@@ -519,6 +519,76 @@
   background-image: linear-gradient(145deg, rgb(79 103 197 / 0.17), rgb(25 32 68 / 0.95));
 }
 
+.wheel-cartoon-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-width: 2px;
+  border-color: rgb(178 160 255 / 0.42);
+  background-color: #1b2148;
+  background-image:
+    radial-gradient(circle, rgb(255 209 102 / 0.28) 1px, transparent 1.6px),
+    radial-gradient(ellipse at 50% 35%, rgb(255 209 102 / 0.16), transparent 42%),
+    radial-gradient(ellipse at 6% 92%, rgb(99 216 255 / 0.11), transparent 38%),
+    linear-gradient(145deg, #252b59 0%, #1b2148 58%, #17284a 100%);
+  background-size: 28px 28px, auto, auto, auto;
+  box-shadow: 0 22px 56px rgb(5 10 36 / 0.34), inset 0 2px 0 rgb(255 255 255 / 0.08);
+}
+
+.wheel-prize-row {
+  border-width: 1.5px;
+  box-shadow: 0 6px 14px rgb(4 9 32 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.07);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.wheel-prize-row:hover {
+  box-shadow: 0 10px 20px rgb(4 9 32 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.1);
+  transform: translateX(3px) rotate(-0.2deg);
+}
+
+.wheel-spin-button {
+  background-image: linear-gradient(100deg, #ffd166 0%, #ffb36f 52%, #ff8fa3 100%);
+  box-shadow: 0 12px 28px rgb(255 155 112 / 0.2), inset 0 2px 0 rgb(255 255 255 / 0.5);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.wheel-spin-button:not(:disabled):hover {
+  box-shadow: 0 16px 32px rgb(255 155 112 / 0.3), inset 0 2px 0 rgb(255 255 255 / 0.55);
+  filter: saturate(1.12);
+  transform: translateY(-2px) rotate(-0.35deg);
+}
+
+.wheel-mascot-float {
+  animation: wheel-mascot-bob 3.6s ease-in-out infinite;
+  filter: drop-shadow(0 16px 24px rgb(4 7 25 / 0.35));
+}
+
+@keyframes wheel-mascot-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-prize-row,
+  .wheel-spin-button {
+    transition: none;
+  }
+
+  .wheel-prize-row:hover,
+  .wheel-spin-button:not(:disabled):hover {
+    transform: none;
+  }
+
+  .wheel-mascot-float {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ptc-task-card {
     transition: none;

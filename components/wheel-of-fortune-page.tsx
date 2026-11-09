@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type TransitionEvent } from 'react'
+import Image from 'next/image'
 import useSWR from 'swr'
-import { Check, Clock3, Volume2, VolumeX } from 'lucide-react'
+import { Check, Clock3, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -54,7 +55,7 @@ function formatRemaining(ms: number) {
 }
 
 function WheelCard({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-[24px] border border-white/[0.08] bg-[#09090B] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] sm:p-5 ${className}`}>{children}</section>
+  return <section className={`rounded-[28px] border-2 border-violet-200/20 bg-[#1b2148] p-4 shadow-[0_18px_48px_rgba(4,9,32,0.28)] sm:p-5 ${className}`}>{children}</section>
 }
 
 export function WheelOfFortunePage() {
@@ -276,37 +277,38 @@ export function WheelOfFortunePage() {
 
   return (
     <LocalizedTree>
-      <main id="top" className="dashboard-page-shell min-w-0 space-y-5 text-white">
+      <main id="top" className="dashboard-page-shell cartoon-wheel-page min-w-0 space-y-5 text-white">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.2em] text-emerald-300/75">Daily rewards</p>
-            <h1 className="text-2xl font-black tracking-tight sm:text-[30px]">Wheel of Fortune</h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/55 sm:text-sm">One free spin every 2 hours. The server selects each result using the published odds.</p>
+            <p className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200/25 bg-amber-200/10 px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-amber-100"><Sparkles size={12} aria-hidden="true" />Daily rewards</p>
+            <h1 className="text-3xl font-black tracking-tight sm:text-[36px]">Wheel of Fortune</h1>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/65 sm:text-sm">One free spin every 2 hours. The server selects each result using the published odds.</p>
           </div>
-          <button type="button" onClick={() => setSoundEnabled((enabled) => !enabled)} aria-pressed={soundEnabled} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-[10px] font-extrabold text-white/75 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">
+          <button type="button" onClick={() => setSoundEnabled((enabled) => !enabled)} aria-pressed={soundEnabled} className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-violet-200/25 bg-[#202951] px-3 text-[10px] font-extrabold text-white/85 shadow-[0_6px_16px_rgba(4,9,32,0.2)] transition hover:border-cyan-200/45 hover:bg-[#29345f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
             {soundEnabled ? <Volume2 size={14} aria-hidden="true" /> : <VolumeX size={14} aria-hidden="true" />}
             {soundEnabled ? 'Sound on' : 'Sound off'}
           </button>
         </header>
 
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <WheelCard className="flex min-w-0 flex-col items-center overflow-hidden border-emerald-300/15 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.09),transparent_55%),#09090B]">
-            <div className="relative mx-auto w-full max-w-[350px] px-4 pb-4 pt-7 sm:px-6 sm:pt-9">
-              <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 sm:top-3" aria-hidden="true">
-                <div className="h-0 w-0 border-x-[13px] border-t-[24px] border-x-transparent border-t-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.6)]" />
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+          <WheelCard className="wheel-cartoon-card flex min-w-0 flex-col items-center px-4 pb-6 pt-5 sm:p-6">
+            <div className="relative z-10 mx-auto w-full max-w-[420px] px-3 pb-4 pt-9 sm:px-5 sm:pt-10">
+              <div className="pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2 sm:top-2" aria-hidden="true">
+                <div className="h-0 w-0 border-x-[14px] border-t-[25px] border-x-transparent border-t-[#fff0a8] drop-shadow-[0_4px_0_rgba(108,67,148,0.9)]" />
               </div>
-              <div className="rounded-full border-[5px] border-[#f3cf70] p-1.5 shadow-[0_0_40px_rgba(34,197,94,0.16),inset_0_0_0_2px_rgba(255,255,255,0.18)] sm:border-[7px] sm:p-2">
+              <div className="rounded-full border-[7px] border-[#ffd166] bg-[#251b4e] p-2 shadow-[0_0_0_3px_rgba(255,255,255,0.1),0_16px_42px_rgba(6,8,30,0.38),0_0_44px_rgba(255,209,102,0.2)] sm:border-[9px] sm:p-2.5">
                 <div
                   role="img"
                   aria-label="Eight-segment prize wheel. The prize odds are listed below."
                   onTransitionEnd={handleWheelTransition}
-                  className="relative aspect-square rounded-full border border-white/20 transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
+                  className="relative aspect-square rounded-full border-2 border-white/50 transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
                   style={{ background: segmentBackground, transform: `rotate(${rotation}deg)` }}
                 >
-                  <div className="absolute inset-[29%] grid place-items-center rounded-full border-4 border-[#f1d487] bg-[#101721] shadow-[0_0_25px_rgba(0,0,0,0.45)]">
-                    <div className="text-center">
-                      <span className="block text-[9px] font-black uppercase tracking-[0.14em] text-emerald-300 sm:text-[10px]">PEPE</span>
-                      <span className="mt-0.5 block text-[7px] font-extrabold uppercase tracking-[0.12em] text-white/55 sm:text-[8px]">Spin & win</span>
+                  <div className="absolute inset-[29%] grid place-items-center rounded-full border-[5px] border-white/85 bg-[linear-gradient(145deg,#fff1b4_0%,#ffd166_52%,#ff9d75_100%)] shadow-[0_8px_0_rgba(115,65,126,0.5),0_12px_24px_rgba(8,9,32,0.35)] transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${-rotation}deg)` }}>
+                    <div className="text-center text-[#34244a]">
+                      <Sparkles className="mx-auto mb-0.5 text-[#8a4d77]" size={15} aria-hidden="true" />
+                      <span className="block text-[9px] font-black uppercase tracking-[0.14em] sm:text-[10px]">PEPE</span>
+                      <span className="mt-0.5 block text-[7px] font-extrabold uppercase tracking-[0.12em] text-[#633e65] sm:text-[8px]">Spin & win</span>
                     </div>
                   </div>
                   {wheelSectors.map((sector, index) => {
@@ -317,50 +319,52 @@ export function WheelOfFortunePage() {
                       top: `${50 - Math.cos(radians) * 34}%`,
                       transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
                     }
-                    return <span key={sector.key} style={labelStyle} className="absolute z-10 max-w-[72px] text-center text-[8px] font-black leading-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] sm:max-w-[80px] sm:text-[9px]">{sector.shortLabel}</span>
+                    return <span key={sector.key} style={labelStyle} className="absolute z-10 max-w-[72px] text-center text-[8px] font-black leading-tight text-white [text-shadow:0_1px_3px_rgba(35,22,58,0.9)] transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none sm:max-w-[80px] sm:text-[9px]">{sector.shortLabel}</span>
                   })}
                 </div>
               </div>
             </div>
 
-            <div className="mt-2 w-full max-w-sm px-1 text-center">
-              <button type="button" onClick={() => void openCaptcha()} disabled={!canSpin || isLoading} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-xs font-black text-[#07120d] shadow-[0_8px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-55">
+            <Image src="/arcade/wheel-frog-mascot.png" alt="" aria-hidden="true" width={180} height={180} priority className="wheel-mascot-float pointer-events-none absolute bottom-24 right-5 z-10 hidden w-32 xl:block 2xl:right-8 2xl:w-36" />
+
+            <div className="relative z-10 mt-1 w-full max-w-sm px-1 text-center">
+              <button type="button" onClick={() => void openCaptcha()} disabled={!canSpin || isLoading} className="wheel-spin-button inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-black text-[#2f2242] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-55">
                 {spinning ? 'Spinning…' : captchaWaiting ? 'Waiting for AdsLab…' : busy ? 'Please wait…' : cooldownRemainingMs > 0 ? <>Next free spin in <span className="font-mono tabular-nums">{formatRemaining(cooldownRemainingMs)}</span></> : 'SPIN THE WHEEL · FREE'}
               </button>
-              <p className="mt-2 inline-flex items-center justify-center gap-1.5 text-[10px] text-white/45"><Clock3 size={12} aria-hidden="true" /> One spin every 2 hours</p>
+              <p className="mt-3 inline-flex items-center justify-center gap-1.5 text-[10px] font-semibold text-white/60"><Clock3 size={12} aria-hidden="true" /> One spin every 2 hours</p>
             </div>
 
             {pendingSpin && !spinning && (
-              <div className="mt-4 flex w-full max-w-sm flex-col gap-2 rounded-xl border border-amber-300/20 bg-amber-300/[0.06] p-3 text-left">
+              <div className="relative z-10 mt-4 flex w-full max-w-sm flex-col gap-2 rounded-2xl border-2 border-amber-200/35 bg-amber-200/10 p-3 text-left shadow-[0_8px_22px_rgba(9,12,34,0.2)]">
                 <p className="text-[10px] font-extrabold text-amber-100">A reward is waiting to be collected.</p>
-                <button type="button" onClick={openPendingReward} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-amber-300 px-3 py-2 text-[10px] font-black text-[#111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100"><Check size={13} aria-hidden="true" /> Show my reward</button>
+                <button type="button" onClick={openPendingReward} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-amber-300 px-3 py-2 text-[10px] font-black text-[#34244a] shadow-[0_4px_0_rgba(126,83,48,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100"><Check size={13} aria-hidden="true" /> Show my reward</button>
               </div>
             )}
 
-            {message && <p role="status" aria-live="polite" className="mt-4 w-full max-w-sm rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2.5 text-left text-[10px] font-semibold leading-5 text-white/75">{message}</p>}
+            {message && <p role="status" aria-live="polite" className="relative z-10 mt-4 w-full max-w-sm rounded-2xl border-2 border-white/10 bg-[#131a3a]/80 px-3 py-2.5 text-left text-[10px] font-semibold leading-5 text-white/80">{message}</p>}
           </WheelCard>
 
-          <WheelCard className="min-w-0">
+          <WheelCard className="cartoon-wheel-card min-w-0">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <div><p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-emerald-200/70">Published odds</p><h2 className="mt-1 text-sm font-black">Every sector, every chance</h2></div>
-              <span className="rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-2.5 py-1 text-[9px] font-extrabold text-emerald-100">100% total</span>
+              <div><p className="inline-flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] text-cyan-100"><Sparkles size={12} aria-hidden="true" />Published odds</p><h2 className="mt-1 text-base font-black">Every sector, every chance</h2></div>
+              <span className="rounded-full border-2 border-emerald-200/35 bg-emerald-300/15 px-3 py-1.5 text-[9px] font-black text-emerald-100 shadow-[0_4px_12px_rgba(10,30,45,0.2)]">100% total</span>
             </div>
-            <ol className="flex flex-col gap-2">
+            <ol className="flex flex-col gap-2.5">
               {wheelSectors.map((sector, index) => {
                 const chance = `${(sector.chanceBps / 100).toFixed(1).replace(/\.0$/, '')}%`
                 return (
-                  <li key={sector.key} className="grid grid-cols-[22px_minmax(0,1fr)_52px] items-center gap-2 rounded-xl border border-white/[0.055] bg-white/[0.025] px-3 py-2.5">
-                    <span className="size-3 rounded-full ring-2 ring-white/10" style={{ backgroundColor: sector.color }} aria-hidden="true" />
+                  <li key={sector.key} className="wheel-prize-row grid grid-cols-[20px_minmax(0,1fr)_58px] items-center gap-2.5 rounded-2xl border px-3 py-2.5" style={{ background: `linear-gradient(105deg, ${sector.color}22, rgba(22,29,62,0.94) 55%)`, borderColor: `${sector.color}70` }}>
+                    <span className="size-3.5 rounded-full border-2 border-white/70 shadow-[0_2px_7px_rgba(0,0,0,0.28)]" style={{ backgroundColor: sector.color }} aria-hidden="true" />
                     <div className="min-w-0">
-                      <p className="truncate text-[10px] font-extrabold text-white/90">{sector.label}</p>
-                      <p className="mt-0.5 text-[9px] text-white/45">Sector {index + 1} of 8</p>
+                      <p className="truncate text-[11px] font-extrabold text-white">{sector.label}</p>
+                      <p className="mt-0.5 text-[9px] font-semibold text-white/55">Sector {index + 1} of 8</p>
                     </div>
-                    <span className="text-right font-mono text-[10px] font-black tabular-nums text-emerald-100">{chance}</span>
+                    <span className="rounded-full px-2 py-1 text-right font-mono text-[10px] font-black tabular-nums" style={{ color: sector.color, backgroundColor: `${sector.color}24` }}>{chance}</span>
                   </li>
                 )
               })}
             </ol>
-            <p className="mt-4 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2.5 text-[9px] leading-5 text-white/45">The result and cooldown are saved on the server. A reward can be collected once, even if you refresh the page.</p>
+            <p className="mt-4 rounded-2xl border-2 border-violet-200/20 bg-[#131a3a]/70 px-3 py-2.5 text-[9px] font-medium leading-5 text-white/60">The result and cooldown are saved on the server. A reward can be collected once, even if you refresh the page.</p>
           </WheelCard>
         </div>
 
@@ -372,7 +376,7 @@ export function WheelOfFortunePage() {
           onClose={() => { setCaptchaUrl(null); setCaptchaSessionId(null); setCaptchaChallengeToken(null) }}
         />
 
-        <dialog ref={dialogRef} onClose={() => setDialogOpen(false)} aria-labelledby="wheel-result-title" className="w-[min(92vw,420px)] rounded-[24px] border border-emerald-200/20 bg-[#0b1118] p-0 text-white shadow-[0_30px_120px_rgba(0,0,0,0.7)] backdrop:bg-black/75">
+        <dialog ref={dialogRef} onClose={() => setDialogOpen(false)} aria-labelledby="wheel-result-title" className="w-[min(92vw,420px)] rounded-[30px] border-2 border-amber-200/35 bg-[linear-gradient(145deg,#252b59_0%,#1b2148_58%,#17284a_100%)] p-0 text-white shadow-[0_30px_120px_rgba(0,0,0,0.7)] backdrop:bg-black/75">
           {activeSpin && currentSector && (
             <div className="p-5 text-center sm:p-7">
               <div className="mx-auto grid size-14 place-items-center rounded-full border border-emerald-200/25 bg-emerald-300/[0.08] text-emerald-200"><Check size={23} aria-hidden="true" /></div>
