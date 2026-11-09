@@ -3,25 +3,34 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, X } from 'lucide-react'
 
+type CaptchaReturnMessage = {
+  type?: unknown
+  captchaSessionId?: unknown
+}
+
 export function AdsLabCaptchaModal({
   solveUrl,
   challengeToken,
-  onChallengeOpened,
+  captchaSessionId,
+  onReturned,
   onClose,
 }: {
   solveUrl: string | null
   challengeToken: string | null
-  onChallengeOpened: () => void
+  captchaSessionId: string | null
+  onReturned: (sessionId: string) => void
   onClose: () => void
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const popupRef = useRef<Window | null>(null)
-  const onChallengeOpenedRef = useRef(onChallengeOpened)
+  const onReturnedRef = useRef(onReturned)
+  const completedRef = useRef(false)
   const [popupBlocked, setPopupBlocked] = useState(false)
   const [popupOpened, setPopupOpened] = useState(false)
-  onChallengeOpenedRef.current = onChallengeOpened
+  onReturnedRef.current = onReturned
 
   useEffect(() => {
+    completedRef.current = false
     setPopupBlocked(false)
     setPopupOpened(false)
     const dialog = dialogRef.current
@@ -30,40 +39,74 @@ export function AdsLabCaptchaModal({
     if (!solveUrl && dialog.open) dialog.close()
     if (!solveUrl && popupRef.current && !popupRef.current.closed) popupRef.current.close()
     if (!solveUrl) popupRef.current = null
-  }, [solveUrl, challengeToken])
+  }, [solveUrl, captchaSessionId, challengeToken])
+
+  useEffect(() => {
+    if (!captchaSessionId) return
+    const activeSessionId = captchaSessionId
+
+    function complete(value: unknown) {
+      if (!value || typeof value !== 'object') return
+      const message = value as CaptchaReturnMessage
+      if (message.type !== 'adslab-captcha-return' || message.captchaSessionId !== activeSessionId || completedRef.current) return
+      completedRef.current = true
+      popupRef.current?.close()
+      popupRef.current = null
+      onReturnedRef.current(activeSessionId)
+    }
+
+    function handleWindowMessage(event: MessageEvent<unknown>) {
+      if (event.origin !== window.location.origin || event.source !== popupRef.current) return
+      complete(event.data)
+    }
+
+    const channel = typeof BroadcastChannel === 'undefined'
+      ? null
+      : new BroadcastChannel(`adslab-wheel-captcha:${activeSessionId}`)
+    const handleChannelMessage = (event: MessageEvent<unknown>) => complete(event.data)
+
+    window.addEventListener('message', handleWindowMessage)
+    channel?.addEventListener('message', handleChannelMessage)
+    return () => {
+      window.removeEventListener('message', handleWindowMessage)
+      channel?.removeEventListener('message', handleChannelMessage)
+      channel?.close()
+    }
+  }, [captchaSessionId])
 
   function openChallenge() {
-    if (!solveUrl || !challengeToken) return
-
+    if (!solveUrl || !captchaSessionId) return
     const popupName = 'adslab-wheel-captcha'
     const popup = window.open('', popupName, 'popup,width=520,height=720')
     if (!popup) {
       setPopupBlocked(true)
       return
     }
-
     popupRef.current = popup
     setPopupBlocked(false)
 
     try {
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = solveUrl
-      form.target = popupName
-      form.hidden = true
+      if (challengeToken) {
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = solveUrl
+        form.target = popupName
+        form.hidden = true
 
-      const tokenField = document.createElement('input')
-      tokenField.type = 'hidden'
-      tokenField.name = 'token'
-      tokenField.value = challengeToken
-      form.append(tokenField)
-      document.body.append(form)
-      form.submit()
-      form.remove()
+        const tokenField = document.createElement('input')
+        tokenField.type = 'hidden'
+        tokenField.name = 'token'
+        tokenField.value = challengeToken
+        form.append(tokenField)
+        document.body.append(form)
+        form.submit()
+        form.remove()
+      } else {
+        popup.location.href = solveUrl
+      }
 
       setPopupOpened(true)
       popup.focus()
-      onChallengeOpenedRef.current()
     } catch {
       popup.close()
       popupRef.current = null
@@ -82,7 +125,7 @@ export function AdsLabCaptchaModal({
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>
           <h2 id="adslab-captcha-title" className="text-base font-black">Verify to spin</h2>
-          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">AdsLab opens its challenge in a separate window. Keep this page open; the wheel spins after AdsLab sends a signed server confirmation.</p>
+          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">AdsLab opens its challenge in a separate window. Return here after solving; the server checks the session with AdsLab before the wheel spins.</p>
         </div>
         <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close verification" className="grid size-9 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
           <X aria-hidden="true" />
@@ -94,7 +137,7 @@ export function AdsLabCaptchaModal({
           {popupOpened ? 'Reopen AdsLab challenge' : 'Open AdsLab challenge'}
         </button>
         <p role="status" aria-live="polite" className="mt-3 min-h-5 text-center text-[10px] leading-5 text-white/55">
-          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for AdsLab’s signed server confirmation…' : 'The wheel result is created only after server-side verification.'}
+          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from AdsLab…' : 'Your wheel result is created only after server-side verification.'}
         </p>
       </div>
     </dialog>

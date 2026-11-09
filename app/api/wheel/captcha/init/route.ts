@@ -13,7 +13,7 @@ const adsLabApiOrigin = 'https://adslab.me'
 const captchaSessionTtlMs = 15 * 60 * 1000
 const maxCaptchaTokenLength = 16_384
 
-type AdsLabCaptchaChallenge = { solveUrl: string; challengeToken: string }
+type AdsLabCaptchaChallenge = { solveUrl: string; challengeToken: string | null }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -23,12 +23,15 @@ function readCaptchaChallenge(value: unknown): AdsLabCaptchaChallenge | null {
   if (!isRecord(value)) return null
   const nested = isRecord(value.data) ? value.data : value
   if (nested.success !== true && value.success !== true) return null
-  if (typeof nested.solve_url !== 'string' || typeof nested.token !== 'string' || !nested.token || nested.token.length > maxCaptchaTokenLength) return null
+  if (typeof nested.solve_url !== 'string') return null
+  const challengeToken = typeof nested.token === 'string' && nested.token.length > 0 && nested.token.length <= maxCaptchaTokenLength
+    ? nested.token
+    : null
 
   try {
     const url = new URL(nested.solve_url)
     if (url.protocol !== 'https:' || !(url.hostname === 'adslab.me' || url.hostname.endsWith('.adslab.me'))) return null
-    return { solveUrl: url.toString(), challengeToken: nested.token }
+    return { solveUrl: url.toString(), challengeToken }
   } catch {
     return null
   }
@@ -43,13 +46,13 @@ export async function POST(request: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
 
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
-  const postbackSecret = process.env.ADSLAB_POSTBACK_SECRET?.trim()
-  if (!apiKey || !postbackSecret) {
-    return NextResponse.json({ error: 'AdsLab CAPTCHA is not fully configured.' }, { status: 503, headers: noStoreHeaders })
+  if (!apiKey) {
+    return NextResponse.json({ error: 'AdsLab CAPTCHA is not configured.' }, { status: 503, headers: noStoreHeaders })
   }
 
   const captchaSessionId = randomUUID()
   const returnUrl = new URL('/api/wheel/captcha/return', request.url)
+  returnUrl.searchParams.set('state', captchaSessionId)
 
   try {
     const response = await fetch(`${adsLabApiOrigin}/api/v1/captcha/init`, {

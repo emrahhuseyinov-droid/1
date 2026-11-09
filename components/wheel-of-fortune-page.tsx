@@ -142,7 +142,7 @@ export function WheelOfFortunePage() {
     setMessage(null)
 
     try {
-      const result = await postJson<{ solveUrl: string; challengeToken: string; captchaSessionId: string }>('/api/wheel/captcha/init', {})
+      const result = await postJson<{ solveUrl: string; challengeToken: string | null; captchaSessionId: string }>('/api/wheel/captcha/init', {})
       setCaptchaSessionId(result.captchaSessionId)
       setCaptchaChallengeToken(result.challengeToken)
       setCaptchaUrl(result.solveUrl)
@@ -194,10 +194,10 @@ export function WheelOfFortunePage() {
     if (captchaPollRef.current === verifiedCaptchaSessionId) return
     captchaPollRef.current = verifiedCaptchaSessionId
     setCaptchaWaiting(true)
-    setMessage('Waiting for AdsLab’s signed server confirmation…')
+    setMessage('Checking the completed AdsLab session…')
 
     try {
-      for (let attempt = 0; attempt < 60; attempt += 1) {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
         const response = await fetch(`/api/wheel/captcha/status?state=${encodeURIComponent(verifiedCaptchaSessionId)}`, { cache: 'no-store' })
         const result = await response.json().catch(() => null) as { status?: string; error?: string } | null
         if (!response.ok) throw new Error(result?.error ?? 'Could not check AdsLab verification.')
@@ -217,10 +217,10 @@ export function WheelOfFortunePage() {
           return
         }
 
-        await new Promise((resolve) => window.setTimeout(resolve, 1000))
+        await new Promise((resolve) => window.setTimeout(resolve, 1500))
       }
 
-      setMessage('AdsLab has not confirmed the CAPTCHA yet. Please try again in a moment.')
+      setMessage('AdsLab has not confirmed the CAPTCHA yet. Please try again.')
     } catch (captchaError) {
       setMessage(captchaError instanceof Error ? captchaError.message : 'Could not check AdsLab verification.')
     } finally {
@@ -232,8 +232,13 @@ export function WheelOfFortunePage() {
     }
   }
 
-  function handleCaptchaChallengeOpened() {
-    if (captchaSessionId) void waitForCaptchaVerification(captchaSessionId)
+  function handleCaptchaReturn(returnedSessionId: string) {
+    if (!captchaSessionId || returnedSessionId !== captchaSessionId) {
+      setMessage('AdsLab returned an unexpected session. Please start the verification again.')
+      return
+    }
+    setCaptchaUrl(null)
+    void waitForCaptchaVerification(returnedSessionId)
   }
 
   async function claimReward(spin: WheelSpin) {
@@ -362,7 +367,8 @@ export function WheelOfFortunePage() {
         <AdsLabCaptchaModal
           solveUrl={captchaUrl}
           challengeToken={captchaChallengeToken}
-          onChallengeOpened={handleCaptchaChallengeOpened}
+          captchaSessionId={captchaSessionId}
+          onReturned={handleCaptchaReturn}
           onClose={() => { setCaptchaUrl(null); setCaptchaSessionId(null); setCaptchaChallengeToken(null) }}
         />
 
