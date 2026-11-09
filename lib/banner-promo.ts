@@ -1,15 +1,14 @@
 import 'server-only'
 
-import { randomInt, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import { and, asc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { bannerPromoEvents, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { grantArcadeEnergy } from '@/lib/arcade-service'
 
 export const BANNER_PROMO_REWARD_ATOMIC = 1_500_000_000
-const MAX_DAILY_IMPRESSIONS = 15
-const MIN_INTERVAL_MS = 5 * 60 * 1000
-const MAX_INTERVAL_MS = 10 * 60 * 1000
+const MAX_DAILY_IMPRESSIONS = 5
+const PROMO_INTERVAL_MS = 2 * 60 * 60 * 1000
 
 export type BannerPromoState =
   | { phase: 'waiting'; nextAt: string }
@@ -23,7 +22,7 @@ function utcDay(date: Date) {
 }
 
 function nextScheduleTime(now: Date) {
-  return new Date(now.getTime() + randomInt(MIN_INTERVAL_MS, MAX_INTERVAL_MS + 1))
+  return new Date(now.getTime() + PROMO_INTERVAL_MS)
 }
 
 export async function getBannerPromoState(guestId: string): Promise<BannerPromoState> {
@@ -45,6 +44,9 @@ export async function getBannerPromoState(guestId: string): Promise<BannerPromoS
         sequenceNumber: bannerPromoEvents.sequenceNumber,
         status: bannerPromoEvents.status,
         scheduledAt: bannerPromoEvents.scheduledAt,
+        shownAt: bannerPromoEvents.shownAt,
+        clickedAt: bannerPromoEvents.clickedAt,
+        dismissedAt: bannerPromoEvents.dismissedAt,
       })
       .from(bannerPromoEvents)
       .where(and(eq(bannerPromoEvents.guestId, guestId), eq(bannerPromoEvents.day, day)))
@@ -56,8 +58,26 @@ export async function getBannerPromoState(guestId: string): Promise<BannerPromoS
 
     const scheduled = events.find((event) => event.status === 'scheduled')
     if (scheduled) {
-      if (scheduled.scheduledAt.getTime() > now.getTime()) {
-        return { phase: 'waiting', nextAt: scheduled.scheduledAt.toISOString() }
+      const previous = events
+        .filter((event) => event.sequenceNumber < scheduled.sequenceNumber)
+        .at(-1)
+      const previousActionAt = previous?.clickedAt ?? previous?.dismissedAt ?? previous?.shownAt
+      let scheduledAt = scheduled.scheduledAt
+
+      if (previousActionAt) {
+        const earliestNextAt = new Date(previousActionAt.getTime() + PROMO_INTERVAL_MS)
+        if (scheduledAt.getTime() < earliestNextAt.getTime()) {
+          const [rescheduled] = await transaction
+            .update(bannerPromoEvents)
+            .set({ scheduledAt: earliestNextAt })
+            .where(and(eq(bannerPromoEvents.id, scheduled.id), eq(bannerPromoEvents.status, 'scheduled')))
+            .returning({ scheduledAt: bannerPromoEvents.scheduledAt })
+          scheduledAt = rescheduled?.scheduledAt ?? earliestNextAt
+        }
+      }
+
+      if (scheduledAt.getTime() > now.getTime()) {
+        return { phase: 'waiting', nextAt: scheduledAt.toISOString() }
       }
 
       const [shown] = await transaction
