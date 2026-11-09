@@ -67,8 +67,8 @@ function isLoopbackIp(value: string): boolean {
 function getClientIp(headers: Headers): string {
   const forwardedIps = headers.get('x-forwarded-for')?.split(',') ?? []
   const candidates = [
-    ...forwardedIps,
     headers.get('cf-connecting-ip'),
+    ...forwardedIps,
     headers.get('x-real-ip'),
   ]
 
@@ -81,7 +81,7 @@ function getClientIp(headers: Headers): string {
 }
 
 function getCountryCode(headers: Headers): string {
-  const candidates = [headers.get('x-vercel-ip-country'), headers.get('cf-ipcountry')]
+  const candidates = [headers.get('cf-ipcountry'), headers.get('x-vercel-ip-country')]
   for (const candidate of candidates) {
     const country = candidate?.trim()
     if (country && /^[a-z]{2}$/i.test(country) && country.toLowerCase() !== 'xx') return country.toLowerCase()
