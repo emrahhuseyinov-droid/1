@@ -59,22 +59,34 @@ function readString(value: unknown, maxLength: number): string | null {
   return trimmed.length > 0 && trimmed.length <= maxLength ? trimmed : null
 }
 
-function getClientIp(headers: Headers): string {
-  const forwardedFor = headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-  if (!forwardedFor || forwardedFor === '::1' || forwardedFor === '127.0.0.1') return '1.1.1.1'
-  if (isIP(forwardedFor)) return forwardedFor
+function isLoopbackIp(value: string): boolean {
+  const normalized = value.toLowerCase()
+  return normalized === '::1' || normalized.startsWith('127.') || normalized.startsWith('::ffff:127.')
+}
 
-  const candidates = [headers.get('cf-connecting-ip')?.trim(), headers.get('x-real-ip')?.trim()]
+function getClientIp(headers: Headers): string {
+  const forwardedIps = headers.get('x-forwarded-for')?.split(',') ?? []
+  const candidates = [
+    ...forwardedIps,
+    headers.get('cf-connecting-ip'),
+    headers.get('x-real-ip'),
+  ]
+
   for (const candidate of candidates) {
-    if (candidate && isIP(candidate)) return candidate
+    const ipAddress = candidate?.trim()
+    if (ipAddress && isIP(ipAddress) && !isLoopbackIp(ipAddress)) return ipAddress
   }
 
   return '1.1.1.1'
 }
 
 function getCountryCode(headers: Headers): string {
-  const country = headers.get('x-vercel-ip-country') ?? headers.get('cf-ipcountry')
-  return country && /^[a-z]{2}$/i.test(country) ? country.toLowerCase() : 'us'
+  const candidates = [headers.get('x-vercel-ip-country'), headers.get('cf-ipcountry')]
+  for (const candidate of candidates) {
+    const country = candidate?.trim()
+    if (country && /^[a-z]{2}$/i.test(country) && country.toLowerCase() !== 'xx') return country.toLowerCase()
+  }
+  return 'us'
 }
 
 function parseScaledUsd(value: unknown): bigint | null {
