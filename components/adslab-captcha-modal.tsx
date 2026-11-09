@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, X } from 'lucide-react'
+import { LocalizedTree } from '@/components/site-language-provider'
 
 type CaptchaReturnMessage = {
   type?: unknown
@@ -14,12 +15,14 @@ export function AdsLabCaptchaModal({
   captchaSessionId,
   onReturned,
   onClose,
+  purpose = 'wheel',
 }: {
   solveUrl: string | null
   challengeToken: string | null
   captchaSessionId: string | null
   onReturned: (sessionId: string) => void
   onClose: () => void
+  purpose?: 'wheel' | 'faucet'
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const popupRef = useRef<Window | null>(null)
@@ -60,9 +63,10 @@ export function AdsLabCaptchaModal({
       complete(event.data)
     }
 
+    const channelPrefix = purpose === 'faucet' ? 'adslab-faucet-captcha' : 'adslab-wheel-captcha'
     const channel = typeof BroadcastChannel === 'undefined'
       ? null
-      : new BroadcastChannel(`adslab-wheel-captcha:${activeSessionId}`)
+      : new BroadcastChannel(`${channelPrefix}:${activeSessionId}`)
     const handleChannelMessage = (event: MessageEvent<unknown>) => complete(event.data)
 
     window.addEventListener('message', handleWindowMessage)
@@ -72,11 +76,11 @@ export function AdsLabCaptchaModal({
       channel?.removeEventListener('message', handleChannelMessage)
       channel?.close()
     }
-  }, [captchaSessionId])
+  }, [captchaSessionId, purpose])
 
   function openChallenge() {
     if (!solveUrl || !captchaSessionId) return
-    const popupName = 'adslab-wheel-captcha'
+    const popupName = `adslab-${purpose}-captcha-${captchaSessionId}`
     const popup = window.open('', popupName, 'popup,width=520,height=720')
     if (!popup) {
       setPopupBlocked(true)
@@ -115,6 +119,7 @@ export function AdsLabCaptchaModal({
   }
 
   return (
+    <LocalizedTree>
     <dialog
       ref={dialogRef}
       onClose={onClose}
@@ -124,8 +129,8 @@ export function AdsLabCaptchaModal({
     >
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>
-          <h2 id="adslab-captcha-title" className="text-base font-black">Verify to spin</h2>
-          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">AdsLab opens its challenge in a separate window. Return here after solving; the server checks the session with AdsLab before the wheel spins.</p>
+          <h2 id="adslab-captcha-title" className="text-base font-black">{purpose === 'faucet' ? 'Verify to claim' : 'Verify to spin'}</h2>
+          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'faucet' ? 'AdsLab opens its challenge in a separate window. Return here after solving; the server checks the session before your PEPE reward is credited.' : 'AdsLab opens its challenge in a separate window. Return here after solving; the server checks the session with AdsLab before the wheel spins.'}</p>
         </div>
         <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close verification" className="grid size-9 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
           <X aria-hidden="true" />
@@ -137,9 +142,10 @@ export function AdsLabCaptchaModal({
           {popupOpened ? 'Reopen AdsLab challenge' : 'Open AdsLab challenge'}
         </button>
         <p role="status" aria-live="polite" className="mt-3 min-h-5 text-center text-[10px] leading-5 text-white/55">
-          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from AdsLab…' : 'Your wheel result is created only after server-side verification.'}
+          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from AdsLab…' : purpose === 'faucet' ? 'Your PEPE reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.'}
         </p>
       </div>
     </dialog>
+    </LocalizedTree>
   )
 }
