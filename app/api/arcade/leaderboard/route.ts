@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { authorizeArcadeRequest, arcadeNoStoreHeaders, getArcadeLeaderboard, getUtcWeekWindow } from '@/lib/arcade-service'
+import { authorizeArcadeRequest, arcadeNoStoreHeaders, getArcadeLeaderboard } from '@/lib/arcade-service'
+import { getArcadeWeekWindow } from '@/lib/arcade-time'
 
 export const runtime = 'nodejs'
 
@@ -7,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const access = await authorizeArcadeRequest(request)
     if ('response' in access) return access.response
-    const week = getUtcWeekWindow()
+    const week = getArcadeWeekWindow()
     const leaderboard = await getArcadeLeaderboard(week.start, week.end, access.guestId)
     return NextResponse.json({ periodStart: week.periodStart, periodEnd: week.end.toISOString(), leaderboard }, { headers: arcadeNoStoreHeaders })
   } catch (error) {

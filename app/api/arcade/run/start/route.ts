@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
 import { ARCADE_DAILY_RUN_LIMIT, ARCADE_HEARTBEAT_GRACE_MS, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, getArcadeHomeroCoinsRemaining, type ArcadeBoostCode } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, isRecord, lockArcadeProfile, readJsonBody } from '@/lib/arcade-service'
+import { getArcadeDayWindow } from '@/lib/arcade-time'
 
 export const runtime = 'nodejs'
 const boostCodes = new Set<ArcadeBoostCode>(['jetpack', 'shield'])
@@ -51,8 +52,7 @@ export async function POST(request: NextRequest) {
           .where(eq(arcadeSessions.id, runningSession.id))
       }
 
-      const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-      const nextDayStart = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+      const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
       const [dailyRuns] = await transaction
         .select({ count: sql<number>`count(*)::int` })
         .from(arcadeSessions)
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (result.status === 'already_running') return NextResponse.json({ error: 'Finish or close your active run first.' }, { status: 409, headers: arcadeNoStoreHeaders })
-    if (result.status === 'daily_limit') return NextResponse.json({ error: 'You have reached the daily limit of 7 arcade runs.' }, { status: 409, headers: arcadeNoStoreHeaders })
+    if (result.status === 'daily_limit') return NextResponse.json({ error: 'You have reached the daily limit of 7 arcade runs. Resets at 17:38 Baku time.' }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'no_energy') return NextResponse.json({ error: 'You need 1 energy to start a run.', energy: result.energy }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'missing_boost') return NextResponse.json({ error: `You do not have a ${result.boostCode} boost.` }, { status: 409, headers: arcadeNoStoreHeaders })
 

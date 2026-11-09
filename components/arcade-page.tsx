@@ -368,8 +368,8 @@ export function ArcadePage() {
                 <p className="mt-1 font-mono text-xl font-black tabular-nums text-white">{energyBalanceLabel}<span className="ml-1 text-[10px] font-bold text-white/40">/ {formatEnergy(energyCap)}</span></p>
                 <div role="progressbar" aria-label="Arcade energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-300 transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>
                 <p className="mt-1 text-[8px] text-white/40">+0.02 per PTC task · +1 Daily Bonus · 1 per Ranked run</p>
-                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Arcade runs today</span><span className="font-mono font-bold tabular-nums">{state?.dailyRunsToday ?? 0} / {state?.dailyRunLimit ?? 7}</span></p>
-                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Ad energy today</span><span className="font-mono font-bold tabular-nums">{formatEnergy(state?.dailyEnergyEarned ?? 0)} / {formatEnergy(state?.dailyEnergyCap ?? 15)}</span></p>
+                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Arcade runs this Baku day</span><span className="font-mono font-bold tabular-nums">{state?.dailyRunsToday ?? 0} / {state?.dailyRunLimit ?? 7}</span></p>
+                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Ad energy this Baku day</span><span className="font-mono font-bold tabular-nums">{formatEnergy(state?.dailyEnergyEarned ?? 0)} / {formatEnergy(state?.dailyEnergyCap ?? 15)}</span></p>
               </div>
             </div>
           </ArcadeCard>
