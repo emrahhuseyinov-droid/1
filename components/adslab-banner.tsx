@@ -8,7 +8,7 @@ type AdsLabBannerProps = {
   id: string
   container: string
   alignment?: 'center' | 'right'
-  format?: 'compact' | 'medium-rectangle'
+  format?: 'compact' | 'medium-rectangle' | 'large-rectangle'
 }
 
 declare global {
