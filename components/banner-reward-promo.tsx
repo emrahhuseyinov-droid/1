@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { ArrowUpRight, Gift, Sparkles, X } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, Gift, Sparkles, X } from 'lucide-react'
 import { AdsLabBanner } from '@/components/adslab-banner'
 import { useSiteLanguage } from '@/components/site-language-provider'
 
@@ -38,9 +38,9 @@ export function BannerRewardPromo() {
     ? {
         label: 'Бонус AdsLab',
         title: 'Заберите 15 PEPE',
-        schedule: 'До 5 раз в день · каждые 30 секунд',
         adLabel: 'Рекламный баннер',
-        claim: 'Забрать награду',
+        bannerHint: 'Жми сюда!',
+        claim: 'Нажми на рекламный баннер',
         reward: '+15 PEPE сразу',
         destination: 'AdsLab откроется в новой вкладке',
         dismiss: 'Закрыть бонусный баннер',
@@ -49,9 +49,9 @@ export function BannerRewardPromo() {
     : {
         label: 'AdsLab bonus',
         title: 'Claim 15 PEPE',
-        schedule: 'Up to 5 times a day · every 30 seconds',
         adLabel: 'Sponsored banner',
-        claim: 'Claim reward',
+        bannerHint: 'Click here!',
+        claim: 'Click the ad banner',
         reward: '+15 PEPE instantly',
         destination: 'AdsLab opens in a new tab',
         dismiss: 'Dismiss reward banner',
@@ -120,16 +120,18 @@ export function BannerRewardPromo() {
             <h2 className="mt-2 text-[16px] font-black leading-tight tracking-[-0.02em] text-white">
               {copy.title}
             </h2>
-            <p className="mt-1 text-[10px] font-bold text-slate-300">
-              {copy.schedule}
-            </p>
           </div>
         </div>
 
         <div className="relative mt-3 rounded-[18px] border border-white/10 bg-[#0c1430]/65 p-2">
-          <p className="mb-1.5 text-center text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-400">
+          <p className="mb-2 text-center text-[9px] font-extrabold uppercase tracking-[0.15em] text-slate-300">
             {copy.adLabel}
           </p>
+          <div aria-hidden="true" className="banner-ad-cue pointer-events-none mx-auto mb-2 flex w-fit items-center gap-3 rounded-full border border-amber-200/30 bg-gradient-to-r from-amber-400/15 via-cyan-300/15 to-amber-400/15 px-3 py-1.5 shadow-[0_0_18px_rgba(251,191,36,0.12)]">
+            <ArrowDown className="banner-ad-arrow text-amber-200 drop-shadow-[0_2px_5px_rgba(255,193,7,0.8)]" size={17} strokeWidth={3} />
+            <span className="text-[10px] font-black tracking-wide text-amber-50">{copy.bannerHint}</span>
+            <ArrowDown className="banner-ad-arrow banner-ad-arrow-late text-cyan-200 drop-shadow-[0_2px_5px_rgba(34,211,238,0.8)]" size={17} strokeWidth={3} />
+          </div>
           <AdsLabBanner
             id="unit-rvjn935d7"
             container="adslab-banner-unit-rvjn935d7"
@@ -139,24 +141,21 @@ export function BannerRewardPromo() {
           />
         </div>
 
-        <a
-          href="/offerwall"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          disabled
           aria-label={`${copy.claim} — ${copy.reward}`}
-          aria-busy={isMutating}
-          onClick={() => void handleAction('click', data.promoId)}
-          className="group relative mt-3 flex min-h-11 w-full items-center justify-between gap-3 rounded-[17px] border-2 border-amber-100/70 bg-gradient-to-r from-[#ffe17e] via-[#ffc35a] to-[#ff9a70] px-3.5 py-2.5 text-left text-[#39220b] shadow-[0_8px_22px_rgba(255,174,63,0.22)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(255,174,63,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#151d3e] motion-reduce:transform-none motion-reduce:transition-none"
+          className="relative mt-3 flex min-h-11 w-full cursor-not-allowed items-center justify-between gap-3 rounded-[17px] border-2 border-amber-100/70 bg-gradient-to-r from-[#ffe17e] via-[#ffc35a] to-[#ff9a70] px-3.5 py-2.5 text-left text-[#39220b] opacity-100 shadow-[0_8px_22px_rgba(255,174,63,0.22)]"
         >
-          <span className="flex min-w-0 items-center gap-2 text-[13px] font-black">
+          <span className="flex min-w-0 flex-1 items-center gap-2 text-[12px] font-black leading-tight sm:text-[13px]">
             <Gift aria-hidden="true" size={16} className="shrink-0" />
-            <span className="truncate">{copy.claim}</span>
+            <span className="min-w-0 whitespace-normal">{copy.claim}</span>
           </span>
           <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#432d14]/10 px-2 py-1 text-[10px] font-black">
             {copy.reward}
             <ArrowUpRight aria-hidden="true" size={13} />
           </span>
-        </a>
+        </button>
         <p className="relative mt-2 text-center text-[9px] font-medium text-slate-400">
           {copy.destination}
         </p>

@@ -288,6 +288,24 @@ dialog.adslab-captcha-dialog[open] {
   }
 }
 
+@keyframes banner-ad-arrow-nudge {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(3px) scale(1.12);
+  }
+}
+
+.banner-ad-arrow {
+  animation: banner-ad-arrow-nudge 850ms ease-in-out infinite;
+}
+
+.banner-ad-arrow-late {
+  animation-delay: 180ms;
+}
+
 @keyframes banner-reward-gift-bob {
   0%,
   100% {
@@ -324,7 +342,8 @@ dialog.adslab-captcha-dialog[open] {
 @media (prefers-reduced-motion: reduce) {
   .homero-coin-float,
   .banner-reward-enter,
-  .banner-reward-gift {
+  .banner-reward-gift,
+  .banner-ad-arrow {
     animation: none;
   }
 }
