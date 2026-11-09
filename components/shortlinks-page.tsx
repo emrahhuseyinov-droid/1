@@ -2,6 +2,7 @@
 
 import { Link2, Sparkles } from 'lucide-react'
 import { AdsLabShortlinksTaskList } from '@/components/adslab-shortlinks-task-list'
+import { AdsLabLinkShortener } from '@/components/adslab-link-shortener'
 import { useSiteLanguage } from '@/components/site-language-provider'
 
 export function ShortlinksPage() {
@@ -22,6 +23,8 @@ export function ShortlinksPage() {
           </div>
         </div>
       </header>
+
+      <AdsLabLinkShortener />
 
       <section aria-label={isRussian ? 'Доступные Shortlinks' : 'Available Shortlinks'} className="cartoon-panel overflow-hidden rounded-[32px] border-2 border-dashboard-outline bg-[#171f40] shadow-xl shadow-indigo-950/30">
         <header className="border-b-2 border-white/10 bg-gradient-to-r from-[#252f5b] to-[#20294e] px-4 py-4 sm:px-5">
