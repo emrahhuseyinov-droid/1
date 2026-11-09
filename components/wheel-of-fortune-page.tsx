@@ -66,11 +66,15 @@ export function WheelOfFortunePage() {
   const [activeSpin, setActiveSpin] = useState<SpinResult | WheelSpin | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [captchaUrl, setCaptchaUrl] = useState<string | null>(null)
+  const [captchaChallengeToken, setCaptchaChallengeToken] = useState<string | null>(null)
+  const [captchaSessionId, setCaptchaSessionId] = useState<string | null>(null)
+  const [captchaWaiting, setCaptchaWaiting] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [message, setMessage] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const tickIntervalRef = useRef<ReturnType<Window['setInterval']> | null>(null)
+  const captchaPollRef = useRef<string | null>(null)
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 1000)
@@ -91,7 +95,7 @@ export function WheelOfFortunePage() {
 
   const nextSpinAt = state?.nextSpinAt ? new Date(state.nextSpinAt).getTime() : null
   const cooldownRemainingMs = nextSpinAt === null ? 0 : Math.max(0, nextSpinAt - now)
-  const canSpin = cooldownRemainingMs === 0 && !busy && !spinning && !captchaUrl
+  const canSpin = cooldownRemainingMs === 0 && !busy && !spinning && !captchaUrl && !captchaWaiting
   const currentSector = activeSpin ? wheelSectors[activeSpin.sectorIndex] : null
   const pendingSpin = state?.lastSpin && !state.lastSpin.claimedAt ? state.lastSpin : null
 
@@ -138,7 +142,9 @@ export function WheelOfFortunePage() {
     setMessage(null)
 
     try {
-      const result = await postJson<{ solveUrl: string }>('/api/wheel/captcha/init', {})
+      const result = await postJson<{ solveUrl: string; challengeToken: string; captchaSessionId: string }>('/api/wheel/captcha/init', {})
+      setCaptchaSessionId(result.captchaSessionId)
+      setCaptchaChallengeToken(result.challengeToken)
       setCaptchaUrl(result.solveUrl)
     } catch (captchaError) {
       setMessage(captchaError instanceof Error ? captchaError.message : 'Could not start the AdsLab verification.')
@@ -147,14 +153,14 @@ export function WheelOfFortunePage() {
     }
   }
 
-  async function startSpin(captchaToken: string) {
+  async function startSpin(verifiedCaptchaSessionId: string) {
     if (busy || spinning) return
     setBusy(true)
     setMessage(null)
     playTone(740, 0.06)
 
     try {
-      const result = await postJson<SpinResult>('/api/wheel/spin', { captchaToken })
+      const result = await postJson<SpinResult>('/api/wheel/spin', { captchaSessionId: verifiedCaptchaSessionId })
       setActiveSpin(result)
       const currentMod = ((rotation % 360) + 360) % 360
       const deltaToSector = (360 - ((result.sectorIndex * 45 + currentMod) % 360)) % 360
@@ -184,13 +190,50 @@ export function WheelOfFortunePage() {
     }
   }
 
-  function handleCaptchaReturn(token: string | null) {
-    setCaptchaUrl(null)
-    if (!token) {
-      setMessage('AdsLab did not return a verification token. Please try again.')
-      return
+  async function waitForCaptchaVerification(verifiedCaptchaSessionId: string) {
+    if (captchaPollRef.current === verifiedCaptchaSessionId) return
+    captchaPollRef.current = verifiedCaptchaSessionId
+    setCaptchaWaiting(true)
+    setMessage('Waiting for AdsLab’s signed server confirmation…')
+
+    try {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        const response = await fetch(`/api/wheel/captcha/status?state=${encodeURIComponent(verifiedCaptchaSessionId)}`, { cache: 'no-store' })
+        const result = await response.json().catch(() => null) as { status?: string; error?: string } | null
+        if (!response.ok) throw new Error(result?.error ?? 'Could not check AdsLab verification.')
+
+        if (result?.status === 'verified') {
+          setMessage(null)
+          void startSpin(verifiedCaptchaSessionId)
+          return
+        }
+        if (result?.status === 'failed' || result?.status === 'expired') {
+          setMessage('AdsLab did not confirm the CAPTCHA. Please try again.')
+          return
+        }
+        if (result?.status === 'consumed') {
+          await mutate()
+          setMessage('This verified spin has already started. Check for a reward waiting to be collected.')
+          return
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 1000))
+      }
+
+      setMessage('AdsLab has not confirmed the CAPTCHA yet. Please try again in a moment.')
+    } catch (captchaError) {
+      setMessage(captchaError instanceof Error ? captchaError.message : 'Could not check AdsLab verification.')
+    } finally {
+      setCaptchaWaiting(false)
+      setCaptchaUrl(null)
+      setCaptchaChallengeToken(null)
+      setCaptchaSessionId(null)
+      if (captchaPollRef.current === verifiedCaptchaSessionId) captchaPollRef.current = null
     }
-    void startSpin(token)
+  }
+
+  function handleCaptchaChallengeOpened() {
+    if (captchaSessionId) void waitForCaptchaVerification(captchaSessionId)
   }
 
   async function claimReward(spin: WheelSpin) {
@@ -277,7 +320,7 @@ export function WheelOfFortunePage() {
 
             <div className="mt-2 w-full max-w-sm px-1 text-center">
               <button type="button" onClick={() => void openCaptcha()} disabled={!canSpin || isLoading} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-xs font-black text-[#07120d] shadow-[0_8px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-55">
-                {spinning ? 'Spinning…' : busy ? 'Please wait…' : cooldownRemainingMs > 0 ? <>Next free spin in <span className="font-mono tabular-nums">{formatRemaining(cooldownRemainingMs)}</span></> : 'SPIN THE WHEEL · FREE'}
+                {spinning ? 'Spinning…' : captchaWaiting ? 'Waiting for AdsLab…' : busy ? 'Please wait…' : cooldownRemainingMs > 0 ? <>Next free spin in <span className="font-mono tabular-nums">{formatRemaining(cooldownRemainingMs)}</span></> : 'SPIN THE WHEEL · FREE'}
               </button>
               <p className="mt-2 inline-flex items-center justify-center gap-1.5 text-[10px] text-white/45"><Clock3 size={12} aria-hidden="true" /> One spin every 2 hours</p>
             </div>
@@ -316,7 +359,12 @@ export function WheelOfFortunePage() {
           </WheelCard>
         </div>
 
-        <AdsLabCaptchaModal solveUrl={captchaUrl} onSolved={handleCaptchaReturn} onClose={() => setCaptchaUrl(null)} />
+        <AdsLabCaptchaModal
+          solveUrl={captchaUrl}
+          challengeToken={captchaChallengeToken}
+          onChallengeOpened={handleCaptchaChallengeOpened}
+          onClose={() => { setCaptchaUrl(null); setCaptchaSessionId(null); setCaptchaChallengeToken(null) }}
+        />
 
         <dialog ref={dialogRef} onClose={() => setDialogOpen(false)} aria-labelledby="wheel-result-title" className="w-[min(92vw,420px)] rounded-[24px] border border-emerald-200/20 bg-[#0b1118] p-0 text-white shadow-[0_30px_120px_rgba(0,0,0,0.7)] backdrop:bg-black/75">
           {activeSpin && currentSector && (

@@ -1,5 +1,8 @@
+import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
+import { db } from '@/lib/db'
+import { wheelCaptchaSessions } from '@/lib/db/schema'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 
 export const runtime = 'nodejs'
@@ -7,20 +10,25 @@ export const dynamic = 'force-dynamic'
 
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 const adsLabApiOrigin = 'https://adslab.me'
+const captchaSessionTtlMs = 15 * 60 * 1000
+const maxCaptchaTokenLength = 16_384
+
+type AdsLabCaptchaChallenge = { solveUrl: string; challengeToken: string }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function readSolveUrl(value: unknown) {
+function readCaptchaChallenge(value: unknown): AdsLabCaptchaChallenge | null {
   if (!isRecord(value)) return null
   const nested = isRecord(value.data) ? value.data : value
-  if (typeof nested.solve_url !== 'string') return null
+  if (nested.success !== true && value.success !== true) return null
+  if (typeof nested.solve_url !== 'string' || typeof nested.token !== 'string' || !nested.token || nested.token.length > maxCaptchaTokenLength) return null
 
   try {
     const url = new URL(nested.solve_url)
     if (url.protocol !== 'https:' || !(url.hostname === 'adslab.me' || url.hostname.endsWith('.adslab.me'))) return null
-    return url.toString()
+    return { solveUrl: url.toString(), challengeToken: nested.token }
   } catch {
     return null
   }
@@ -35,21 +43,20 @@ export async function POST(request: NextRequest) {
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
 
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
-  if (!apiKey) {
-    return NextResponse.json({ error: 'AdsLab CAPTCHA is not configured.' }, { status: 503, headers: noStoreHeaders })
+  const postbackSecret = process.env.ADSLAB_POSTBACK_SECRET?.trim()
+  if (!apiKey || !postbackSecret) {
+    return NextResponse.json({ error: 'AdsLab CAPTCHA is not fully configured.' }, { status: 503, headers: noStoreHeaders })
   }
 
+  const captchaSessionId = randomUUID()
   const returnUrl = new URL('/api/wheel/captcha/return', request.url)
-  returnUrl.searchParams.set('parent_origin', new URL(request.url).origin)
-  const placementId = process.env.ADSLAB_PLACEMENT_ID?.trim()
 
   try {
     const response = await fetch(`${adsLabApiOrigin}/api/v1/captcha/init`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
       body: JSON.stringify({
-        ...(placementId ? { placement_id: placementId } : {}),
-        sub_id: account.profile.id,
+        sub_id: captchaSessionId,
         return_url: returnUrl.toString(),
       }),
       cache: 'no-store',
@@ -57,13 +64,26 @@ export async function POST(request: NextRequest) {
     })
 
     const result: unknown = await response.json().catch(() => null)
-    const solveUrl = response.ok ? readSolveUrl(result) : null
-    if (!solveUrl) {
+    const challenge = response.ok ? readCaptchaChallenge(result) : null
+    if (!challenge) {
       console.error('[wheel/captcha] AdsLab could not create a challenge.', { status: response.status })
       return NextResponse.json({ error: 'AdsLab could not start the verification. Please try again.' }, { status: 502, headers: noStoreHeaders })
     }
 
-    return NextResponse.json({ solveUrl }, { headers: noStoreHeaders })
+    const now = new Date()
+    await db.insert(wheelCaptchaSessions).values({
+      id: captchaSessionId,
+      guestId: account.profile.id,
+      status: 'pending',
+      createdAt: now,
+      expiresAt: new Date(now.getTime() + captchaSessionTtlMs),
+    })
+
+    return NextResponse.json({
+      solveUrl: challenge.solveUrl,
+      challengeToken: challenge.challengeToken,
+      captchaSessionId,
+    }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[wheel/captcha] AdsLab initialization failed:', error instanceof Error ? error.name : 'unknown error')
     return NextResponse.json({ error: 'AdsLab verification is temporarily unavailable. Please try again.' }, { status: 503, headers: noStoreHeaders })

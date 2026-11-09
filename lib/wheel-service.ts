@@ -2,7 +2,7 @@ import 'server-only'
 import { randomInt, randomUUID } from 'node:crypto'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { arcadeInventory, arcadeProfiles, earningEvents, guestProfiles, wheelSpins } from '@/lib/db/schema'
+import { arcadeInventory, arcadeProfiles, earningEvents, guestProfiles, wheelCaptchaSessions, wheelSpins } from '@/lib/db/schema'
 import { lockArcadeProfile } from '@/lib/arcade-service'
 import { ARCADE_ENERGY_CAP } from '@/lib/arcade-gameplay'
 import { chooseWheelSector, wheelSectors, WHEEL_COOLDOWN_MS } from '@/lib/wheel-of-fortune'
@@ -11,7 +11,7 @@ export class WheelServiceError extends Error {
   constructor(
     message: string,
     readonly status: number,
-    readonly code: 'cooldown' | 'not_found' | 'energy_full' | 'profile_missing',
+    readonly code: 'cooldown' | 'not_found' | 'energy_full' | 'profile_missing' | 'captcha_required',
     readonly nextAllowedAt?: string,
   ) {
     super(message)
@@ -47,8 +47,22 @@ export async function getWheelState(guestId: string, now = new Date()) {
   }
 }
 
-export async function startWheelSpin(guestId: string, now = new Date()) {
+export async function startWheelSpin(guestId: string, captchaSessionId: string, now = new Date()) {
   return db.transaction(async (transaction) => {
+    const [captchaSession] = await transaction
+      .select({ status: wheelCaptchaSessions.status, expiresAt: wheelCaptchaSessions.expiresAt })
+      .from(wheelCaptchaSessions)
+      .where(and(
+        eq(wheelCaptchaSessions.id, captchaSessionId),
+        eq(wheelCaptchaSessions.guestId, guestId),
+      ))
+      .for('update')
+      .limit(1)
+
+    if (!captchaSession || captchaSession.status !== 'verified' || captchaSession.expiresAt <= now) {
+      throw new WheelServiceError('AdsLab has not confirmed this CAPTCHA yet.', 403, 'captcha_required')
+    }
+
     const [lockedProfile] = await transaction
       .select({ id: guestProfiles.id })
       .from(guestProfiles)
@@ -71,6 +85,18 @@ export async function startWheelSpin(guestId: string, now = new Date()) {
         throw new WheelServiceError('Your next free spin is not ready yet.', 429, 'cooldown', nextAllowedAt.toISOString())
       }
     }
+
+    const [consumedSession] = await transaction
+      .update(wheelCaptchaSessions)
+      .set({ status: 'consumed', consumedAt: now })
+      .where(and(
+        eq(wheelCaptchaSessions.id, captchaSessionId),
+        eq(wheelCaptchaSessions.guestId, guestId),
+        eq(wheelCaptchaSessions.status, 'verified'),
+      ))
+      .returning({ id: wheelCaptchaSessions.id })
+
+    if (!consumedSession) throw new WheelServiceError('AdsLab has not confirmed this CAPTCHA yet.', 403, 'captcha_required')
 
     const sectorIndex = chooseWheelSector(randomInt(0, 10_000))
     const sector = wheelSectors[sectorIndex]

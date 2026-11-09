@@ -3,30 +3,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink, X } from 'lucide-react'
 
-type CaptchaMessage = {
-  type?: unknown
-  token?: unknown
-}
-
 export function AdsLabCaptchaModal({
   solveUrl,
-  onSolved,
+  challengeToken,
+  onChallengeOpened,
   onClose,
 }: {
   solveUrl: string | null
-  onSolved: (token: string | null) => void
+  challengeToken: string | null
+  onChallengeOpened: () => void
   onClose: () => void
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const popupRef = useRef<Window | null>(null)
-  const onSolvedRef = useRef(onSolved)
-  const completedRef = useRef(false)
+  const onChallengeOpenedRef = useRef(onChallengeOpened)
   const [popupBlocked, setPopupBlocked] = useState(false)
   const [popupOpened, setPopupOpened] = useState(false)
-  onSolvedRef.current = onSolved
+  onChallengeOpenedRef.current = onChallengeOpened
 
   useEffect(() => {
-    completedRef.current = false
     setPopupBlocked(false)
     setPopupOpened(false)
     const dialog = dialogRef.current
@@ -35,34 +30,45 @@ export function AdsLabCaptchaModal({
     if (!solveUrl && dialog.open) dialog.close()
     if (!solveUrl && popupRef.current && !popupRef.current.closed) popupRef.current.close()
     if (!solveUrl) popupRef.current = null
-  }, [solveUrl])
-
-  useEffect(() => {
-    function handleMessage(event: MessageEvent<CaptchaMessage>) {
-      if (event.origin !== window.location.origin || event.source !== popupRef.current) return
-      if (!event.data || event.data.type !== 'adslab-captcha-return' || completedRef.current) return
-      completedRef.current = true
-      const token = typeof event.data.token === 'string' && event.data.token.length <= 16_384 ? event.data.token : null
-      popupRef.current?.close()
-      popupRef.current = null
-      onSolvedRef.current(token)
-    }
-
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [])
+  }, [solveUrl, challengeToken])
 
   function openChallenge() {
-    if (!solveUrl) return
-    const popup = window.open(solveUrl, 'adslab-wheel-captcha', 'popup,width=520,height=720')
+    if (!solveUrl || !challengeToken) return
+
+    const popupName = 'adslab-wheel-captcha'
+    const popup = window.open('', popupName, 'popup,width=520,height=720')
     if (!popup) {
       setPopupBlocked(true)
       return
     }
+
     popupRef.current = popup
     setPopupBlocked(false)
-    setPopupOpened(true)
-    popup.focus()
+
+    try {
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = solveUrl
+      form.target = popupName
+      form.hidden = true
+
+      const tokenField = document.createElement('input')
+      tokenField.type = 'hidden'
+      tokenField.name = 'token'
+      tokenField.value = challengeToken
+      form.append(tokenField)
+      document.body.append(form)
+      form.submit()
+      form.remove()
+
+      setPopupOpened(true)
+      popup.focus()
+      onChallengeOpenedRef.current()
+    } catch {
+      popup.close()
+      popupRef.current = null
+      setPopupBlocked(true)
+    }
   }
 
   return (
@@ -76,7 +82,7 @@ export function AdsLabCaptchaModal({
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>
           <h2 id="adslab-captcha-title" className="text-base font-black">Verify to spin</h2>
-          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">AdsLab opens its challenge in a separate window. Keep this window open; the wheel spins after AdsLab verifies your response.</p>
+          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">AdsLab opens its challenge in a separate window. Keep this page open; the wheel spins after AdsLab sends a signed server confirmation.</p>
         </div>
         <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close verification" className="grid size-9 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
           <X aria-hidden="true" />
@@ -88,7 +94,7 @@ export function AdsLabCaptchaModal({
           {popupOpened ? 'Reopen AdsLab challenge' : 'Open AdsLab challenge'}
         </button>
         <p role="status" aria-live="polite" className="mt-3 min-h-5 text-center text-[10px] leading-5 text-white/55">
-          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for AdsLab to confirm the challenge…' : 'Your wheel result is created only after server-side verification.'}
+          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for AdsLab’s signed server confirmation…' : 'The wheel result is created only after server-side verification.'}
         </p>
       </div>
     </dialog>
