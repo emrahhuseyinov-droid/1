@@ -24,6 +24,7 @@ import { ArcadePage } from '@/components/arcade-page'
 import { WheelOfFortunePage } from '@/components/wheel-of-fortune-page'
 import { ArcadeWeeklyLeaderboardPage } from '@/components/arcade-weekly-leaderboard-page'
 import { WithdrawPage } from '@/components/withdraw-page'
+import { ManualFaucetPage } from '@/components/manual-faucet-page'
 import { authClient } from '@/lib/auth-client'
 import type { DashboardOverview } from '@/lib/dashboard-types'
 import { walletAssets, type WalletCoinSymbol } from '@/lib/wallet-assets'
@@ -70,6 +71,7 @@ const publisherNavGroups: NavigationGroup[] = [
   {
     title: 'Earning features',
     links: [
+      { label: 'Manual Faucet', icon: Gift },
       { label: 'Arcade', icon: Gamepad2 },
       { label: 'Wheel of Fortune', icon: Dices },
       { label: 'Weekly Leaderboard', icon: Trophy },
@@ -238,7 +240,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, email, name, i
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>

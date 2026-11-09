@@ -25,12 +25,16 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
   const language = cookieStore.get('pepecasa_language')?.value === 'en' ? 'en' : 'ru'
   const title = translateSiteText(`${section} | pepe.casa`, language)
   const description = language === 'ru'
-    ? section === 'Wheel of Fortune'
-      ? 'Крутите колесо раз в два часа и получайте серверно подтверждённые награды HOMERO и аркады.'
-      : `Откройте раздел «${translateSiteText(section, 'ru')}» в pepe.casa.`
-    : section === 'Wheel of Fortune'
-      ? 'Spin once every two hours for server-verified HOMERO and Arcade rewards.'
-      : `Open your ${section} section on pepe.casa.`
+    ? section === 'Manual Faucet'
+      ? 'Получайте награды PEPE после серверной проверки CAPTCHA AdsLab.'
+      : section === 'Wheel of Fortune'
+        ? 'Крутите колесо раз в два часа и получайте серверно подтверждённые награды HOMERO и аркады.'
+        : `Откройте раздел «${translateSiteText(section, 'ru')}» в pepe.casa.`
+    : section === 'Manual Faucet'
+      ? 'Claim PEPE rewards after server-verified AdsLab CAPTCHA completion.'
+      : section === 'Wheel of Fortune'
+        ? 'Spin once every two hours for server-verified HOMERO and Arcade rewards.'
+        : `Open your ${section} section on pepe.casa.`
 
   return { title, description }
 }
