@@ -11,6 +11,7 @@ import { ARCADE_ENERGY_CAP, ARCADE_HOMERO_COIN_REWARD, type ArcadeBoostCode, typ
 import { PepeRunner } from '@/components/pepe-runner'
 import { HomeroTokenLogo } from '@/components/homero-token-logo'
 import { LocalizedTree } from '@/components/site-language-provider'
+import { initializeAdsLabInterstitial, showAdsLabInterstitial } from '@/lib/adslab-interstitial'
 
 type ArcadeState = {
   energy: number
@@ -67,8 +68,12 @@ function ArcadeCard({ children, className = '' }: { children: ReactNode; classNa
   return <section className={`min-w-0 rounded-[24px] border border-white/[0.08] bg-[#09090B] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] sm:p-5 ${className}`}>{children}</section>
 }
 
-export function ArcadePage() {
+export function ArcadePage({ userId }: { userId: string }) {
   const router = useRouter()
+
+  useEffect(() => {
+    initializeAdsLabInterstitial(userId)
+  }, [userId])
   const { data: state, error: stateError, isLoading, mutate: refreshState } = useSWR<ArcadeState>('/api/arcade/state', getJson, { revalidateOnFocus: true })
   const { trigger: sendHeartbeat } = useSWRMutation('/api/arcade/run/heartbeat', (url, { arg }: { arg: { sessionId: string; active: boolean } }) => postJson(url, arg))
   const [run, setRun] = useState<ActiveRun | null>(null)
@@ -204,6 +209,7 @@ export function ArcadePage() {
 
   const startRun = async () => {
     if (busy || run) return
+    void showAdsLabInterstitial()
     setBusy(true)
     setMessage(null)
     setPendingFinish(null)
