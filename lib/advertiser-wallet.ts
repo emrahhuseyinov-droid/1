@@ -1,0 +1,14 @@
+export const ADVERTISER_WALLET_TRANSFER_IN_SOURCE = 'advertiser_wallet_transfer_in'
+export const ADVERTISER_WALLET_TRANSFER_OUT_SOURCE = 'advertiser_wallet_transfer_out'
+export const ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE = 'advertiser_wallet_campaign_charge'
+export const ADVERTISER_WALLET_CAMPAIGN_REFUND_SOURCE = 'advertiser_wallet_campaign_refund'
+export const ADVERTISER_WALLET_PROMOTION_CHARGE_SOURCE = 'advertiser_wallet_promotion_charge'
+export const ADVERTISER_WALLET_PROMOTION_REFUND_SOURCE = 'advertiser_wallet_promotion_refund'
+
+export const ADVERTISER_WALLET_EVENT_SOURCES = [
+  ADVERTISER_WALLET_TRANSFER_IN_SOURCE,
+  ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE,
+  ADVERTISER_WALLET_CAMPAIGN_REFUND_SOURCE,
+  ADVERTISER_WALLET_PROMOTION_CHARGE_SOURCE,
+  ADVERTISER_WALLET_PROMOTION_REFUND_SOURCE,
+] as const
