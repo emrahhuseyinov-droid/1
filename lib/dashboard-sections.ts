@@ -26,6 +26,7 @@ const sectionsBySlug: Record<string, DashboardSection> = {
   shortlinks: 'Shortlinks',
   offerwall: 'Offerwall',
   arcade: 'Arcade',
+  wheel: 'Wheel of Fortune',
   'wheel-of-fortune': 'Wheel of Fortune',
   'weekly-leaderboard': 'Weekly Leaderboard',
   swap: 'Swap',
