@@ -260,7 +260,7 @@ export function AdsLabPtcTaskList({
       const reward = formatTokenAtomic(result.rewardAtomic ?? activeTask.rewardAtomic)
       const rewardToken = result.tokenSymbol ?? activeTask.tokenSymbol
       const energyNotice = result.energyGranted
-        ? (isRussian ? ' +0,25 энергии Аркады.' : ' +0.25 Arcade energy.')
+        ? (isRussian ? ' +0,02 энергии Аркады.' : ' +0.02 Arcade energy.')
         : result.energy !== undefined && result.dailyEnergyEarned !== undefined && result.dailyEnergyCap !== undefined && result.dailyEnergyEarned >= result.dailyEnergyCap
           ? (isRussian ? ' Достигнут дневной лимит энергии.' : ' Daily energy limit reached.')
           : ''

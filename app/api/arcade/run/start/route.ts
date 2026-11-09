@@ -3,7 +3,7 @@ import { and, eq, gte, lt, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
-import { ARCADE_DAILY_RANKED_RUN_LIMIT, ARCADE_HEARTBEAT_GRACE_MS, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, getArcadeHomeroCoinsRemaining, type ArcadeBoostCode } from '@/lib/arcade-gameplay'
+import { ARCADE_DAILY_RUN_LIMIT, ARCADE_HEARTBEAT_GRACE_MS, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, getArcadeHomeroCoinsRemaining, type ArcadeBoostCode } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, isRecord, lockArcadeProfile, readJsonBody } from '@/lib/arcade-service'
 
 export const runtime = 'nodejs'
@@ -51,21 +51,18 @@ export async function POST(request: NextRequest) {
           .where(eq(arcadeSessions.id, runningSession.id))
       }
 
-      if (mode === 'ranked') {
-        const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-        const nextDayStart = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
-        const [dailyRuns] = await transaction
-          .select({ count: sql<number>`count(*)::int` })
-          .from(arcadeSessions)
-          .where(and(
-            eq(arcadeSessions.guestId, access.guestId),
-            eq(arcadeSessions.mode, 'ranked'),
-            gte(arcadeSessions.startedAt, dayStart),
-            lt(arcadeSessions.startedAt, nextDayStart),
-          ))
-        if ((dailyRuns?.count ?? 0) >= ARCADE_DAILY_RANKED_RUN_LIMIT) return { status: 'daily_limit' as const }
-        if (profile.energy < 1) return { status: 'no_energy' as const, energy: profile.energy }
-      }
+      const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+      const nextDayStart = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+      const [dailyRuns] = await transaction
+        .select({ count: sql<number>`count(*)::int` })
+        .from(arcadeSessions)
+        .where(and(
+          eq(arcadeSessions.guestId, access.guestId),
+          gte(arcadeSessions.startedAt, dayStart),
+          lt(arcadeSessions.startedAt, nextDayStart),
+        ))
+      if ((dailyRuns?.count ?? 0) >= ARCADE_DAILY_RUN_LIMIT) return { status: 'daily_limit' as const }
+      if (mode === 'ranked' && profile.energy < 1) return { status: 'no_energy' as const, energy: profile.energy }
 
       for (const boostCode of selectedBoosts) {
         const [inventoryItem] = await transaction
@@ -141,7 +138,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (result.status === 'already_running') return NextResponse.json({ error: 'Finish or close your active run first.' }, { status: 409, headers: arcadeNoStoreHeaders })
-    if (result.status === 'daily_limit') return NextResponse.json({ error: 'Ranked play is unavailable right now.' }, { status: 409, headers: arcadeNoStoreHeaders })
+    if (result.status === 'daily_limit') return NextResponse.json({ error: 'You have reached the daily limit of 7 arcade runs.' }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'no_energy') return NextResponse.json({ error: 'You need 1 energy to start a run.', energy: result.energy }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'missing_boost') return NextResponse.json({ error: `You do not have a ${result.boostCode} boost.` }, { status: 409, headers: arcadeNoStoreHeaders })
 

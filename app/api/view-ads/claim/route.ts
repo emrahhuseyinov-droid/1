@@ -8,7 +8,7 @@ import { ADVERTISER_WALLET_PROMOTION_CHARGE_SOURCE, ADVERTISER_WALLET_PROMOTION_
 import { calculateUnusedPromotionRefundAtomic } from '@/lib/advertiser-promotion'
 import { getEligibleReward, VIEW_ADS_REWARD_COOLDOWN_MS } from '@/lib/referral-rewards'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
-import { addPtcCommissionToArcadeReserve, grantArcadeEnergy } from '@/lib/arcade-service'
+import { addPtcCommissionToArcadeReserve, grantPtcArcadeEnergy } from '@/lib/arcade-service'
 
 export const runtime = 'nodejs'
 
@@ -157,7 +157,7 @@ async function claimAdvertiserTask(userId: string, clickId: string) {
       .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
       .returning({ id: earningEvents.id })
     if (!credit) throw new Error('Advertiser task credit already exists.')
-    const energy = await grantArcadeEnergy(transaction, userId, now)
+    const energy = await grantPtcArcadeEnergy(transaction, userId, now)
     const reserveFunding = await addPtcCommissionToArcadeReserve(transaction, click.clickId, campaign.commissionPerTaskAtomic, now)
 
     if (remainingTasks === 0 && campaign.promotionFeeAtomic > 0) {
@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
           cooldownUntil: new Date(Date.now() + VIEW_ADS_REWARD_COOLDOWN_MS).toISOString(),
         }
       }
-      const energy = await grantArcadeEnergy(transaction, account.profile.id)
+      const energy = await grantPtcArcadeEnergy(transaction, account.profile.id)
       return {
         status: 'credited' as const,
         rewardAtomic: reward.rewardAtomic,
