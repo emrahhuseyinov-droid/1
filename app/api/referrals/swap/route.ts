@@ -6,7 +6,7 @@ import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, referralCommissions } from '@/lib/db/schema'
 import { ADVERTISER_WALLET_EVENT_SOURCES } from '@/lib/advertiser-wallet'
-import { getDashboardOverview } from '@/lib/dashboard'
+import { getDashboardBalancesAtomic } from '@/lib/dashboard'
 import { calculatePepeSwapFeeAtomic, parsePepeAmountToAtomic } from '@/lib/pepe-amount'
 import {
   getPepeReserveAdminProfile,
@@ -33,13 +33,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'The configured exchange administrator account is not available.' }, { status: 503, headers: noStoreHeaders })
     }
 
-    const [overview, reserve] = await Promise.all([
-      getDashboardOverview(account.profile.id),
+    const [balancesAtomic, reserve] = await Promise.all([
+      getDashboardBalancesAtomic(account.profile.id),
       getPepeReserveSnapshot(reserveAdmin.id),
     ])
 
     return NextResponse.json({
-      balancesAtomic: overview.balancesAtomic,
+      balancesAtomic,
       reserveAvailableAtomic: reserve.availableAtomic,
       initialReserveSeeded: reserve.initialReserveSeeded,
       isReserveAdmin: isPepeReserveAdmin(account.session.user.email, account.session.user.emailVerified),
@@ -206,32 +206,6 @@ export async function POST(request: NextRequest) {
       const availableReserveAtomic = BigInt(reserveBalance?.amount ?? '0')
       if (availableReserveAtomic < BigInt(amountAtomic)) return { status: 'insufficient_reserve' as const }
 
-      const [pepeBalance] = await transaction
-        .select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
-        .from(earningEvents)
-        .where(and(
-          eq(earningEvents.guestId, account.profile.id),
-          eq(earningEvents.tokenSymbol, 'PEPE'),
-          notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
-        ))
-      const currentPepeAtomic = BigInt(pepeBalance?.amount ?? '0')
-      if (currentPepeAtomic + BigInt(amountAtomic) > BigInt(Number.MAX_SAFE_INTEGER)) {
-        return { status: 'balance_limit' as const }
-      }
-
-      const [adminPepeBalance] = await transaction
-        .select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
-        .from(earningEvents)
-        .where(and(
-          eq(earningEvents.guestId, reserveAdmin.id),
-          eq(earningEvents.tokenSymbol, 'PEPE'),
-          notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
-        ))
-      const currentAdminPepeAtomic = BigInt(adminPepeBalance?.amount ?? '0')
-      if (currentAdminPepeAtomic + feeAtomic > BigInt(Number.MAX_SAFE_INTEGER)) {
-        return { status: 'admin_balance_limit' as const }
-      }
-
       const now = new Date()
       await transaction.insert(earningEvents).values([
         {
@@ -297,12 +271,6 @@ export async function POST(request: NextRequest) {
     }
     if (result.status === 'insufficient_reserve') {
       return NextResponse.json({ error: 'The exchange balance does not cover this amount.' }, { status: 409, headers: noStoreHeaders })
-    }
-    if (result.status === 'balance_limit') {
-      return NextResponse.json({ error: 'The resulting PEPE balance would exceed the precise internal ledger limit.' }, { status: 409, headers: noStoreHeaders })
-    }
-    if (result.status === 'admin_balance_limit') {
-      return NextResponse.json({ error: 'The admin PEPE balance would exceed the precise internal ledger limit.' }, { status: 409, headers: noStoreHeaders })
     }
     if (result.status === 'idempotency_conflict') {
       return NextResponse.json({ error: 'This request key was already used for a different swap amount.' }, { status: 409, headers: noStoreHeaders })

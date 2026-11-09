@@ -16,7 +16,7 @@ import { calculatePepeSwapFeeAtomic, formatPepeAtomic, parsePepeAmountToAtomic, 
 import { MARKET_PRICE_REFRESH_INTERVAL_MS } from '@/lib/wallet-assets'
 
 type SwapSnapshot = {
-  balancesAtomic: { HOMERO: number; PEPE: number }
+  balancesAtomic: { HOMERO: string; PEPE: string }
   reserveAvailableAtomic: string
   initialReserveSeeded: boolean
   isReserveAdmin: boolean
@@ -101,15 +101,18 @@ export function SwapPage() {
   const amountAtomic = amount ? parsePepeAmountToAtomic(amount) : null
   const exchangeFeeAtomic = amountAtomic === null ? 0n : calculatePepeSwapFeeAtomic(amountAtomic)
   const pepeReceiveAtomic = amountAtomic === null ? 0n : BigInt(amountAtomic) - exchangeFeeAtomic
-  const currentHomeroAtomic = Math.max(0, snapshot?.balancesAtomic.HOMERO ?? 0)
-  const homeroBalanceAtomic = BigInt(Number.isSafeInteger(currentHomeroAtomic) ? currentHomeroAtomic : 0)
+  const currentHomeroAtomic = BigInt(snapshot?.balancesAtomic.HOMERO ?? '0')
+  const homeroBalanceAtomic = currentHomeroAtomic > 0n ? currentHomeroAtomic : 0n
   const availableReserveAtomic = BigInt(snapshot?.reserveAvailableAtomic ?? '0')
-  const maxSwapAtomic = homeroBalanceAtomic < availableReserveAtomic ? homeroBalanceAtomic : availableReserveAtomic
+  const availableSwapAtomic = homeroBalanceAtomic < availableReserveAtomic ? homeroBalanceAtomic : availableReserveAtomic
+  const maxSwapAtomic = availableSwapAtomic < BigInt(Number.MAX_SAFE_INTEGER)
+    ? availableSwapAtomic
+    : BigInt(Number.MAX_SAFE_INTEGER)
   const maxSwapAmount = maxSwapAtomic > 0n ? formatPepeAtomic(maxSwapAtomic.toString()) : ''
   const retryingSameSwap = swapAttempt?.amount === amount
   const amountIsInvalid = amount.length > 0 && amountAtomic === null
   const topUpAmountIsInvalid = topUpAmount.length > 0 && parsePepeAmountToAtomic(topUpAmount) === null
-  const insufficientHomero = amountAtomic !== null && BigInt(amountAtomic) > BigInt(currentHomeroAtomic)
+  const insufficientHomero = amountAtomic !== null && BigInt(amountAtomic) > homeroBalanceAtomic
   const insufficientReserve = amountAtomic !== null && BigInt(amountAtomic) > availableReserveAtomic
   const canSwap = Boolean(
     snapshot && amountAtomic !== null && amountAtomic > 0 && !isSwapping &&

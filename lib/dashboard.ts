@@ -6,7 +6,25 @@ import { ADVERTISER_WALLET_EVENT_SOURCES, ADVERTISER_WALLET_TRANSFER_OUT_SOURCE 
 import { PEPE_RESERVE_EVENT_SOURCES, PEPE_SWAP_COMMISSION_SOURCE } from '@/lib/pepe-reserve'
 import { getStreakFromDate, getUtcDateKey } from '@/lib/daily-bonus'
 import type { DashboardActivity, DashboardOverview } from '@/lib/dashboard-types'
-import type { WalletBalancesAtomic } from '@/lib/wallet-assets'
+import type { WalletBalancesAtomic, WalletCoinSymbol } from '@/lib/wallet-assets'
+
+export async function getDashboardBalancesAtomic(guestId: string): Promise<Record<WalletCoinSymbol, string>> {
+  const [balanceRows, commissionTotal] = await Promise.all([
+    db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
+      .from(earningEvents)
+      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES])))
+      .groupBy(earningEvents.tokenSymbol),
+    db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+      .from(referralCommissions)
+      .where(eq(referralCommissions.referrerId, guestId)),
+  ])
+
+  const balancesAtomic: Record<WalletCoinSymbol, string> = { HOMERO: '0', PEPE: '0' }
+  for (const row of balanceRows) balancesAtomic[row.tokenSymbol] = row.amount
+  balancesAtomic.HOMERO = (BigInt(balancesAtomic.HOMERO) + BigInt(commissionTotal[0]?.amount ?? '0')).toString()
+
+  return balancesAtomic
+}
 
 export async function getDashboardOverview(guestId: string): Promise<DashboardOverview> {
   const [balanceRows, commissionTotal, earningRows, commissionRows, dailyRows] = await Promise.all([
