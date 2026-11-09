@@ -209,7 +209,7 @@ function getIconUrl(value: unknown): string | null {
   }
 }
 
-type AdsLabTaskCategory = 'ptc' | 'all'
+type AdsLabTaskCategory = 'ptc' | 'shortlinks' | 'all'
 type AdsLabTaskPayload = { tasks: unknown[]; pepeUsdPrice: string; ipAddress: string }
 
 async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category: AdsLabTaskCategory): Promise<AdsLabTaskPayload> {
@@ -309,7 +309,7 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
 }
 
 export async function getAdsLabPtcTasks(headers: Headers, userId: string): Promise<AdsLabPtcFeed> {
-  const { tasks: taskPayload, pepeUsdPrice, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'all')
+  const { tasks: taskPayload, pepeUsdPrice, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'ptc')
   const tasks = new Map<string, AdsLabPtcTask>()
 
   for (const rawTask of taskPayload) {
@@ -347,15 +347,14 @@ export async function getAdsLabPtcTasks(headers: Headers, userId: string): Promi
 }
 
 export async function getAdsLabShortlinkTasks(headers: Headers, userId: string): Promise<AdsLabPtcFeed> {
-  const { tasks: taskPayload, pepeUsdPrice, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'all')
-  const loadedFromAllCategory = true
+  const { tasks: taskPayload, pepeUsdPrice, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'shortlinks')
   const tasks = new Map<string, AdsLabPtcTask>()
 
   for (const rawTask of taskPayload) {
     if (!isRecord(rawTask)) continue
 
     const taskType = readString(rawTask.type, 40)?.toLowerCase()
-    if ((loadedFromAllCategory && !taskType) || (taskType && !['shortlink', 'shortlinks'].includes(taskType))) continue
+    if (taskType && !['shortlink', 'shortlinks'].includes(taskType)) continue
 
     const title = readString(rawTask.title, 160) ?? readString(rawTask.name, 160)
     const targetUrl = normalizeTaskUrl(rawTask.url)
