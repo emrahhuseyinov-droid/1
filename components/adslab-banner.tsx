@@ -9,6 +9,7 @@ type AdsLabBannerProps = {
   container: string
   alignment?: 'center' | 'right'
   format?: 'compact' | 'medium-rectangle' | 'large-rectangle'
+  onClick?: () => void
 }
 
 declare global {
@@ -18,7 +19,7 @@ declare global {
   }
 }
 
-export function AdsLabBanner({ id, container: containerId, alignment = 'right', format = 'compact' }: AdsLabBannerProps) {
+export function AdsLabBanner({ id, container: containerId, alignment = 'right', format = 'compact', onClick }: AdsLabBannerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export function AdsLabBanner({ id, container: containerId, alignment = 'right', 
       : 'h-[50px] w-[320px] max-w-full overflow-hidden'
 
   return (
-    <aside aria-label="Advertisement" className={alignmentClass}>
+    <aside aria-label="Advertisement" className={alignmentClass} onClick={onClick}>
       <div ref={containerRef} id={containerId} className={sizeClass} />
     </aside>
   )
