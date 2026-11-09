@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const clickId = randomUUID()
-    const providerFeed = await getAdsLabPtcTasks(request.headers, clickId)
+    const providerFeed = await getAdsLabPtcTasks(request.headers, account.profile.id)
     const task = providerFeed.tasks.find((candidate) => candidate.key === taskInput.taskKey)
     if (!task) return NextResponse.json({ error: 'This task is no longer available.' }, { status: 409, headers: noStoreHeaders })
 
