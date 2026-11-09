@@ -12,7 +12,7 @@ const SHARE_BPS_SCALE = 10_000n
 const TOKEN_ATOMIC_PER_UNIT = 100_000_000n
 const USD_SCALE = 10n ** 18n
 const MAX_SAFE_ATOMIC = BigInt(Number.MAX_SAFE_INTEGER)
-export const ADSLAB_PTC_PLACEMENT_ID = 'task-cTL7EAUq5qkF'
+export const ADSLAB_PTC_PLACEMENT_ID = process.env.ADSLAB_PLACEMENT_ID?.trim() ?? ''
 const ADSLAB_HOST = 'adslab.me'
 
 type UnknownRecord = Record<string, unknown>
@@ -213,6 +213,10 @@ type AdsLabTaskCategory = 'ptc' | 'all'
 type AdsLabTaskPayload = { tasks: unknown[]; pepeUsdPrice: string; ipAddress: string }
 
 async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category: AdsLabTaskCategory): Promise<AdsLabTaskPayload> {
+  if (!ADSLAB_PTC_PLACEMENT_ID) {
+    throw new AdsLabPtcError('AdsLab placement ID is not configured.', 503, { stage: 'configuration_missing' })
+  }
+
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
   if (!apiKey) {
     throw new AdsLabPtcError('AdsLab publisher API key is not configured.', 503, { stage: 'configuration_missing' })
