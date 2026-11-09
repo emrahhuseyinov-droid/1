@@ -1,9 +1,10 @@
 export type ArcadeBoostCode = 'jetpack' | 'shield'
 export type ArcadeObstacleKind = 'candle' | 'cactus'
 
-export const ARCADE_ENERGY_CAP = 15
+export const ARCADE_ENERGY_CAP = 10
 export const ARCADE_DAILY_ENERGY_EARNED_CAP = 15
-export const ARCADE_DAILY_RANKED_RUN_LIMIT = 15
+export const ARCADE_DAILY_RUN_LIMIT = 7
+export const ARCADE_PTC_ENERGY_REWARD = 0.02
 export const ARCADE_VIEW_AD_ENERGY_REWARD = 0.25
 export const ARCADE_MAX_JUMPS = 100_000
 export const ARCADE_HEARTBEAT_GRACE_MS = 12_000
@@ -284,6 +285,22 @@ export function stepArcadeRunner(state: ArcadeRunnerState, jumpPressed: boolean)
   state.homeroCoins = state.homeroCoins.filter((coin) => coin.x + coin.width > -12)
 
   return { jumped, collision }
+}
+
+export function getArcadeMaximumDistanceM(elapsedMs: number, boostCodes: ArcadeBoostCode[] = []) {
+  if (!Number.isSafeInteger(elapsedMs) || elapsedMs < 0) return 0
+
+  const targetFrame = Math.floor(elapsedMs * ARCADE_RUNNER_FPS / 1000)
+  const distanceMultiplier = boostCodes.includes('jetpack') ? 1.25 : 1
+  let distanceM = 0
+
+  for (let frameCount = 1; frameCount <= targetFrame; frameCount += 1) {
+    const difficultyLevel = getArcadeDifficultyLevel(distanceM)
+    const speed = RUNNER_START_SPEED + frameCount * RUNNER_SPEED_STEP + difficultyLevel * RUNNER_DIFFICULTY_SPEED_STEP
+    distanceM += speed * RUNNER_DISTANCE_PER_PIXEL * distanceMultiplier
+  }
+
+  return Math.floor(distanceM)
 }
 
 export function simulateArcadeRun(seed: number, jumpTimes: number[], boostCodes: ArcadeBoostCode[], elapsedMs: number, extraLives = 0, homeroCoinsEnabled = false, homeroCoinRewardLimit = ARCADE_HOMERO_COIN_MAX_REWARDS) {

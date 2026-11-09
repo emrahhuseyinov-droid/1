@@ -47,6 +47,7 @@ export async function getBannerPromoState(guestId: string): Promise<BannerPromoS
         shownAt: bannerPromoEvents.shownAt,
         clickedAt: bannerPromoEvents.clickedAt,
         dismissedAt: bannerPromoEvents.dismissedAt,
+        createdAt: bannerPromoEvents.createdAt,
       })
       .from(bannerPromoEvents)
       .where(and(eq(bannerPromoEvents.guestId, guestId), eq(bannerPromoEvents.day, day)))
@@ -62,18 +63,17 @@ export async function getBannerPromoState(guestId: string): Promise<BannerPromoS
         .filter((event) => event.sequenceNumber < scheduled.sequenceNumber)
         .at(-1)
       const previousActionAt = previous?.clickedAt ?? previous?.dismissedAt ?? previous?.shownAt
+      const intervalAnchor = previousActionAt ?? scheduled.createdAt
+      const expectedNextAt = new Date(intervalAnchor.getTime() + PROMO_INTERVAL_MS)
       let scheduledAt = scheduled.scheduledAt
 
-      if (previousActionAt) {
-        const earliestNextAt = new Date(previousActionAt.getTime() + PROMO_INTERVAL_MS)
-        if (scheduledAt.getTime() < earliestNextAt.getTime()) {
-          const [rescheduled] = await transaction
-            .update(bannerPromoEvents)
-            .set({ scheduledAt: earliestNextAt })
-            .where(and(eq(bannerPromoEvents.id, scheduled.id), eq(bannerPromoEvents.status, 'scheduled')))
-            .returning({ scheduledAt: bannerPromoEvents.scheduledAt })
-          scheduledAt = rescheduled?.scheduledAt ?? earliestNextAt
-        }
+      if (scheduledAt.getTime() !== expectedNextAt.getTime()) {
+        const [rescheduled] = await transaction
+          .update(bannerPromoEvents)
+          .set({ scheduledAt: expectedNextAt })
+          .where(and(eq(bannerPromoEvents.id, scheduled.id), eq(bannerPromoEvents.status, 'scheduled')))
+          .returning({ scheduledAt: bannerPromoEvents.scheduledAt })
+        scheduledAt = rescheduled?.scheduledAt ?? expectedNextAt
       }
 
       if (scheduledAt.getTime() > now.getTime()) {

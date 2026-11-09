@@ -14,8 +14,10 @@ const rules = [
     tone: 'text-amber-200 bg-amber-300/10 ring-amber-200/15',
     points: [
       'Claim one Daily Bonus per UTC calendar day. HOMERO rewards follow the seven-day schedule shown in your account; missing a UTC day resets the streak.',
-      'A successful Daily Bonus also adds up to 1 Arcade energy. Energy cannot exceed 15, so the amount credited may be lower when you are close to the cap or already full.',
+      'A successful Daily Bonus also adds up to 1 Arcade energy. Energy cannot exceed 10.00, so the amount credited may be lower when you are close to the cap or already full.',
+      'Arcade is limited to 7 total Ranked and FREE runs per UTC calendar day.',
       'Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.',
+      'Verified PTC tasks also add 0.02 Arcade energy when storage and the daily energy allowance are available.',
       'AdsLab task requirements and PEPE rewards are shown before you start. Rewards are credited only after verification.',
       'Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.',
     ],

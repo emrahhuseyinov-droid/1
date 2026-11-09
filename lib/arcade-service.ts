@@ -18,7 +18,7 @@ import {
 } from '@/lib/db/schema'
 import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
-import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RANKED_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_SHOP, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrizeAtomic } from '@/lib/arcade-gameplay'
+import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrizeAtomic } from '@/lib/arcade-gameplay'
 
 export const arcadeNoStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 export type ArcadeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -53,7 +53,7 @@ export function isUuid(value: unknown): value is string {
 }
 
 export async function lockArcadeProfile(transaction: ArcadeTransaction, guestId: string) {
-  await transaction.insert(arcadeProfiles).values({ guestId }).onConflictDoNothing({ target: arcadeProfiles.guestId })
+  await transaction.insert(arcadeProfiles).values({ guestId, energy: 0 }).onConflictDoNothing({ target: arcadeProfiles.guestId })
   const [profile] = await transaction
     .select()
     .from(arcadeProfiles)
@@ -76,12 +76,12 @@ export async function getPublisherPepeBalance(transaction: ArcadeTransaction, gu
   return Number(balance?.amount ?? '0')
 }
 
-export async function grantArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date()) {
+export async function grantArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date(), energyReward = ARCADE_VIEW_AD_ENERGY_REWARD) {
   const profile = await lockArcadeProfile(transaction, guestId)
   const today = now.toISOString().slice(0, 10)
   const dailyEnergyEarned = profile.dailyEnergyDay === today ? profile.dailyEnergyEarned : 0
   const energyToGrant = Math.max(0, Math.round(Math.min(
-    ARCADE_VIEW_AD_ENERGY_REWARD,
+    energyReward,
     ARCADE_ENERGY_CAP - profile.energy,
     ARCADE_DAILY_ENERGY_EARNED_CAP - dailyEnergyEarned,
   ) * 100) / 100)
@@ -109,6 +109,10 @@ export async function grantArcadeEnergy(transaction: ArcadeTransaction, guestId:
     dailyEnergyEarned: nextDailyEnergyEarned,
     dailyEnergyCap: ARCADE_DAILY_ENERGY_EARNED_CAP,
   }
+}
+
+export async function grantPtcArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date()) {
+  return grantArcadeEnergy(transaction, guestId, now, ARCADE_PTC_ENERGY_REWARD)
 }
 
 async function lockArcadeReserve(transaction: ArcadeTransaction) {
@@ -476,7 +480,6 @@ export async function getArcadeState(guestId: string) {
       .from(arcadeSessions)
       .where(and(
         eq(arcadeSessions.guestId, guestId),
-        eq(arcadeSessions.mode, 'ranked'),
         gte(arcadeSessions.startedAt, dayStart),
         lt(arcadeSessions.startedAt, nextDayStart),
       )),
@@ -487,7 +490,9 @@ export async function getArcadeState(guestId: string) {
     energyCap: ARCADE_ENERGY_CAP,
     dailyEnergyEarned: profile[0]?.dailyEnergyDay === today ? profile[0].dailyEnergyEarned : 0,
     dailyEnergyCap: ARCADE_DAILY_ENERGY_EARNED_CAP,
-    rankedRunsAvailable: (dailyRuns[0]?.count ?? 0) < ARCADE_DAILY_RANKED_RUN_LIMIT,
+    dailyRunsToday: dailyRuns[0]?.count ?? 0,
+    dailyRunLimit: ARCADE_DAILY_RUN_LIMIT,
+    dailyRunsAvailable: (dailyRuns[0]?.count ?? 0) < ARCADE_DAILY_RUN_LIMIT,
     bestDistanceM: profile[0]?.bestDistanceM ?? 0,
     totalRuns: profile[0]?.totalRuns ?? 0,
     pepeBalanceAtomic: balance[0]?.amount ?? '0',

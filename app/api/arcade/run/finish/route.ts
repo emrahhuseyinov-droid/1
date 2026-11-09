@@ -3,7 +3,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
-import { ARCADE_HEARTBEAT_GRACE_MS, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, ARCADE_HOMERO_COIN_REWARD_ATOMIC, ARCADE_MAX_JUMPS, getArcadeHomeroCoinsRemaining, simulateArcadeRun } from '@/lib/arcade-gameplay'
+import { ARCADE_HEARTBEAT_GRACE_MS, getArcadeMaximumDistanceM, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, ARCADE_HOMERO_COIN_REWARD_ATOMIC, ARCADE_MAX_JUMPS, getArcadeHomeroCoinsRemaining, simulateArcadeRun } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, createMilestoneClaims, isRecord, isUuid, lockArcadeProfile, readJsonBody, settlePendingArcadeRewards } from '@/lib/arcade-service'
 
 export const runtime = 'nodejs'
@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
         : [undefined]
       const homeroCoinsRemaining = getArcadeHomeroCoinsRemaining(coinEarnings?.rewardAtomic ?? 0)
       const score = simulateArcadeRun(session.runSeed, jumpTimes, session.boostCodes, elapsedMs, session.extraLives, canEarnHomeroCoins && homeroCoinsRemaining > 0, homeroCoinsRemaining)
-      if (!score.valid || score.distanceM < 0) {
+      const maximumDistanceM = getArcadeMaximumDistanceM(elapsedMs, session.boostCodes)
+      if (!score.valid || score.distanceM < 0 || score.distanceM > maximumDistanceM) {
         await transaction.update(arcadeSessions).set({ status: 'invalid', finishedAt: now }).where(eq(arcadeSessions.id, session.id))
         return { status: 'invalid' as const }
       }

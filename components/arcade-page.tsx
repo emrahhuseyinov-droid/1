@@ -17,7 +17,9 @@ type ArcadeState = {
   energyCap: number
   dailyEnergyEarned: number
   dailyEnergyCap: number
-  rankedRunsAvailable: boolean
+  dailyRunsToday: number
+  dailyRunLimit: number
+  dailyRunsAvailable: boolean
   bestDistanceM: number
   totalRuns: number
   reserveBalanceAtomic: string
@@ -251,7 +253,7 @@ export function ArcadePage() {
   const energyBalanceLabel = state ? formatEnergy(energyValue) : isLoading ? '—' : '0'
   const missingEnergy = Math.max(0, 1 - energyValue)
   const missingEnergyLabel = missingEnergy === 1 ? 'Need 1 energy' : `Need ${formatEnergy(missingEnergy)} more energy`
-  const startRunLabel = mode === 'casual' ? 'Start free run' : state?.rankedRunsAvailable === false ? 'Unavailable right now' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
+  const startRunLabel = state?.dailyRunsAvailable === false ? 'Daily limit reached' : mode === 'casual' ? 'Start free run' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
   const showLives = mode === 'ranked'
   const lifeCount = run ? runLives : state?.inventory.life ?? 0
 
@@ -347,7 +349,7 @@ export function ArcadePage() {
                 {run ? (
                   <button type="button" onPointerDown={(event) => { if (event.button === 0) requestJump() }} onClick={(event) => { if (event.detail === 0) requestJump() }} disabled={busy || isPaused} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] touch-manipulation transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-wait disabled:opacity-60"><Zap size={15} />{busy ? 'Saving run…' : isPaused ? 'Paused' : 'JUMP'}</button>
                 ) : (
-                  <button type="button" onClick={() => void startRun()} disabled={busy || (mode === 'ranked' && (energyValue < 1 || state?.rankedRunsAvailable === false)) || isLoading} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"><Gamepad2 size={15} />{busy ? 'Starting…' : startRunLabel}</button>
+                  <button type="button" onClick={() => void startRun()} disabled={busy || state?.dailyRunsAvailable === false || (mode === 'ranked' && energyValue < 1) || isLoading} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"><Gamepad2 size={15} />{busy ? 'Starting…' : startRunLabel}</button>
                 )}
               </div>
               {pendingFinish && <button type="button" onClick={() => void finishRun(pendingFinish.activeRun, pendingFinish.jumpTimes)} disabled={busy || isPaused} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-amber-300/25 bg-amber-300/[0.07] px-4 py-2 text-[10px] font-extrabold text-amber-100 transition hover:bg-amber-300/[0.12] disabled:cursor-not-allowed disabled:opacity-50">Retry verified run save</button>}
@@ -365,7 +367,8 @@ export function ArcadePage() {
                 <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/45">Arcade energy</p><BatteryCharging size={14} className="text-amber-200" /></div>
                 <p className="mt-1 font-mono text-xl font-black tabular-nums text-white">{energyBalanceLabel}<span className="ml-1 text-[10px] font-bold text-white/40">/ {formatEnergy(energyCap)}</span></p>
                 <div role="progressbar" aria-label="Arcade energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-300 transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>
-                <p className="mt-1 text-[8px] text-white/40">+0.25 per completed ad · 1 per Ranked run</p>
+                <p className="mt-1 text-[8px] text-white/40">+0.02 per PTC task · +1 Daily Bonus · 1 per Ranked run</p>
+                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Arcade runs today</span><span className="font-mono font-bold tabular-nums">{state?.dailyRunsToday ?? 0} / {state?.dailyRunLimit ?? 7}</span></p>
                 <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Ad energy today</span><span className="font-mono font-bold tabular-nums">{formatEnergy(state?.dailyEnergyEarned ?? 0)} / {formatEnergy(state?.dailyEnergyCap ?? 15)}</span></p>
               </div>
             </div>
