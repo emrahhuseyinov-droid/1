@@ -169,7 +169,13 @@ function normalizeTaskUrl(value: unknown): string | null {
       || url.password
       || url.port
     ) return null
-    return candidate
+
+    const placementSegment = encodeURIComponent(ADSLAB_PTC_PLACEMENT_ID)
+    url.pathname = url.pathname.replace(
+      /(^|\/)(?:\[placement\]|%5Bplacement%5D)(?=\/|$)/gi,
+      (_, prefix: string) => `${prefix}${placementSegment}`,
+    )
+    return url.toString()
   } catch {
     return null
   }
@@ -191,6 +197,10 @@ function getTaskKey(
 ): string {
   const url = new URL(targetUrl)
   url.hash = ''
+  const placementSegment = encodeURIComponent(ADSLAB_PTC_PLACEMENT_ID)
+  url.pathname = url.pathname.split('/').map((segment) => (
+    segment === placementSegment ? '[placement]' : segment
+  )).join('/')
 
   for (const [name] of url.searchParams) {
     if (/^(uid|user|user_id|userid|ip|user_ip|subid)$/i.test(name)) {
