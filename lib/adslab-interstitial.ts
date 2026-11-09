@@ -8,6 +8,7 @@ declare global {
     ADSLAB_INT?: string
     ADSLAB_USER?: string
     adslabShowInterstitial?: () => unknown
+    showint_adslab?: () => unknown
   }
 }
 
@@ -27,10 +28,14 @@ export function initializeAdsLabInterstitial(userId: string) {
 }
 
 export async function showAdsLabInterstitial() {
-  if (typeof window === 'undefined' || typeof window.adslabShowInterstitial !== 'function') return
+  if (typeof window === 'undefined') return
 
   try {
-    await window.adslabShowInterstitial()
+    if (typeof window.adslabShowInterstitial === 'function') {
+      await window.adslabShowInterstitial()
+    } else if (typeof window.showint_adslab === 'function') {
+      await window.showint_adslab()
+    }
   } catch (error) {
     console.error('[adslab-interstitial] Interstitial request failed.', {
       name: error instanceof Error ? error.name : 'UnknownError',
