@@ -304,7 +304,24 @@ export async function GET(request: NextRequest) {
           .limit(1)
         userId = profileByAuthId?.id ?? null
       }
-      if (!userId) return 'unknown_user' as const
+
+      const pendingClickLookupId = userId ?? uid
+      const [pendingClickOwner] = ptcTypeRequested && uuidPattern.test(pendingClickLookupId)
+        ? await transaction
+          .select({ userId: ptcClicks.userId })
+          .from(ptcClicks)
+          .where(and(
+            eq(ptcClicks.userId, pendingClickLookupId),
+            eq(ptcClicks.status, 'pending'),
+            like(ptcClicks.taskId, `${ADSLAB_PTC_TASK_PREFIX}%`),
+          ))
+          .orderBy(asc(ptcClicks.createdAt))
+          .for('update')
+          .limit(1)
+        : []
+      const hasTrustedPtcClickIdentity = Boolean(clickIdentity || pendingClickOwner)
+      userId = userId ?? pendingClickOwner?.userId ?? null
+      if (!userId) return 'unknown_user_identity' as const
 
       const [profile] = await transaction
         .select({ id: guestProfiles.id })
@@ -312,7 +329,7 @@ export async function GET(request: NextRequest) {
         .where(eq(guestProfiles.id, userId))
         .for('update')
         .limit(1)
-      if (!profile) return 'unknown_user' as const
+      if (!profile && !hasTrustedPtcClickIdentity) return 'unknown_user_profile' as const
 
       const [existingTransaction] = await transaction
         .select({ userId: ptcClicks.userId })
