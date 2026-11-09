@@ -38,7 +38,7 @@ export function BannerRewardPromo() {
     ? {
         label: 'Бонус AdsLab',
         title: 'Заберите 15 PEPE',
-        schedule: 'До 5 раз в день · каждые 2 часа',
+        schedule: 'До 5 раз в день · каждые 30 секунд',
         adLabel: 'Рекламный баннер',
         claim: 'Забрать награду',
         reward: '+15 PEPE сразу',
@@ -49,7 +49,7 @@ export function BannerRewardPromo() {
     : {
         label: 'AdsLab bonus',
         title: 'Claim 15 PEPE',
-        schedule: 'Up to 5 times a day · every 2 hours',
+        schedule: 'Up to 5 times a day · every 30 seconds',
         adLabel: 'Sponsored banner',
         claim: 'Claim reward',
         reward: '+15 PEPE instantly',
