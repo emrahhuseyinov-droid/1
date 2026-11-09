@@ -44,9 +44,11 @@ export function AdsLabBanner({ id, container: containerId, alignment = 'right', 
   const alignmentClass = alignment === 'right'
     ? 'flex w-full shrink-0 justify-center lg:w-[320px] lg:justify-end'
     : 'flex w-full justify-center'
-  const sizeClass = format === 'medium-rectangle'
-    ? 'h-[250px] w-[300px] max-w-full overflow-hidden'
-    : 'h-[50px] w-[320px] max-w-full overflow-hidden'
+  const sizeClass = format === 'large-rectangle'
+    ? 'h-[280px] w-[336px] max-w-full overflow-hidden'
+    : format === 'medium-rectangle'
+      ? 'h-[250px] w-[300px] max-w-full overflow-hidden'
+      : 'h-[50px] w-[320px] max-w-full overflow-hidden'
 
   return (
     <aside aria-label="Advertisement" className={alignmentClass}>
