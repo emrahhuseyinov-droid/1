@@ -64,11 +64,11 @@ function isLoopbackIp(value: string): boolean {
   return normalized === '::1' || normalized.startsWith('127.') || normalized.startsWith('::ffff:127.')
 }
 
-function getClientIp(headers: Headers): string {
-  const forwardedIps = headers.get('x-forwarded-for')?.split(',') ?? []
+function getClientIp(headers: Headers): string | null {
   const candidates = [
     headers.get('cf-connecting-ip'),
-    ...forwardedIps,
+    ...(headers.get('x-vercel-forwarded-for')?.split(',') ?? []),
+    ...(headers.get('x-forwarded-for')?.split(',') ?? []),
     headers.get('x-real-ip'),
   ]
 
@@ -77,7 +77,7 @@ function getClientIp(headers: Headers): string {
     if (ipAddress && isIP(ipAddress) && !isLoopbackIp(ipAddress)) return ipAddress
   }
 
-  return '1.1.1.1'
+  return null
 }
 
 function getCountryCode(headers: Headers): string {
