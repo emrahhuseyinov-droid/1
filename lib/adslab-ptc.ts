@@ -67,9 +67,9 @@ function isLoopbackIp(value: string): boolean {
 function getClientIp(headers: Headers): string | null {
   const candidates = [
     headers.get('cf-connecting-ip'),
-    ...(headers.get('x-vercel-forwarded-for')?.split(',') ?? []),
     ...(headers.get('x-forwarded-for')?.split(',') ?? []),
     headers.get('x-real-ip'),
+    ...(headers.get('x-vercel-forwarded-for')?.split(',') ?? []),
   ]
 
   for (const candidate of candidates) {
