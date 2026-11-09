@@ -125,7 +125,7 @@ export function AdsLabCaptchaModal({
       onClose={onClose}
       aria-labelledby="adslab-captcha-title"
       aria-describedby="adslab-captcha-description"
-      className="w-[min(94vw,480px)] max-h-[90dvh] overflow-hidden rounded-[24px] border border-emerald-200/20 bg-[#0b1118] p-0 text-white shadow-[0_30px_120px_rgba(0,0,0,0.7)] backdrop:bg-black/75"
+      className="adslab-captcha-dialog w-[min(94vw,480px)] max-h-[90dvh] overflow-hidden rounded-[24px] border border-emerald-200/20 bg-[#0b1118] p-0 text-white shadow-[0_30px_120px_rgba(0,0,0,0.7)] backdrop:bg-black/75"
     >
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>

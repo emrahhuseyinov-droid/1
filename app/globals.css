@@ -260,6 +260,19 @@
   }
 }
 
+dialog.adslab-captcha-dialog[open] {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+
+@media (min-width: 768px) {
+  dialog.adslab-captcha-dialog[open] {
+    left: calc(50vw + 143px);
+  }
+}
+
 @keyframes banner-reward-enter {
   0% {
     opacity: 0;
