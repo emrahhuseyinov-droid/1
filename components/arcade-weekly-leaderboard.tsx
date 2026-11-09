@@ -40,7 +40,7 @@ function formatWeekStart(periodStart?: string, language: 'en' | 'ru' = 'en') {
   return new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', {
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC',
+    timeZone: 'Asia/Baku',
   }).format(weekStart)
 }
 
@@ -84,7 +84,7 @@ function WeeklyResetCountdown({ periodEnd }: { periodEnd?: string }) {
         <Clock3 aria-hidden="true" size={18} />
         <h3 id="weekly-reset-title" className="text-base font-extrabold">Weekly reset countdown</h3>
       </div>
-      <p id="weekly-reset-label" className="mt-2 text-sm text-white/75">Time until standings reset · UTC</p>
+      <p id="weekly-reset-label" className="mt-2 text-sm text-white/75">Time until standings reset · Mondays at 17:38 Baku time</p>
       <div role="timer" aria-live="off" aria-labelledby="weekly-reset-label" className="relative z-10 mt-4 grid grid-cols-4 gap-2">
         {countdownValues.map((value, index) => (
           <div key={countdownLabels[index]} className={`min-w-0 rounded-2xl border bg-gradient-to-b px-2 py-3 text-center shadow-inner shadow-black/20 ${countdownTileStyles[index]}`}>
@@ -174,7 +174,7 @@ export function ArcadeWeeklyLeaderboard({
 
             <div className="flex shrink-0 items-center gap-2">
               <span className="inline-flex min-h-10 items-center rounded-full border border-violet-200/25 bg-gradient-to-r from-violet-300/15 to-sky-300/10 px-3 font-mono text-xs font-bold text-violet-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                UTC · {formatWeekStart(data?.periodStart, language)}
+                {language === 'ru' ? 'Баку' : 'Baku'} · {formatWeekStart(data?.periodStart, language)}
               </span>
               <button
                 type="button"

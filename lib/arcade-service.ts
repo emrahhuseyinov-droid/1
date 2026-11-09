@@ -1,5 +1,6 @@
 import 'server-only'
 import { randomUUID } from 'node:crypto'
+import { getArcadeDayKey, getArcadeDayWindow, getArcadeWeekWindow } from '@/lib/arcade-time'
 import { and, asc, desc, eq, gte, inArray, lt, notInArray, sql } from 'drizzle-orm'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
@@ -78,7 +79,7 @@ export async function getPublisherPepeBalance(transaction: ArcadeTransaction, gu
 
 export async function grantArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date(), energyReward = ARCADE_VIEW_AD_ENERGY_REWARD) {
   const profile = await lockArcadeProfile(transaction, guestId)
-  const today = now.toISOString().slice(0, 10)
+  const today = getArcadeDayKey(now)
   const dailyEnergyEarned = profile.dailyEnergyDay === today ? profile.dailyEnergyEarned : 0
   const energyToGrant = Math.max(0, Math.round(Math.min(
     energyReward,
@@ -236,14 +237,6 @@ export async function createMilestoneClaims(
   return createdCount
 }
 
-export function getUtcWeekWindow(date = new Date()) {
-  const current = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
-  const daysSinceMonday = (current.getUTCDay() + 6) % 7
-  current.setUTCDate(current.getUTCDate() - daysSinceMonday)
-  const next = new Date(current)
-  next.setUTCDate(next.getUTCDate() + 7)
-  return { start: current, end: next, periodStart: current.toISOString().slice(0, 10) }
-}
 
 async function getLeaderboardRows(transaction: ArcadeTransaction, start: Date, end: Date) {
   const rankedRuns = transaction
@@ -411,10 +404,9 @@ export async function settlePendingWeeklyAwards(
 }
 
 export async function settlePreviousWeekAwards(now = new Date()) {
-  const currentWeek = getUtcWeekWindow(now)
-  const previousStart = new Date(currentWeek.start)
-  previousStart.setUTCDate(previousStart.getUTCDate() - 7)
-  const previousPeriodStart = previousStart.toISOString().slice(0, 10)
+  const currentWeek = getArcadeWeekWindow(now)
+  const previousWeek = getArcadeWeekWindow(new Date(currentWeek.start.getTime() - 1))
+  const { start: previousStart, periodStart: previousPeriodStart } = previousWeek
   const reserveAdmin = await getPepeReserveAdminProfile()
 
   return db.transaction(async (transaction) => {
@@ -461,9 +453,8 @@ export async function settlePreviousWeekAwards(now = new Date()) {
 
 export async function getArcadeState(guestId: string) {
   const now = new Date()
-  const today = now.toISOString().slice(0, 10)
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-  const nextDayStart = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+  const today = getArcadeDayKey(now)
+  const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
   const [profile, inventory, claims, balance, reserve, dailyRuns] = await Promise.all([
     db.select().from(arcadeProfiles).where(eq(arcadeProfiles.guestId, guestId)).limit(1),
     db.select().from(arcadeInventory).where(eq(arcadeInventory.guestId, guestId)),

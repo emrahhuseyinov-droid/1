@@ -285,7 +285,17 @@ export async function GET(request: NextRequest) {
         .limit(1)
 
       const directClickId = clickIdentity ? uid : null
-      let userId = clickIdentity?.userId ?? (uidIsUuid ? uid : null)
+      let userId = clickIdentity?.userId ?? null
+
+      if (!userId && uidIsUuid) {
+        const [profileById] = await transaction
+          .select({ id: guestProfiles.id })
+          .from(guestProfiles)
+          .where(eq(guestProfiles.id, uid))
+          .limit(1)
+        userId = profileById?.id ?? null
+      }
+
       if (!userId) {
         const [profileByAuthId] = await transaction
           .select({ id: guestProfiles.id })
@@ -407,6 +417,15 @@ export async function GET(request: NextRequest) {
       else await grantArcadeEnergy(transaction, userId, now)
       return 'credited' as const
     })
+
+    if (result !== 'credited' && result !== 'duplicate') {
+      console.error('[adslab-ptc] Verified postback was not applied; returning a retryable response.', {
+        outcome: result,
+        uidFingerprint: signatureFingerprint(uid),
+        txidFingerprint: signatureFingerprint(txid),
+      })
+      return response('Postback not applied; retry required', 503)
+    }
 
     console.info('[adslab-ptc] Processed verified postback.', {
       outcome: result,
