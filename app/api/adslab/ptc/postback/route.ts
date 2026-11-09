@@ -10,7 +10,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const transactionIdPattern = /^[A-Za-z0-9._:-]{1,128}$/
 const signaturePattern = /^[a-f0-9]{64}$/i
 
