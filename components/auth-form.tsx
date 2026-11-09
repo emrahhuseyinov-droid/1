@@ -75,6 +75,11 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
         return
       }
 
+      if (isSignUp) {
+        router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}&next=${encodeURIComponent(destination)}`)
+        return
+      }
+
       try {
         await fetch('/api/account/bootstrap', { method: 'POST' })
       } catch {
@@ -106,7 +111,7 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">Account access</p>
             <h1 className="mt-2 text-2xl font-black tracking-tight">{isSignUp ? 'Create your account' : 'Welcome back'}</h1>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              {isSignUp ? 'Sign up with email and password to keep your profile and existing ledger together.' : 'Sign in to continue to your account and saved reward ledger.'}
+              {isSignUp ? 'Create your account, then verify your email to activate it and keep your profile and reward ledger together.' : 'Sign in to continue to your account and saved reward ledger.'}
             </p>
           </div>
 

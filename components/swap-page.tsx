@@ -240,7 +240,7 @@ export function SwapPage() {
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
           <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-          {quote ? `PEPE/USD ${formatUsdPrice(quote.pepeUsd)}` : quoteLoading ? 'Loading PEPE/USD…' : 'PEPE/USD unavailable'}
+          {quote ? `PEPE/USD ${formatUsdPrice(quote.pepeUsd)}` : quoteLoading ? 'Loading PEPE/USD���' : 'PEPE/USD unavailable'}
         </span>
       </header>
 
@@ -347,12 +347,11 @@ export function SwapPage() {
             <p className="mt-4 rounded-xl border border-blue-500/15 bg-blue-500/[0.04] px-3 py-2.5 text-[9px] leading-relaxed text-dashboard-muted">{`The ${PEPE_SWAP_FEE_PERCENT}% fee is deducted from the PEPE output and recorded separately in the configured admin's PEPE balance. This exchange updates internal balances only, not blockchain holdings.`}</p>
           </section>
 
-          <AdsLabBanner id="unit-j32z8abjg" container="adslab-banner-unit-j32z8abjg" alignment="center" />
           <AdsLabBanner
-            id="unit-a1sbev00e"
-            container="adslab-banner-unit-a1sbev00e"
+            id="unit-n4lvvnn6m"
+            container="adslab-banner-unit-n4lvvnn6m"
             alignment="center"
-            format="medium-rectangle"
+            format="large-rectangle"
           />
 
           {snapshot?.isReserveAdmin && (

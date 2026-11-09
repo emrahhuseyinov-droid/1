@@ -83,7 +83,9 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
                           ? 'PEPE withdrawal request'
                           : row.source === 'withdrawal_refund'
                             ? 'Rejected PEPE withdrawal refund'
-                            : row.source === PEPE_SWAP_COMMISSION_SOURCE
+                            : row.source === 'admin_adjustment'
+                              ? 'Admin balance credit'
+                              : row.source === PEPE_SWAP_COMMISSION_SOURCE
                               ? 'Token exchange commission'
                               : row.source === ADVERTISER_WALLET_TRANSFER_OUT_SOURCE
                                 ? 'PEPE transfer to advertiser wallet'

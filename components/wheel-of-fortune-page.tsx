@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type TransitionEvent } from 'react'
-import Image from 'next/image'
 import useSWR from 'swr'
 import { Check, Clock3, Sparkles, Volume2, VolumeX } from 'lucide-react'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
@@ -62,6 +61,7 @@ export function WheelOfFortunePage() {
   const { data: state, error, isLoading, mutate } = useSWR<WheelState>('/api/wheel/state', getWheelState, { revalidateOnFocus: true })
   const [now, setNow] = useState(() => Date.now())
   const [rotation, setRotation] = useState(0)
+  const [spinDurationMs, setSpinDurationMs] = useState(6200)
   const [spinning, setSpinning] = useState(false)
   const [busy, setBusy] = useState(false)
   const [activeSpin, setActiveSpin] = useState<SpinResult | WheelSpin | null>(null)
@@ -166,7 +166,9 @@ export function WheelOfFortunePage() {
       const currentMod = ((rotation % 360) + 360) % 360
       const deltaToSector = (360 - ((result.sectorIndex * 45 + currentMod) % 360)) % 360
       const nextRotation = rotation + 360 * 7 + deltaToSector
+      const nextSpinDurationMs = 4000 + Math.floor(Math.random() * 3001)
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      setSpinDurationMs(nextSpinDurationMs)
       setRotation(nextRotation)
       void mutate({
         cooldownMs: WHEEL_COOLDOWN_MS,
@@ -269,7 +271,7 @@ export function WheelOfFortunePage() {
     setDialogOpen(true)
   }
 
-  const segmentBackground = `conic-gradient(from -22.5deg, ${wheelSectors.map((sector, index) => `${sector.color} ${index * 45}deg ${(index + 1) * 45}deg`).join(', ')})`
+  const segmentBackground = `radial-gradient(ellipse at 34% 20%, rgba(255,255,255,0.22), transparent 38%), radial-gradient(circle, transparent 48%, rgba(0,0,0,0.32) 100%), repeating-conic-gradient(from -22.5deg, rgba(17,20,28,0.92) 0deg 1.2deg, transparent 1.2deg 45deg), conic-gradient(from -22.5deg, ${wheelSectors.map((sector, index) => `${sector.color} ${index * 45}deg ${(index + 1) * 45}deg`).join(', ')})`
 
   if (error) {
     return <LocalizedTree><main id="top" className="dashboard-page-shell"><section role="alert" className="rounded-3xl border border-rose-400/20 bg-rose-400/[0.06] p-6 text-sm text-rose-200">{error.message}</section></main></LocalizedTree>
@@ -292,40 +294,48 @@ export function WheelOfFortunePage() {
 
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
           <WheelCard className="wheel-cartoon-card flex min-w-0 flex-col items-center px-4 pb-6 pt-5 sm:p-6">
-            <div className="relative z-10 mx-auto w-full max-w-[420px] px-3 pb-4 pt-9 sm:px-5 sm:pt-10">
-              <div className="pointer-events-none absolute left-1/2 top-1 z-20 -translate-x-1/2 sm:top-2" aria-hidden="true">
-                <div className="h-0 w-0 border-x-[14px] border-t-[25px] border-x-transparent border-t-[#fff0a8] drop-shadow-[0_4px_0_rgba(108,67,148,0.9)]" />
-              </div>
-              <div className="rounded-full border-[7px] border-[#ffd166] bg-[#251b4e] p-2 shadow-[0_0_0_3px_rgba(255,255,255,0.1),0_16px_42px_rgba(6,8,30,0.38),0_0_44px_rgba(255,209,102,0.2)] sm:border-[9px] sm:p-2.5">
-                <div
-                  role="img"
-                  aria-label="Eight-segment prize wheel. The prize odds are listed below."
-                  onTransitionEnd={handleWheelTransition}
-                  className="relative aspect-square rounded-full border-2 border-white/50 transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
-                  style={{ background: segmentBackground, transform: `rotate(${rotation}deg)` }}
-                >
-                  <div className="absolute inset-[29%] grid place-items-center rounded-full border-[5px] border-white/85 bg-[linear-gradient(145deg,#fff1b4_0%,#ffd166_52%,#ff9d75_100%)] shadow-[0_8px_0_rgba(115,65,126,0.5),0_12px_24px_rgba(8,9,32,0.35)] transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${-rotation}deg)` }}>
-                    <div className="text-center text-[#34244a]">
-                      <Sparkles className="mx-auto mb-0.5 text-[#8a4d77]" size={15} aria-hidden="true" />
-                      <span className="block text-[9px] font-black uppercase tracking-[0.14em] sm:text-[10px]">PEPE</span>
-                      <span className="mt-0.5 block text-[7px] font-extrabold uppercase tracking-[0.12em] text-[#633e65] sm:text-[8px]">Spin & win</span>
+            <div className="relative z-10 mx-auto w-full max-w-[520px] px-2 pb-4 pt-14 sm:px-5 sm:pt-16">
+              <div className="wheel-pin-shell pointer-events-none" aria-hidden="true"><span className="wheel-pin-bolt" /></div>
+              <div className="wheel-metal-rim">
+                <div className="wheel-gold-rim">
+                  <div
+                    role="img"
+                    aria-label="Eight-segment prize wheel. The prize odds are listed below."
+                    onTransitionEnd={handleWheelTransition}
+                    className="wheel-spin-face relative aspect-square rounded-full transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
+                    style={{ background: segmentBackground, transform: `rotate(${rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}
+                  >
+                    <div className="wheel-center-ring" aria-hidden="true">
+                      {Array.from({ length: 8 }, (_, index) => {
+                        const radians = index * 45 * Math.PI / 180
+                        const bulbStyle: CSSProperties = {
+                          left: `${50 + Math.sin(radians) * 42}%`,
+                          top: `${50 - Math.cos(radians) * 42}%`,
+                        }
+                        return <span key={`bulb-${index}`} className="wheel-center-bulb absolute size-3 -translate-x-1/2 -translate-y-1/2 sm:size-4" style={bulbStyle} />
+                      })}
+                      <div className="wheel-blue-hub flex flex-col items-center justify-center text-center transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${-rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}>
+                        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65)] sm:text-[11px]">PEPE</span>
+                        <span className="mt-0.5 text-[6px] font-extrabold uppercase tracking-[0.12em] text-white/85 [text-shadow:0_1px_3px_rgba(0,0,0,0.75)] sm:text-[8px]">Spin & win</span>
+                      </div>
                     </div>
+                    {wheelSectors.map((sector, index) => {
+                      const angle = index * 45
+                      const radians = angle * Math.PI / 180
+                      const tangentAngle = angle - 90
+                      const readableAngle = tangentAngle > 90 && tangentAngle < 270 ? tangentAngle + 180 : tangentAngle
+                      const labelStyle: CSSProperties = {
+                        left: `${50 + Math.sin(radians) * 36}%`,
+                        top: `${50 - Math.cos(radians) * 36}%`,
+                        transform: `translate(-50%, -50%) rotate(${readableAngle - rotation}deg)`,
+                        transitionDuration: `${spinDurationMs}ms`,
+                      }
+                      return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] text-center text-[11px] font-black leading-tight sm:max-w-[104px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
+                    })}
                   </div>
-                  {wheelSectors.map((sector, index) => {
-                    const angle = index * 45
-                    const radians = angle * Math.PI / 180
-                    const labelStyle: CSSProperties = {
-                      left: `${50 + Math.sin(radians) * 34}%`,
-                      top: `${50 - Math.cos(radians) * 34}%`,
-                      transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
-                    }
-                    return <span key={sector.key} style={labelStyle} className="absolute z-10 max-w-[72px] text-center text-[8px] font-black leading-tight text-white [text-shadow:0_1px_3px_rgba(35,22,58,0.9)] transition-transform duration-[6200ms] [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none sm:max-w-[80px] sm:text-[9px]">{sector.shortLabel}</span>
-                  })}
                 </div>
               </div>
             </div>
-
-            <Image src="/arcade/wheel-frog-mascot.png" alt="" aria-hidden="true" width={180} height={180} priority className="wheel-mascot-float pointer-events-none absolute bottom-24 right-5 z-10 hidden w-32 xl:block 2xl:right-8 2xl:w-36" />
 
             <div className="relative z-10 mt-1 w-full max-w-sm px-1 text-center">
               <button type="button" onClick={() => void openCaptcha()} disabled={!canSpin || isLoading} className="wheel-spin-button inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-black text-[#2f2242] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-55">
