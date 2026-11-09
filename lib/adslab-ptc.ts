@@ -59,9 +59,41 @@ function readString(value: unknown, maxLength: number): string | null {
   return trimmed.length > 0 && trimmed.length <= maxLength ? trimmed : null
 }
 
-function isLoopbackIp(value: string): boolean {
+function isPublicIpv4(value: string): boolean {
+  const octets = value.split('.').map(Number)
+  if (octets.length !== 4 || octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return false
+
+  const [first, second, third] = octets
+  if (first === 0 || first === 10 || first === 127 || first >= 224) return false
+  if (first === 100 && second >= 64 && second <= 127) return false
+  if (first === 169 && second === 254) return false
+  if (first === 172 && second >= 16 && second <= 31) return false
+  if (first === 192 && (second === 168 || (second === 0 && (third === 0 || third === 2)) || (second === 88 && third === 99))) return false
+  if (first === 198 && (second === 18 || second === 19 || (second === 51 && third === 100))) return false
+  if (first === 203 && second === 0 && third === 113) return false
+
+  return true
+}
+
+function isPublicIp(value: string): boolean {
+  const ipVersion = isIP(value)
+  if (ipVersion === 4) return isPublicIpv4(value)
+  if (ipVersion !== 6) return false
+
   const normalized = value.toLowerCase()
-  return normalized === '::1' || normalized.startsWith('127.') || normalized.startsWith('::ffff:127.')
+  if (normalized === '::' || normalized === '::1') return false
+  if (normalized.startsWith('::ffff:')) {
+    const mappedIpv4 = normalized.slice('::ffff:'.length)
+    return isIP(mappedIpv4) === 4 && isPublicIpv4(mappedIpv4)
+  }
+
+  const [firstHextet, secondHextet] = normalized.split(':')
+  const first = Number.parseInt(firstHextet || '0', 16)
+  const second = Number.parseInt(secondHextet || '0', 16)
+  if (!Number.isFinite(first) || first < 0x2000 || first > 0x3fff) return false
+  if (first === 0x2001 && second === 0x0db8) return false
+
+  return true
 }
 
 function getClientIp(headers: Headers): string | null {
@@ -74,7 +106,7 @@ function getClientIp(headers: Headers): string | null {
 
   for (const candidate of candidates) {
     const ipAddress = candidate?.trim()
-    if (ipAddress && isIP(ipAddress) && !isLoopbackIp(ipAddress)) return ipAddress
+    if (ipAddress && isPublicIp(ipAddress)) return ipAddress
   }
 
   return null
