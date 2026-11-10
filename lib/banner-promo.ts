@@ -1,13 +1,13 @@
 import 'server-only'
 
 import { randomUUID } from 'node:crypto'
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { bannerPromoEvents, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { grantArcadeEnergy } from '@/lib/arcade-service'
 
 export const BANNER_PROMO_REWARD_ATOMIC = 7_000_000_000
-const MAX_DAILY_IMPRESSIONS = 5
+const MAX_DAILY_IMPRESSIONS = 15
 const PROMO_INTERVAL_MS = 3 * 60 * 60 * 1000
 
 export type BannerPromoState =
@@ -19,10 +19,6 @@ export type BannerPromoActionResult = BannerPromoState & { rewardGranted: boolea
 
 function utcDay(date: Date) {
   return date.toISOString().slice(0, 10)
-}
-
-function nextScheduleTime(now: Date) {
-  return new Date(now.getTime() + PROMO_INTERVAL_MS)
 }
 
 export async function getBannerPromoState(guestId: string): Promise<BannerPromoState> {
@@ -38,7 +34,7 @@ export async function getBannerPromoState(guestId: string): Promise<BannerPromoS
 
     const now = new Date()
     const day = utcDay(now)
-    const events = await transaction
+    const [latestEvent] = await transaction
       .select({
         id: bannerPromoEvents.id,
         sequenceNumber: bannerPromoEvents.sequenceNumber,
@@ -50,80 +46,87 @@ export async function getBannerPromoState(guestId: string): Promise<BannerPromoS
         createdAt: bannerPromoEvents.createdAt,
       })
       .from(bannerPromoEvents)
-      .where(and(eq(bannerPromoEvents.guestId, guestId), eq(bannerPromoEvents.day, day)))
-      .orderBy(asc(bannerPromoEvents.sequenceNumber))
+      .where(eq(bannerPromoEvents.guestId, guestId))
+      .orderBy(desc(bannerPromoEvents.createdAt), desc(bannerPromoEvents.sequenceNumber))
       .for('update')
+      .limit(1)
 
-    const active = events.find((event) => event.status === 'shown')
-    if (active) return { phase: 'active', promoId: active.id }
+    if (latestEvent?.status === 'shown') return { phase: 'active', promoId: latestEvent.id }
 
-    const scheduled = events.find((event) => event.status === 'scheduled')
-    if (scheduled) {
-      const previous = events
-        .filter((event) => event.sequenceNumber < scheduled.sequenceNumber)
-        .at(-1)
-      const previousActionAt = previous?.clickedAt ?? previous?.dismissedAt ?? previous?.shownAt
-      const intervalAnchor = previousActionAt ?? scheduled.createdAt
-      const expectedNextAt = new Date(intervalAnchor.getTime() + PROMO_INTERVAL_MS)
-      let scheduledAt = scheduled.scheduledAt
-
-      if (scheduledAt.getTime() !== expectedNextAt.getTime()) {
-        const [rescheduled] = await transaction
-          .update(bannerPromoEvents)
-          .set({ scheduledAt: expectedNextAt })
-          .where(and(eq(bannerPromoEvents.id, scheduled.id), eq(bannerPromoEvents.status, 'scheduled')))
-          .returning({ scheduledAt: bannerPromoEvents.scheduledAt })
-        scheduledAt = rescheduled?.scheduledAt ?? expectedNextAt
-      }
-
-      if (scheduledAt.getTime() > now.getTime()) {
-        return { phase: 'waiting', nextAt: scheduledAt.toISOString() }
+    if (latestEvent?.status === 'scheduled') {
+      if (latestEvent.scheduledAt.getTime() > now.getTime()) {
+        return { phase: 'waiting', nextAt: latestEvent.scheduledAt.toISOString() }
       }
 
       const [shown] = await transaction
         .update(bannerPromoEvents)
         .set({ status: 'shown', shownAt: now })
-        .where(and(eq(bannerPromoEvents.id, scheduled.id), eq(bannerPromoEvents.status, 'scheduled')))
+        .where(and(eq(bannerPromoEvents.id, latestEvent.id), eq(bannerPromoEvents.status, 'scheduled')))
         .returning({ id: bannerPromoEvents.id })
 
       return shown ? { phase: 'active', promoId: shown.id } : { phase: 'waiting', nextAt: now.toISOString() }
     }
 
-    const shownCount = events.filter((event) => event.status !== 'scheduled').length
-    if (shownCount >= MAX_DAILY_IMPRESSIONS) {
+    const todayEvents = await transaction
+      .select({ sequenceNumber: bannerPromoEvents.sequenceNumber })
+      .from(bannerPromoEvents)
+      .where(and(eq(bannerPromoEvents.guestId, guestId), eq(bannerPromoEvents.day, day)))
+      .orderBy(asc(bannerPromoEvents.sequenceNumber))
+      .for('update')
+
+    if (todayEvents.length >= MAX_DAILY_IMPRESSIONS) {
       const resetAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
       return { phase: 'exhausted', resetAt: resetAt.toISOString() }
     }
 
-    const scheduledAt = nextScheduleTime(now)
+    const intervalAnchor = latestEvent
+      ? latestEvent.clickedAt ?? latestEvent.dismissedAt ?? latestEvent.shownAt ?? latestEvent.createdAt
+      : now
+    const scheduledAt = new Date(intervalAnchor.getTime() + PROMO_INTERVAL_MS)
+    const sequenceNumber = todayEvents.length + 1
     const [created] = await transaction
       .insert(bannerPromoEvents)
       .values({
         guestId,
         day,
-        sequenceNumber: shownCount + 1,
+        sequenceNumber,
         status: 'scheduled',
         scheduledAt,
       })
       .onConflictDoNothing({
         target: [bannerPromoEvents.guestId, bannerPromoEvents.day, bannerPromoEvents.sequenceNumber],
       })
-      .returning({ scheduledAt: bannerPromoEvents.scheduledAt })
+      .returning({ id: bannerPromoEvents.id, scheduledAt: bannerPromoEvents.scheduledAt })
 
-    if (created) return { phase: 'waiting', nextAt: created.scheduledAt.toISOString() }
+    let nextEvent = created
+    if (!nextEvent) {
+      const [existing] = await transaction
+        .select({ id: bannerPromoEvents.id, status: bannerPromoEvents.status, scheduledAt: bannerPromoEvents.scheduledAt })
+        .from(bannerPromoEvents)
+        .where(and(
+          eq(bannerPromoEvents.guestId, guestId),
+          eq(bannerPromoEvents.day, day),
+          eq(bannerPromoEvents.sequenceNumber, sequenceNumber),
+        ))
+        .for('update')
+        .limit(1)
 
-    const [existing] = await transaction
-      .select({ id: bannerPromoEvents.id, status: bannerPromoEvents.status, scheduledAt: bannerPromoEvents.scheduledAt })
-      .from(bannerPromoEvents)
-      .where(and(
-        eq(bannerPromoEvents.guestId, guestId),
-        eq(bannerPromoEvents.day, day),
-        eq(bannerPromoEvents.sequenceNumber, shownCount + 1),
-      ))
-      .limit(1)
+      if (existing?.status === 'shown') return { phase: 'active', promoId: existing.id }
+      if (!existing) return { phase: 'waiting', nextAt: scheduledAt.toISOString() }
+      nextEvent = existing
+    }
 
-    if (existing?.status === 'shown') return { phase: 'active', promoId: existing.id }
-    return { phase: 'waiting', nextAt: existing?.scheduledAt.toISOString() ?? scheduledAt.toISOString() }
+    if (nextEvent.scheduledAt.getTime() > now.getTime()) {
+      return { phase: 'waiting', nextAt: nextEvent.scheduledAt.toISOString() }
+    }
+
+    const [shown] = await transaction
+      .update(bannerPromoEvents)
+      .set({ status: 'shown', shownAt: now })
+      .where(and(eq(bannerPromoEvents.id, nextEvent.id), eq(bannerPromoEvents.status, 'scheduled')))
+      .returning({ id: bannerPromoEvents.id })
+
+    return shown ? { phase: 'active', promoId: shown.id } : { phase: 'waiting', nextAt: now.toISOString() }
   })
 }
 
@@ -151,7 +154,6 @@ export async function recordBannerPromoAction(
       .where(and(
         eq(bannerPromoEvents.id, promoId),
         eq(bannerPromoEvents.guestId, guestId),
-        eq(bannerPromoEvents.day, utcDay(now)),
       ))
       .for('update')
       .limit(1)

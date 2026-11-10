@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
@@ -35,6 +35,7 @@ async function sendPromoAction(url: string, { arg }: { arg: BannerPromoAction })
 
 export function BannerRewardPromo() {
   const [rewardedPromoId, setRewardedPromoId] = useState<string | null>(null)
+  const actionLockRef = useRef<string | null>(null)
   const router = useRouter()
   const { language } = useSiteLanguage()
   const copy = language === 'ru'
@@ -78,14 +79,21 @@ export function BannerRewardPromo() {
   )
 
   async function handleAction(action: BannerPromoAction['action'], promoId: string) {
+    if (actionLockRef.current === promoId) return
+
+    actionLockRef.current = promoId
+    setRewardedPromoId(promoId)
+
     try {
       const result = await trigger({ action, promoId })
       const { rewardGranted, ...nextState } = result
-      if (action === 'click' && rewardGranted) setRewardedPromoId(promoId)
       await mutate(nextState, { revalidate: false })
       if (action === 'click' && rewardGranted) router.refresh()
     } catch {
+      setRewardedPromoId(null)
       await mutate()
+    } finally {
+      actionLockRef.current = null
     }
   }
 
@@ -96,7 +104,11 @@ export function BannerRewardPromo() {
       <section
         aria-label={copy.ariaLabel}
         aria-live="polite"
-        className="banner-reward-enter pointer-events-auto relative isolate overflow-hidden rounded-[26px] border-2 border-amber-300/45 bg-[#151d3e] p-3 text-white shadow-[0_20px_60px_rgba(3,8,30,0.5)] sm:p-4"
+        onClick={(event) => {
+          if (event.target instanceof Element && event.target.closest('button')) return
+          void handleAction('click', data.promoId)
+        }}
+        className="banner-reward-enter pointer-events-auto relative isolate cursor-pointer overflow-hidden rounded-[26px] border-2 border-amber-300/45 bg-[#151d3e] p-3 text-white shadow-[0_20px_60px_rgba(3,8,30,0.5)] sm:p-4"
       >
         <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-12 size-36 rounded-full bg-amber-300/15 blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-12 -left-10 size-32 rounded-full bg-cyan-400/15 blur-3xl" />

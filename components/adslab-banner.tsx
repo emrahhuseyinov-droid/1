@@ -42,6 +42,28 @@ export function AdsLabBanner({ id, container: containerId, alignment = 'right', 
     document.head.appendChild(script)
   }, [containerId, id])
 
+  useEffect(() => {
+    const containerElement = containerRef.current
+    if (!containerElement || !onClick) return
+
+    const handleFrameFocus = (event: FocusEvent) => {
+      if (event.target instanceof HTMLIFrameElement && containerElement.contains(event.target)) onClick()
+    }
+    const handleWindowBlur = () => {
+      window.setTimeout(() => {
+        const activeElement = document.activeElement
+        if (activeElement instanceof HTMLIFrameElement && containerElement.contains(activeElement)) onClick()
+      }, 0)
+    }
+
+    containerElement.addEventListener('focusin', handleFrameFocus)
+    window.addEventListener('blur', handleWindowBlur)
+    return () => {
+      containerElement.removeEventListener('focusin', handleFrameFocus)
+      window.removeEventListener('blur', handleWindowBlur)
+    }
+  }, [onClick])
+
   const alignmentClass = alignment === 'right'
     ? 'flex w-full shrink-0 justify-center lg:w-[320px] lg:justify-end'
     : 'flex w-full justify-center'
