@@ -117,13 +117,6 @@ export function AdsLabShortlinksTaskList() {
       {message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.06] px-4 py-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{message}</p></li>}
       {data?.awaitingConfirmation && !message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs font-semibold text-amber-700 dark:text-amber-300">{isRussian ? 'AdsLab подтверждает предыдущий Short-Link. Дождитесь подтверждения перед запуском следующего.' : 'AdsLab is still confirming a shortlink. Please wait before starting another.'}</p></li>}
       {errorMessage && !data?.awaitingConfirmation && <li className="col-span-full"><p role="alert" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{errorMessage}</p></li>}
-      <li className="col-span-full rounded-2xl border border-cyan-200/70 bg-cyan-50/70 px-4 py-3 text-[10px] leading-5 text-slate-600 dark:border-cyan-900/50 dark:bg-cyan-950/20 dark:text-slate-300">
-        <span className="font-bold text-cyan-800 dark:text-cyan-200">{isRussian ? 'Shortlinks от AdsLab' : 'AdsLab Shortlinks'}</span>
-        {' · '}
-        {isRussian
-          ? 'Открывайте точную tracking-ссылку AdsLab. Награда в PEPE зачисляется автоматически только после подтверждённого callback.'
-          : 'Each task opens the exact AdsLab tracking URL. PEPE rewards are credited automatically after a verified callback.'}
-      </li>
 
       {tasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-slate-200/70 px-4 py-10 text-center dark:border-white/[0.06]">
