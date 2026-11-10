@@ -3,7 +3,7 @@ export type ArcadeObstacleKind = 'candle' | 'cactus'
 
 export const ARCADE_ENERGY_CAP = 10
 export const ARCADE_DAILY_ENERGY_EARNED_CAP = 20
-export const ARCADE_DAILY_RUN_LIMIT = 20
+export const ARCADE_DAILY_RUN_LIMIT = 5
 export const ARCADE_PTC_ENERGY_REWARD = 0.02
 export const ARCADE_VIEW_AD_ENERGY_REWARD = 0.25
 export const ARCADE_MAX_JUMPS = 100_000

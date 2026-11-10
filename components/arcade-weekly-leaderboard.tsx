@@ -11,7 +11,6 @@ type LeaderboardPlayer = {
   bestDistanceM: number
   prizeAmount: number
   prizeTokenSymbol: 'HOMERO' | 'PEPE'
-  prizePending: boolean
   isCurrentUser: boolean
 }
 
@@ -195,18 +194,18 @@ export function ArcadeWeeklyLeaderboard({
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-sky-50">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">HOMERO budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_HOMERO.toLocaleString()} HOMERO</span></span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">PEPE base value</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_PEPE.toLocaleString()} PEPE</span></span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">PEPE budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_PEPE.toLocaleString()} PEPE</span></span>
                 </div>
               </div>
               <ul aria-label="Weekly prize tiers" className="relative z-10 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                 {ARCADE_WEEKLY_PRIZE_TIERS.map((tier) => (
                   <li key={`${tier.startRank}-${tier.endRank}`} className={`flex min-h-10 items-center justify-between gap-1.5 rounded-xl border bg-gradient-to-br px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] transition-colors hover:brightness-110 sm:px-3 ${prizeTierStyle(tier.startRank)}`}>
                     <span className="text-xs font-bold text-white/90 sm:text-sm">{formatRankRange(tier.startRank, tier.endRank)}</span>
-                    <span className="whitespace-nowrap font-mono text-xs font-extrabold tabular-nums text-white sm:text-sm">{tier.amount.toLocaleString()} {tier.tokenSymbol === 'PEPE' ? 'PEPE eq. → HOMERO' : 'HOMERO'}</span>
+                    <span className="whitespace-nowrap font-mono text-xs font-extrabold tabular-nums text-white sm:text-sm">{tier.amount.toLocaleString()} {tier.tokenSymbol}</span>
                   </li>
                 ))}
               </ul>
-              <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">The top three prizes are paid in HOMERO from the internal treasury. Ranks 4–100 use their PEPE-equivalent prize value and are converted to HOMERO at payout; claims stay pending if the AMM pool or treasury is unavailable.</p>
+              <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">The top three prizes are paid in HOMERO from the internal treasury. Ranks 4–100 are paid in PEPE; claims remain pending if reserve funds are temporarily unavailable.</p>
             </section>
           </div>
 
@@ -280,7 +279,7 @@ export function ArcadeWeeklyLeaderboard({
                             <p className="mt-4 flex items-baseline gap-1 font-mono text-2xl font-black tracking-tight tabular-nums text-white sm:text-3xl">{player.bestDistanceM.toLocaleString()} <span className="text-xs font-bold text-white/60 sm:text-sm">m</span></p>
                             <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/15 px-3 py-1.5">
                               <span className="text-xs font-semibold text-white/60">Prize</span>
-                              <span className="font-mono text-xs font-extrabold tabular-nums text-cyan-100">{player.prizePending ? 'Pending AMM pool' : `${player.prizeAmount.toLocaleString()} ${player.prizeTokenSymbol}`}</span>
+                              <span className="font-mono text-xs font-extrabold tabular-nums text-cyan-100">{player.prizeAmount.toLocaleString()} {player.prizeTokenSymbol}</span>
                             </div>
                           </div>
                         </li>
@@ -336,7 +335,7 @@ export function ArcadeWeeklyLeaderboard({
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-bold tabular-nums text-white">{player.bestDistanceM.toLocaleString()} m</td>
-                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{player.prizePending ? 'Pending AMM pool' : `${player.prizeAmount.toLocaleString()} ${player.prizeTokenSymbol}`}</td>
+                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{player.prizeAmount.toLocaleString()} {player.prizeTokenSymbol}</td>
                           </tr>
                         ))}
                       </tbody>

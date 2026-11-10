@@ -9,8 +9,6 @@ import { calculateUnusedPromotionRefundAtomic } from '@/lib/advertiser-promotion
 import { getEligibleReward, VIEW_ADS_REWARD_COOLDOWN_MS } from '@/lib/referral-rewards'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { addPtcCommissionToArcadeReserve, grantPtcArcadeEnergy } from '@/lib/arcade-service'
-import { issueHomeroRewardForPepe } from '@/lib/homero-amm'
-import { getHomeroTreasuryAdminProfile, lockHomeroTreasuryProfiles } from '@/lib/homero-treasury'
 
 export const runtime = 'nodejs'
 
@@ -234,29 +232,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const [staticClick] = await db
-      .select({ taskId: ptcClicks.taskId })
-      .from(ptcClicks)
-      .where(and(eq(ptcClicks.clickId, clickId), eq(ptcClicks.userId, account.profile.id)))
-      .limit(1)
-    const staticReward = getEligibleReward('view_ads', staticClick?.taskId ?? null)
-    const homeroTreasuryAdmin = staticReward?.tokenSymbol === 'PEPE' ? await getHomeroTreasuryAdminProfile() : null
-    if (staticReward?.tokenSymbol === 'PEPE' && !homeroTreasuryAdmin) {
-      return NextResponse.json({ error: 'HOMERO rewards are temporarily unavailable.' }, { status: 503, headers: noStoreHeaders })
-    }
-
     const result = await db.transaction(async (transaction) => {
-      if (homeroTreasuryAdmin) {
-        await lockHomeroTreasuryProfiles(transaction, [homeroTreasuryAdmin.id, account.profile.id])
-      } else {
-        const [lockedProfile] = await transaction
-          .select({ id: guestProfiles.id })
-          .from(guestProfiles)
-          .where(eq(guestProfiles.id, account.profile.id))
-          .for('update')
-          .limit(1)
-        if (!lockedProfile) return { status: 'not_found' as const }
-      }
+      const [lockedProfile] = await transaction
+        .select({ id: guestProfiles.id })
+        .from(guestProfiles)
+        .where(eq(guestProfiles.id, account.profile.id))
+        .for('update')
+        .limit(1)
+
+      if (!lockedProfile) return { status: 'not_found' as const }
 
       const [click] = await transaction
         .select({ clickId: ptcClicks.clickId, taskId: ptcClicks.taskId, status: ptcClicks.status, createdAt: ptcClicks.createdAt })
@@ -277,7 +261,7 @@ export async function POST(request: NextRequest) {
       }
 
       const [existingCredit] = await transaction
-        .select({ id: earningEvents.id, createdAt: earningEvents.createdAt, rewardAtomic: earningEvents.rewardAtomic, tokenSymbol: earningEvents.tokenSymbol })
+        .select({ id: earningEvents.id, createdAt: earningEvents.createdAt })
         .from(earningEvents)
         .where(and(
           eq(earningEvents.guestId, account.profile.id),
@@ -289,8 +273,6 @@ export async function POST(request: NextRequest) {
       if (existingCredit) {
         return {
           status: 'already_credited' as const,
-          rewardAtomic: existingCredit.rewardAtomic,
-          tokenSymbol: existingCredit.tokenSymbol,
           cooldownUntil: new Date(existingCredit.createdAt.getTime() + VIEW_ADS_REWARD_COOLDOWN_MS).toISOString(),
         }
       }
@@ -339,59 +321,35 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const now = new Date()
-      let rewardAtomic = reward.rewardAtomic
-      let tokenSymbol = reward.tokenSymbol
-      let creditedAt = now
-      if (reward.tokenSymbol === 'PEPE') {
-        if (!homeroTreasuryAdmin) throw new Error('HOMERO treasury is not available for this PEPE-based reward.')
-        const credited = await issueHomeroRewardForPepe(transaction, {
-          adminProfileId: homeroTreasuryAdmin.id,
-          recipientProfileId: account.profile.id,
-          pepeEquivalentAtomic: reward.rewardAtomic,
+      const [credit] = await transaction
+        .insert(earningEvents)
+        .values({
+          id: randomUUID(),
+          guestId: account.profile.id,
+          source: 'view_ads',
           sourceKey: click.clickId,
-          recipientSource: 'view_ads',
           itemId: click.taskId,
-          now,
+          tokenSymbol: 'HOMERO',
+          rewardAtomic: reward.rewardAtomic,
         })
-        rewardAtomic = credited.rewardAtomic
-        tokenSymbol = 'HOMERO'
-      } else {
-        const [credit] = await transaction
-          .insert(earningEvents)
-          .values({
-            id: randomUUID(),
-            guestId: account.profile.id,
-            source: 'view_ads',
-            sourceKey: click.clickId,
-            itemId: click.taskId,
-            tokenSymbol: reward.tokenSymbol,
-            rewardAtomic: reward.rewardAtomic,
-            createdAt: now,
-          })
-          .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-          .returning({ id: earningEvents.id, createdAt: earningEvents.createdAt })
-        if (!credit) {
-          return {
-            status: 'already_credited' as const,
-            rewardAtomic: reward.rewardAtomic,
-            tokenSymbol: reward.tokenSymbol,
-            cooldownUntil: new Date(Date.now() + VIEW_ADS_REWARD_COOLDOWN_MS).toISOString(),
-          }
-        }
-        creditedAt = credit.createdAt
-      }
+        .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+        .returning({ id: earningEvents.id, createdAt: earningEvents.createdAt })
 
-      const energy = await grantPtcArcadeEnergy(transaction, account.profile.id, now)
+      if (!credit) {
+        return {
+          status: 'already_credited' as const,
+          cooldownUntil: new Date(Date.now() + VIEW_ADS_REWARD_COOLDOWN_MS).toISOString(),
+        }
+      }
+      const energy = await grantPtcArcadeEnergy(transaction, account.profile.id)
       return {
         status: 'credited' as const,
-        rewardAtomic,
-        tokenSymbol,
-        cooldownUntil: new Date(creditedAt.getTime() + VIEW_ADS_REWARD_COOLDOWN_MS).toISOString(),
+        rewardAtomic: reward.rewardAtomic,
+        cooldownUntil: new Date(credit.createdAt.getTime() + VIEW_ADS_REWARD_COOLDOWN_MS).toISOString(),
         energy: energy.energy,
         energyGranted: energy.energyGranted,
-        dailyEnergyEarned: energy.dailyEnergyEarned,
-        dailyEnergyCap: energy.dailyEnergyCap,
+      dailyEnergyEarned: energy.dailyEnergyEarned,
+      dailyEnergyCap: energy.dailyEnergyCap,
       }
     })
 
@@ -405,10 +363,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This task will be available again in 24 hours.', code: result.status, remainingSeconds: result.remainingSeconds }, { status: 409, headers: noStoreHeaders })
     }
     if (result.status === 'already_credited') {
-      return NextResponse.json({ credited: true, alreadyCredited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: result.tokenSymbol, cooldownUntil: result.cooldownUntil }, { headers: noStoreHeaders })
+      return NextResponse.json({ credited: true, alreadyCredited: true, cooldownUntil: result.cooldownUntil }, { headers: noStoreHeaders })
     }
 
-    return NextResponse.json({ credited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: result.tokenSymbol, cooldownUntil: result.cooldownUntil, energy: result.energy, energyGranted: result.energyGranted, dailyEnergyEarned: result.dailyEnergyEarned, dailyEnergyCap: result.dailyEnergyCap, reserveContributionAtomic: 'reserveContributionAtomic' in result ? result.reserveContributionAtomic : 0 }, { headers: noStoreHeaders })
+    return NextResponse.json({ credited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: 'HOMERO', cooldownUntil: result.cooldownUntil, energy: result.energy, energyGranted: result.energyGranted, dailyEnergyEarned: result.dailyEnergyEarned, dailyEnergyCap: result.dailyEnergyCap, reserveContributionAtomic: 'reserveContributionAtomic' in result ? result.reserveContributionAtomic : 0 }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[view-ads-claim] Could not credit task:', error)
     return NextResponse.json({ error: 'Could not credit this task.' }, { status: 500, headers: noStoreHeaders })

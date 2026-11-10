@@ -47,6 +47,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: error.status, headers: noStoreHeaders })
     }
     console.error('[manual-faucet] Claim failed:', error instanceof Error ? error.name : 'unknown error')
-    return NextResponse.json({ error: 'Could not claim the HOMERO reward. Please try again.' }, { status: 503, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'Could not claim the PEPE reward. Please try again.' }, { status: 503, headers: noStoreHeaders })
   }
 }

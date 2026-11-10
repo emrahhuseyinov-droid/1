@@ -51,7 +51,7 @@ const features = [
   },
   {
     title: 'PEPE payouts',
-    description: 'Request payouts to a verified FaucetPay account. Minimum: 5,000 PEPE; daily limit: 50,000 PEPE.',
+    description: 'Request payouts to a verified FaucetPay account. Minimum: 1,000 PEPE; daily limit: 50,000 PEPE.',
     icon: Wallet,
     tone: 'text-blue-200 bg-blue-300/10 ring-blue-200/15',
   },
@@ -99,7 +99,7 @@ const steps = [
   },
   {
     title: 'Withdraw your PEPE',
-    description: 'Have at least 5,000 PEPE? Add your FaucetPay account and request a payout instantly!',
+    description: 'Have at least 1,000 PEPE? Add your FaucetPay account and request a payout instantly!',
     icon: Wallet,
   },
 ]
@@ -244,7 +244,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
               <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">{'Minimum payout'}</dt>
-              <dd className="mt-1.5 font-mono text-[14px] font-bold text-amber-100">{'5,000 PEPE'}</dd>
+              <dd className="mt-1.5 font-mono text-[14px] font-bold text-amber-100">{'1,000 PEPE'}</dd>
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
               <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">{'Daily limit'}</dt>

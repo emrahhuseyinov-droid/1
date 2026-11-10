@@ -1,18 +1,17 @@
 import 'server-only'
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { arcadeInventory, arcadeProfiles, guestProfiles, wheelCaptchaSessions, wheelSpins } from '@/lib/db/schema'
+import { arcadeInventory, arcadeProfiles, earningEvents, guestProfiles, wheelCaptchaSessions, wheelSpins } from '@/lib/db/schema'
 import { lockArcadeProfile } from '@/lib/arcade-service'
 import { ARCADE_ENERGY_CAP } from '@/lib/arcade-gameplay'
-import { getHomeroTreasuryAdminProfile, getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer } from '@/lib/homero-treasury'
 import { chooseWheelSector, wheelSectors, WHEEL_COOLDOWN_MS } from '@/lib/wheel-of-fortune'
 
 export class WheelServiceError extends Error {
   constructor(
     message: string,
     readonly status: number,
-    readonly code: 'cooldown' | 'not_found' | 'energy_full' | 'profile_missing' | 'captcha_required' | 'treasury_unavailable',
+    readonly code: 'cooldown' | 'not_found' | 'energy_full' | 'profile_missing' | 'captcha_required',
     readonly nextAllowedAt?: string,
   ) {
     super(message)
@@ -119,18 +118,7 @@ export async function startWheelSpin(guestId: string, captchaSessionId: string, 
 }
 
 export async function claimWheelReward(guestId: string, spinId: string, now = new Date()) {
-  const [spinIdentity] = await db
-    .select({ rewardType: wheelSpins.rewardType })
-    .from(wheelSpins)
-    .where(and(eq(wheelSpins.id, spinId), eq(wheelSpins.guestId, guestId)))
-    .limit(1)
-  const treasuryAdmin = spinIdentity?.rewardType === 'homero' ? await getHomeroTreasuryAdminProfile() : null
-
   return db.transaction(async (transaction) => {
-    if (spinIdentity?.rewardType === 'homero' && treasuryAdmin) {
-      await lockHomeroTreasuryProfiles(transaction, [treasuryAdmin.id, guestId])
-    }
-
     const [spin] = await transaction
       .select()
       .from(wheelSpins)
@@ -139,31 +127,28 @@ export async function claimWheelReward(guestId: string, spinId: string, now = ne
       .limit(1)
 
     if (!spin) throw new WheelServiceError('That wheel result was not found.', 404, 'not_found')
-    if (spin.claimedAt) return { spin: serializeSpin(spin), alreadyClaimed: true, energy: null }
+
+    if (spin.claimedAt) {
+      return { spin: serializeSpin(spin), alreadyClaimed: true, energy: null }
+    }
 
     if (spin.rewardType === 'homero') {
-      if (!treasuryAdmin) {
-        throw new WheelServiceError('The HOMERO treasury is temporarily unavailable.', 503, 'treasury_unavailable')
-      }
-      const treasury = await getHomeroTreasurySnapshot(transaction, treasuryAdmin.id)
-      const rewardAtomic = BigInt(spin.rewardAtomic)
-      if (
-        !treasury.initialReserveSeeded ||
-        BigInt(treasury.availableAtomic) < rewardAtomic ||
-        BigInt(treasury.remainingSupplyAtomic) < rewardAtomic
-      ) {
-        throw new WheelServiceError('The HOMERO treasury cannot fund this reward yet.', 503, 'treasury_unavailable')
-      }
-      await recordHomeroTreasuryTransfer(
-        transaction,
-        treasuryAdmin.id,
-        guestId,
-        spin.rewardAtomic,
-        spin.id,
-        'wheel_of_fortune',
-        wheelSectors[spin.sectorIndex].key,
-        now,
-      )
+      const [credit] = await transaction
+        .insert(earningEvents)
+        .values({
+          id: randomUUID(),
+          guestId,
+          source: 'wheel_of_fortune',
+          sourceKey: spin.id,
+          itemId: wheelSectors[spin.sectorIndex].key,
+          tokenSymbol: 'HOMERO',
+          rewardAtomic: spin.rewardAtomic,
+          createdAt: now,
+        })
+        .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+        .returning({ id: earningEvents.id })
+
+      if (!credit) throw new Error('The wheel reward ledger entry already exists.')
     }
 
     let energy: number | null = null
