@@ -43,7 +43,7 @@ export function BannerRewardPromo() {
         title: 'Заберите 70 PEPE',
         adLabel: 'Рекламный баннер',
         bannerHint: 'Жми сюда!',
-        claim: 'Нажми на рекламный баннер',
+        claim: 'Получить 70 PEPE',
         reward: '+70 PEPE сразу',
         destination: 'AdsLab откроется в новой вкладке',
         dismiss: 'Закрыть бонусный баннер',
@@ -54,7 +54,7 @@ export function BannerRewardPromo() {
         title: 'Claim 70 PEPE',
         adLabel: 'Sponsored banner',
         bannerHint: 'Click here!',
-        claim: 'Click the ad banner',
+        claim: 'Claim 70 PEPE',
         reward: '+70 PEPE instantly',
         destination: 'AdsLab opens in a new tab',
         dismiss: 'Dismiss reward banner',
@@ -147,13 +147,14 @@ export function BannerRewardPromo() {
 
         <button
           type="button"
-          disabled
+          disabled={isMutating}
+          onClick={() => void handleAction('click', data.promoId)}
           aria-label={`${copy.claim} — ${copy.reward}`}
-          className="relative mt-3 flex min-h-11 w-full cursor-not-allowed items-center justify-between gap-3 rounded-[17px] border-2 border-amber-100/70 bg-gradient-to-r from-[#ffe17e] via-[#ffc35a] to-[#ff9a70] px-3.5 py-2.5 text-left text-[#39220b] opacity-100 shadow-[0_8px_22px_rgba(255,174,63,0.22)]"
+          className="relative mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-[17px] border-2 border-amber-100/70 bg-gradient-to-r from-[#ffe17e] via-[#ffc35a] to-[#ff9a70] px-3.5 py-2.5 text-left text-[#39220b] opacity-100 shadow-[0_8px_22px_rgba(255,174,63,0.22)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 disabled:cursor-wait disabled:opacity-70"
         >
           <span className="flex min-w-0 flex-1 items-center gap-2 text-[12px] font-black leading-tight sm:text-[13px]">
             <Gift aria-hidden="true" size={16} className="shrink-0" />
-            <span className="min-w-0 whitespace-normal">{copy.claim}</span>
+            <span className="min-w-0 whitespace-normal">{isMutating ? (language === 'ru' ? 'Начисляем…' : 'Crediting…') : copy.claim}</span>
           </span>
           <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#432d14]/10 px-2 py-1 text-[10px] font-black">
             {copy.reward}
