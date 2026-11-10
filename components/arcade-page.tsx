@@ -365,22 +365,30 @@ export function ArcadePage({ userId }: { userId: string }) {
         </div>
 
         <aside className="min-w-0 space-y-5">
-          <ArcadeCard>
+          <ArcadeCard className="border-2 border-sky-300/25 bg-gradient-to-br from-[#111b32] via-[#0c1326] to-[#09090B] shadow-[0_8px_0_rgba(56,189,248,0.08),0_18px_50px_rgba(0,0,0,0.35)]">
             <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-amber-200/70">Player profile</p><h2 className="mt-1 text-sm font-black">Your stats</h2></div><Trophy size={18} className="text-amber-300" /></div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/45">Personal best</p><p className="mt-1 font-mono text-xl font-black">{(state?.bestDistanceM ?? 0).toLocaleString()}<span className="text-xs text-white/40"> m</span></p></div>
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3">
-                <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/45">Arcade energy</p><BatteryCharging size={14} className="text-amber-200" /></div>
-                <p className="mt-1 font-mono text-xl font-black tabular-nums text-white">{energyBalanceLabel}<span className="ml-1 text-[10px] font-bold text-white/40">/ {formatEnergy(energyCap)}</span></p>
-                <div role="progressbar" aria-label="Arcade energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-emerald-300 transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>
-                <p className="mt-1 text-[8px] text-white/40">+0.02 per PTC task · +1 Daily Bonus · 1 per Ranked run</p>
-                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Arcade runs this Baku day</span><span className="font-mono font-bold tabular-nums">{state?.dailyRunsToday ?? 0} / {state?.dailyRunLimit ?? 7}</span></p>
-                <p className="mt-1 flex items-center justify-between gap-2 text-[8px] text-white/55"><span>Ad energy this Baku day</span><span className="font-mono font-bold tabular-nums">{formatEnergy(state?.dailyEnergyEarned ?? 0)} / {formatEnergy(state?.dailyEnergyCap ?? 15)}</span></p>
+              <div className="group relative overflow-hidden rounded-[22px] border-2 border-sky-200/35 bg-gradient-to-br from-[#24405d] via-[#172943] to-[#10172e] p-3 shadow-[0_4px_0_rgba(14,165,233,0.2),0_12px_24px_rgba(0,0,0,0.3)]">
+                <div aria-hidden="true" className="pointer-events-none absolute -right-4 -top-5 size-20 rounded-full bg-sky-300/10 blur-xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-sky-100/70">Personal best</p><span className="grid size-7 place-items-center rounded-xl border border-sky-100/20 bg-sky-200/10 text-sky-100 shadow-inner"><Trophy size={12} /></span></div>
+                  <p className="mt-3 flex items-baseline gap-1.5 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(125,211,252,0.35)]">{(state?.bestDistanceM ?? 0).toLocaleString()}<span className="rounded-md bg-sky-200/10 px-1.5 py-0.5 text-[10px] font-extrabold text-sky-100">m</span></p>
+                </div>
+              </div>
+              <div className="relative overflow-hidden rounded-[22px] border-2 border-amber-200/35 bg-gradient-to-br from-[#54401e] via-[#30271c] to-[#161a2d] p-3 shadow-[0_4px_0_rgba(245,158,11,0.18),0_12px_24px_rgba(0,0,0,0.3)]">
+                <div aria-hidden="true" className="pointer-events-none absolute -right-5 -top-6 size-24 rounded-full bg-amber-100/10 blur-xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-amber-100/75">Arcade energy</p><span className="grid size-7 place-items-center rounded-xl border border-amber-100/25 bg-amber-200/10 text-amber-100 shadow-inner"><BatteryCharging size={13} /></span></div>
+                  <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(253,224,71,0.35)]">{energyBalanceLabel}<span className="ml-1 text-[10px] font-extrabold text-amber-100/65">/ {formatEnergy(energyCap)}</span></p>
+                  <div role="progressbar" aria-label="Arcade energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 shadow-[0_0_10px_rgba(253,224,71,0.55)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>
+                  <p className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-2 py-1.5 text-[8px] text-white/65"><span>Arcade runs this Baku day</span><span className="font-mono font-extrabold tabular-nums text-amber-100">{state?.dailyRunsToday ?? 0} / {state?.dailyRunLimit ?? 7}</span></p>
+                  <p className="mt-1.5 flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-2 py-1.5 text-[8px] text-white/65"><span>Ad energy this Baku day</span><span className="font-mono font-extrabold tabular-nums text-amber-100">{formatEnergy(state?.dailyEnergyEarned ?? 0)} / {formatEnergy(state?.dailyEnergyCap ?? 15)}</span></p>
+                </div>
               </div>
             </div>
           </ArcadeCard>
 
-          {mode !== 'casual' && <ArcadeCard className="relative overflow-hidden border-amber-300/20">
+          {mode !== 'casual' && <ArcadeCard className="relative overflow-hidden border-2 border-amber-200/30 bg-gradient-to-br from-[#261d2c] via-[#171521] to-[#0b101c] shadow-[0_8px_0_rgba(251,191,36,0.08),0_18px_50px_rgba(0,0,0,0.35)]">
             <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-12 size-36 rounded-full bg-amber-300/[0.08] blur-3xl" />
             <div className="relative">
               <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-amber-200/70">PEPE shop</p><h2 className="mt-1 flex items-center gap-2 text-sm font-black"><ShoppingBag size={14} className="text-amber-300" /> Run essentials</h2></div><Coins size={17} className="text-white/45" /></div>
@@ -389,10 +397,10 @@ export function ArcadePage({ userId }: { userId: string }) {
                   const isEnergy = item.code === 'energy'
                   const lifeOwned = state?.inventory.life ?? 0
                   const unavailable = isEnergy ? energyValue >= energyCap : lifeOwned >= 1
-                  return <div key={item.code} className={`flex items-center gap-3 rounded-2xl border p-3 transition ${isEnergy ? 'border-amber-300/15 bg-gradient-to-br from-amber-300/[0.08] to-transparent' : 'border-rose-400/15 bg-gradient-to-br from-rose-400/[0.07] to-transparent'}`}>
-                    <span className={`grid size-10 shrink-0 place-items-center rounded-xl border ${isEnergy ? 'border-amber-200/20 bg-amber-300/10 text-amber-200' : 'border-rose-300/20 bg-rose-400/10 text-rose-300'}`}>{isEnergy ? <BatteryCharging size={17} /> : <Heart size={17} className="fill-rose-500" />}</span>
-                    <div className="min-w-0 flex-1"><p className="text-[10px] font-extrabold">{item.label}</p><p className="mt-1 text-[9px] leading-4 text-white/50">{isEnergy ? 'Adds 1 energy' : 'One extra heart for any run · maximum 1 held'}</p></div>
-                    <button type="button" onClick={() => void purchaseItem(item.code)} disabled={Boolean(shopBusy) || Boolean(run) || unavailable} className="shrink-0 rounded-xl border border-white/10 bg-white/[0.07] px-3 py-2 text-[9px] font-extrabold text-amber-100 transition hover:border-amber-200/25 hover:bg-amber-300/15 disabled:cursor-not-allowed disabled:opacity-40">{shopBusy === item.code ? '…' : unavailable && !isEnergy ? 'Owned' : `${formatPepe(item.priceAtomic)} PEPE`}</button>
+                  return <div key={item.code} className={`group relative flex items-center gap-3 overflow-hidden rounded-[22px] border-2 p-3 transition-all duration-200 hover:-translate-y-0.5 ${isEnergy ? 'border-amber-200/45 bg-gradient-to-r from-[#503d17] via-[#2a2219] to-[#111827] shadow-[0_4px_0_rgba(245,158,11,0.16),0_10px_20px_rgba(0,0,0,0.24)]' : 'border-rose-200/40 bg-gradient-to-r from-[#512339] via-[#2a1c2b] to-[#10131f] shadow-[0_4px_0_rgba(244,63,94,0.16),0_10px_20px_rgba(0,0,0,0.24)]'}`}>
+                    <span className={`grid size-12 shrink-0 place-items-center rounded-[17px] border-2 shadow-inner ${isEnergy ? 'border-amber-100/35 bg-gradient-to-br from-amber-200/25 to-amber-500/10 text-amber-100' : 'border-rose-100/30 bg-gradient-to-br from-rose-200/25 to-rose-500/10 text-rose-100'}`}>{isEnergy ? <BatteryCharging size={18} /> : <Heart size={18} className="fill-rose-400" />}</span>
+                    <div className="min-w-0 flex-1"><p className="text-[10px] font-black text-white">{item.label}</p><p className="mt-1 text-[9px] leading-4 text-white/60">{isEnergy ? 'Adds 1 energy' : 'One extra heart for any run · maximum 1 held'}</p></div>
+                    <button type="button" onClick={() => void purchaseItem(item.code)} disabled={Boolean(shopBusy) || Boolean(run) || unavailable} className={`shrink-0 rounded-xl border-2 px-3 py-2.5 text-[9px] font-black transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${isEnergy ? 'border-amber-100/70 bg-gradient-to-b from-[#fff0a8] to-[#ffc94d] text-[#382200] shadow-[0_3px_0_#a36d12] hover:brightness-105' : 'border-rose-100/70 bg-gradient-to-b from-[#ffd6e3] to-[#fb7185] text-[#3b0c1d] shadow-[0_3px_0_#a92446] hover:brightness-105'}`}>{shopBusy === item.code ? '…' : unavailable && !isEnergy ? 'Owned' : `${formatPepe(item.priceAtomic)} PEPE`}</button>
                   </div>
                 })}
                 {!visibleShopItems.length && <p className="text-[10px] text-white/40">Shop items are loading.</p>}
