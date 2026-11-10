@@ -141,7 +141,7 @@ const ruPhrases = new Map<string, string>([
   ['Every sector, every chance', 'Все секторы и их вероятности'],
   ['100% total', 'Всего 100%'],
   ['The result and cooldown are saved on the server. A reward can be collected once, even if you refresh the page.', 'Результат и таймер сохраняются на сервере. Награду можно забрать один раз, даже после перезагрузки страницы.'],
-  ['Eight-segment prize wheel. The prize odds are listed below.', 'Колесо с восем��ю секторами. Вероятности выигрыша указ��������ны ниже.'],
+  ['Eight-segment prize wheel. The prize odds are listed below.', 'Колесо с восем��ю секторами. Вероятности выигрыша указ����������ны ниже.'],
   ['Wheel result', 'Результат колеса'],
   ['Congratulations!', 'Поздравляем!'],
   ['You won: ', 'Вы выиграли: '],
@@ -305,10 +305,10 @@ const ruPhrases = new Map<string, string>([
   ['Explore features', 'Возможности платформы'],
   ['FaucetPay PEPE payouts', 'Выплаты PEPE через FaucetPay'],
   ['Clear limits', 'Понятные лимиты'],
-  ['Ranked & Casual Arcade', 'Рейтинговая и свобод��ая аркада'],
+  ['Ranked & Casual Arcade', 'Рейтинговая и с��обод��ая аркада'],
   ['One place for everything', 'Всё необходимое — под рукой'],
   ['Everything in one account', 'Всё в одном аккаунте'],
-  ['Tasks, Arcade, wallet tools, and PEPE payout tracking — all in one place.', 'Задания, аркада, кошелёк и выплаты PEPE — всё в одном месте.'],
+  ['Tasks, Arcade, wallet tools, and PEPE payout tracking — all in one place.', 'Задания, аркада, кошелёк и выплаты PEPE — всё в одном мест��.'],
   ['Verified reward tasks', 'Проверенные задания'],
   ['Choose an offer, check its requirements, and track confirmed rewards in your account.', 'Выбирайте задание, изучайте условия и следите за начисленными наградами в личном кабинете.'],
   ['Neon Arcade', 'Н����о��овая аркада'],
@@ -538,7 +538,7 @@ const ruPhrases = new Map<string, string>([
   ['The app sends PEPE to the verified FaucetPay email you entered.', 'Приложение отправит PEPE на указанный вами подтверждённый адрес FaucetPay.'],
   ['Status appears in your history', 'Статус появится в истории'],
   ['FaucetPay confirms successful payouts automatically. If it declines a payout, the PEPE returns to your available balance.', 'FaucetPay автоматически подтверждает успешные выплаты. Если выплата отклонена, PEPE возвращаются в доступный баланс.'],
-  ['If FaucetPay does not return a clear result, the balance stays reserved and the app will not retry automatically, preventing an accidental duplicate transfer.', 'Если FaucetPay не вернёт однозначный результат, сумма останется в резерве. Прил��жение не будет повторять п��ревод автоматически, чтобы избежать дублирования.'],
+  ['If FaucetPay does not return a clear result, the balance stays reserved and the app will not retry automatically, preventing an accidental duplicate transfer.', 'Если FaucetPay не вернёт однозначный результат, сумма останется в резер��е. Прил��жение не будет повторять п��ревод автоматически, чтобы избежать дублирования.'],
   ['Your requests', 'Ваши заявки'],
   ['Track every request from pending to confirmed.', 'Отслеживайте каждую заявку от обработки до подтверждения.'],
   ['Loading requests...', 'Загружаем заявки…'],
@@ -614,7 +614,7 @@ const ruPhrases = new Map<string, string>([
   ['Loading balances…', 'Загружаем балансы…'],
   ['Enter an amount to exchange', 'Введите сумму для обмена'],
   ['Check amount format', 'Проверьте формат суммы'],
-  ['Insufficient HOMERO', 'Недостаточно HOMERO'],
+  ['Insufficient HOMERO', 'Недо��таточно HOMERO'],
   ['Insufficient exchange balance', 'Недостаточно средств для обмена'],
   ['Exchange HOMERO for PEPE', 'Обменять HOMERO на PEPE'],
   ['Profile settings', 'Настройки профиля'],
@@ -695,7 +695,7 @@ const ruPhrases = new Map<string, string>([
   ['Enter your FaucetPay email with each request; no payout details are saved in settings.', 'Указывайте электронную почту FaucetPay в каждой заявке; платёжные данные не сохраняются в настройках.'],
   ['Automatic PEPE payouts', 'Автоматические выплаты PEPE'],
   ['PEPE is sent automatically through FaucetPay when you submit a valid request. Ledger balances remain off-chain; on-chain transfers are not available.', 'PEPE автоматически отправляются через FaucetPay после подачи корректной заявки. Баланс ��едётся во внутреннем реестре; Переводы в блокчейне недоступны.'],
-  ['Off-chain ledger assets', 'Активы внутреннего ��еестра'],
+  ['Off-chain ledger assets', '��ктивы внутреннего ��еестра'],
   ['No transfer', 'Перевод недоступен'],
   ['View wallet overview', 'Открыть обзор кошелька'],
   ['The new passwords do not match.', 'Новые пароли не совпадают.'],
@@ -907,8 +907,11 @@ const ruPhrases = new Map<string, string>([
   ['Try again', 'Попробовать снова'],
   ['Own the first spot', 'Займите первое место'],
   ['No ranked runs yet this week. Complete a verified run to take the top of the board.', 'На этой неделе ещё нет рейтинговых забегов. Завершите проверенный забег и возглавьте рейтинг.'],
+  ['Live', 'В эфире'],
   ['Live standings', 'Текущий рейтинг'],
+  ['Weekly leaderboard content', 'Содержимое рейтинга'],
   ['Weekly podium', 'Тройка лидеров недели'],
+  ['Best result', 'Лучший результат'],
   ['Top three weekly players', 'Три лучших игрока недели'],
   ['Top 100 weekly players', 'Топ-100 игроков недели'],
   ['Showing', 'Показано'],
@@ -1101,7 +1104,7 @@ const ruPhrases = new Map<string, string>([
   ['The title must be between 3 and 80 characters.', 'Название должно содержать от 3 до 80 символов.'],
   ['The description must be 500 characters or fewer.', 'Описание должно содержать не более 500 символов.'],
   ['Enter a valid HTTPS YouTube URL.', 'Введите корректную HTTPS-ссылку на YouTube.'],
-  ['Enter a valid HTTPS URL.', 'Введите корректный HTTPS-адрес.'],
+  ['Enter a valid HTTPS URL.', 'Вве��ите корректный HTTPS-адрес.'],
   ['Task count must be between 1 and 100,000.', 'Количество заданий должно быть от 1 до 100 000.'],
   ['The total budget is too large.', 'Общий бюджет слишком велик.'],
   ['Could not launch the campaign.', 'Не удалось запустить кампанию.'],
@@ -1193,7 +1196,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Доступно: ${match[1]} HOMERO`
 
   match = value.match(/^Enter a positive amount or choose Max\. The (\d+(?:\.\d+)?)% fee is deducted from PEPE received\.$/i)
-  if (match) return `Введите положительную сумму или нажмите «Максимум». Комиссия ${match[1]}% удерживается из получаемых PEPE.`
+  if (match) return `Введите положительную сумму или нажмите «Максимум». Комиссия ${match[1]}% удерживается и�� получаемых PEPE.`
 
   match = value.match(/^Estimated value received · (.+)$/i)
   if (match) return `Ориентировочная сумма к получению · ${match[1].toLowerCase() === 'live market feed' ? 'рыночная котировка' : match[1]}`

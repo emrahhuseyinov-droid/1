@@ -32,24 +32,21 @@ export function ArcadeWeeklyLeaderboardPage() {
 
   return (
     <LocalizedTree>
-    <main id="top" className="dashboard-page-shell space-y-5 text-white">
-      <header className="relative isolate flex flex-wrap items-end justify-between gap-4 overflow-hidden rounded-[30px] border border-violet-200/20 bg-gradient-to-br from-[#17356b] via-[#29205e] to-[#4a1b55] p-5 shadow-[0_22px_65px_rgba(22,16,65,0.42)] sm:p-7">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 size-48 rounded-full bg-cyan-300/15 blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-1/3 size-36 rounded-full bg-fuchsia-400/15 blur-3xl" />
-        <div className="relative z-10 flex min-w-0 items-center gap-4">
-          <div className="grid size-14 shrink-0 place-items-center rounded-[22px] border border-white/30 bg-gradient-to-br from-amber-300 via-orange-400 to-pink-500 text-white shadow-[0_10px_28px_rgba(249,115,22,0.35)] ring-4 ring-white/10">
-            <Trophy aria-hidden="true" size={25} />
+    <main id="top" className="dashboard-page-shell weekly-leaderboard-page space-y-4 text-white">
+      <header className="flex flex-wrap items-end justify-between gap-4 px-1">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Trophy aria-hidden="true" className="text-amber-200" size={24} />
+            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Weekly leaderboard</h1>
+            <span className="rounded-md border border-emerald-200/35 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-emerald-100">FREE</span>
           </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-white sm:text-[30px]">Weekly leaderboard</h1>
-            <p className="mt-1 max-w-xl text-sm leading-6 text-white/80">
-              Your best server-verified ranked run earns the spot. Casual and boosted runs stay off the board.
-            </p>
-          </div>
+          <p className="mt-1.5 max-w-3xl text-sm leading-6 text-white/75">
+            Your best server-verified ranked run earns the spot. Casual and boosted runs stay off the board.
+          </p>
         </div>
-        <div className="relative z-10 inline-flex min-h-11 w-fit items-center gap-2 rounded-full border border-cyan-100/25 bg-gradient-to-r from-cyan-300/15 to-violet-300/15 px-4 py-2.5 text-sm font-bold text-cyan-50 shadow-[0_0_28px_rgba(34,211,238,0.14)] backdrop-blur-sm">
-          <span className="size-2 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.8)]" />
-          <Radio aria-hidden="true" size={16} /> Live · refreshes every 30 seconds
+        <div className="inline-flex min-h-9 w-fit items-center gap-2 rounded-full border border-rose-200/25 bg-rose-400/10 px-3 py-1.5 text-xs font-bold text-rose-50 shadow-[0_0_22px_rgba(244,63,94,0.12)]">
+          <span className="size-2 animate-pulse rounded-full bg-rose-300 shadow-[0_0_10px_rgba(251,113,133,0.8)] motion-reduce:animate-none" />
+          <Radio aria-hidden="true" size={14} /> Live
         </div>
       </header>
 
