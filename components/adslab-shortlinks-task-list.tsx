@@ -21,7 +21,7 @@ type ShortlinkTask = {
   awaitingConfirmation: boolean
 }
 
-type ShortlinksResponse = { tasks: ShortlinkTask[]; pepeUsdPrice: string }
+type ShortlinksResponse = { tasks: ShortlinkTask[]; pepeUsdPrice: string; awaitingConfirmation: boolean }
 
 async function fetchShortlinks(url: string): Promise<ShortlinksResponse> {
   const response = await fetch(url, { cache: 'no-store' })
@@ -96,6 +96,7 @@ export function AdsLabShortlinksTaskList() {
     } catch (error) {
       if (!taskWindow.closed) taskWindow.close()
       setErrorMessage(error instanceof Error ? error.message : (isRussian ? 'Не удалось открыть ссылку.' : 'Could not open this shortlink.'))
+      void mutate()
     } finally {
       setOpeningKey(null)
     }
@@ -114,7 +115,8 @@ export function AdsLabShortlinksTaskList() {
   return (
     <>
       {message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.06] px-4 py-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{message}</p></li>}
-      {errorMessage && <li className="col-span-full"><p role="alert" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{errorMessage}</p></li>}
+      {data?.awaitingConfirmation && !message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs font-semibold text-amber-700 dark:text-amber-300">{isRussian ? 'AdsLab подтверждает предыдущий Short-Link. Дождитесь подтверждения перед запуском следующего.' : 'AdsLab is still confirming a shortlink. Please wait before starting another.'}</p></li>}
+      {errorMessage && !data?.awaitingConfirmation && <li className="col-span-full"><p role="alert" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{errorMessage}</p></li>}
       <li className="col-span-full rounded-2xl border border-cyan-200/70 bg-cyan-50/70 px-4 py-3 text-[10px] leading-5 text-slate-600 dark:border-cyan-900/50 dark:bg-cyan-950/20 dark:text-slate-300">
         <span className="font-bold text-cyan-800 dark:text-cyan-200">{isRussian ? 'Shortlinks от AdsLab' : 'AdsLab Shortlinks'}</span>
         {' · '}
