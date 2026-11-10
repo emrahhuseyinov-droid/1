@@ -336,7 +336,7 @@ export function ArcadeWeeklyLeaderboard({
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-bold tabular-nums text-white">{player.bestDistanceM.toLocaleString()} m</td>
-                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{player.prizeAmount.toLocaleString()} {player.prizeTokenSymbol}</td>
+                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{player.prizePending ? 'Pending AMM pool' : `${player.prizeAmount.toLocaleString()} ${player.prizeTokenSymbol}`}</td>
                           </tr>
                         ))}
                       </tbody>

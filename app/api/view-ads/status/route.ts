@@ -4,6 +4,8 @@ import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { db } from '@/lib/db'
 import { advertiserCampaigns, earningEvents, ptcClicks } from '@/lib/db/schema'
 import { getEligibleReward } from '@/lib/referral-rewards'
+import { convertPepeAtomicToHomeroAtomic, getHomeroAmmSnapshot } from '@/lib/homero-amm'
+import { getHomeroTreasuryAdminProfile, getHomeroTreasurySnapshot } from '@/lib/homero-treasury'
 
 export const runtime = 'nodejs'
 
@@ -56,7 +58,38 @@ export async function GET(request: NextRequest) {
 
     const alreadyCredited = Boolean(earningEvent)
     const campaignAvailable = isCampaignTask ? campaign?.status === 'active' : true
-    const canClaim = click.status !== 'rejected' && timerRemainingSeconds === 0 && campaignAvailable
+    let rewardAtomic: number | null = reward?.rewardAtomic ?? null
+    let tokenSymbol: 'PEPE' | 'HOMERO' = reward?.tokenSymbol ?? 'HOMERO'
+    let rewardAvailable = Boolean(reward)
+
+    if (reward?.tokenSymbol === 'PEPE') {
+      rewardAtomic = null
+      tokenSymbol = 'HOMERO'
+      rewardAvailable = false
+      const adminProfile = await getHomeroTreasuryAdminProfile()
+      if (adminProfile) {
+        const { pool, treasury } = await db.transaction(async (transaction) => {
+          const [pool, treasury] = await Promise.all([
+            getHomeroAmmSnapshot(transaction, adminProfile.id),
+            getHomeroTreasurySnapshot(transaction, adminProfile.id),
+          ])
+          return { pool, treasury }
+        })
+        if (pool.seeded && treasury.initialReserveSeeded) {
+          try {
+            const estimate = convertPepeAtomicToHomeroAtomic(reward.rewardAtomic, pool)
+            if (BigInt(treasury.availableAtomic) >= BigInt(estimate) && BigInt(treasury.remainingSupplyAtomic) >= BigInt(estimate)) {
+              rewardAtomic = estimate
+              rewardAvailable = true
+            }
+          } catch {
+            rewardAvailable = false
+          }
+        }
+      }
+    }
+
+    const canClaim = click.status !== 'rejected' && timerRemainingSeconds === 0 && campaignAvailable && (isCampaignTask || rewardAvailable)
 
     return NextResponse.json({
       status: click.status,
@@ -64,6 +97,10 @@ export async function GET(request: NextRequest) {
       canClaim,
       alreadyCredited,
       campaignAvailable,
+      rewardAtomic,
+      tokenSymbol,
+      rewardAvailable,
+      pepeEquivalentAtomic: reward?.tokenSymbol === 'PEPE' ? reward.rewardAtomic : null,
     }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[view-ads-status] Could not fetch task status:', error)

@@ -14,7 +14,7 @@ type ShortlinkTask = {
   description: string
   iconUrl: string | null
   rewardAtomic: string
-  tokenSymbol: 'PEPE'
+  tokenSymbol: 'HOMERO'
   cooldownMinutes: number
   visitsRemaining: number
   cooldownRemainingSeconds: number

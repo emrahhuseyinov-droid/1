@@ -332,9 +332,14 @@ export async function getArcadeLeaderboard(start: Date, end: Date, currentGuestI
     const rank = index + 1
     const prize = getArcadeWeeklyPrize(rank)
     const convertsToHomero = prize?.tokenSymbol === 'PEPE'
-    const homeroPrizeAtomic = convertsToHomero && pool?.seeded
-      ? convertPepeAtomicToHomeroAtomic(prize.amountAtomic, pool)
-      : null
+    let homeroPrizeAtomic: number | null = null
+    if (convertsToHomero && pool?.seeded) {
+      try {
+        homeroPrizeAtomic = convertPepeAtomicToHomeroAtomic(prize.amountAtomic, pool)
+      } catch (error) {
+        if (!(error instanceof HomeroAmmUnavailableError)) throw error
+      }
+    }
     return {
       rank,
       displayName,

@@ -41,25 +41,25 @@ export function BannerRewardPromo() {
   const copy = language === 'ru'
     ? {
         label: 'Бонус AdsLab',
-        title: 'Заберите 70 PEPE',
+        title: '70 PEPE эквивалентом в HOMERO',
         adLabel: 'Рекламный баннер',
         bannerHint: 'Жми сюда!',
-        claim: 'Получить 70 PEPE',
-        reward: '+70 PEPE сразу',
+        claim: 'Получить награду HOMERO',
+        reward: '70 PEPE экв.',
         destination: 'AdsLab откроется в новой вкладке',
         dismiss: 'Закрыть бонусный баннер',
-        ariaLabel: 'Бонус AdsLab: 70 PEPE за нажатие',
+        ariaLabel: 'Бонус AdsLab: эквивалент 70 PEPE выплачивается в HOMERO',
       }
     : {
         label: 'AdsLab bonus',
-        title: 'Claim 70 PEPE',
+        title: '70 PEPE value paid in HOMERO',
         adLabel: 'Sponsored banner',
         bannerHint: 'Click here!',
-        claim: 'Claim 70 PEPE',
-        reward: '+70 PEPE instantly',
+        claim: 'Claim HOMERO reward',
+        reward: '70 PEPE eq.',
         destination: 'AdsLab opens in a new tab',
         dismiss: 'Dismiss reward banner',
-        ariaLabel: 'AdsLab bonus: 70 PEPE per click',
+        ariaLabel: 'AdsLab bonus: a 70 PEPE equivalent paid in HOMERO',
       }
 
   const { data, mutate } = useSWR<BannerPromoState>('/api/banner-promo', fetchPromoState, {
