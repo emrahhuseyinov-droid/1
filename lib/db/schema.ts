@@ -317,6 +317,14 @@ export const arcadeProfiles = pgTable('earnpepe_arcade_profiles', {
   check('earnpepe_arcade_profiles_total_runs_check', sql`${table.totalRuns} >= 0`),
 ])
 
+export const arcadeEntitlements = pgTable('earnpepe_arcade_entitlements', {
+  guestId: uuid('guest_id').primaryKey(),
+  unlimitedRanked: boolean('unlimited_ranked').notNull().default(false),
+  unlimitedEnergy: boolean('unlimited_energy').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const arcadeSessions = pgTable('earnpepe_arcade_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   guestId: uuid('guest_id').notNull(),

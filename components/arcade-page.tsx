@@ -11,11 +11,12 @@ import { ARCADE_ENERGY_CAP, ARCADE_HOMERO_COIN_REWARD, type ArcadeBoostCode, typ
 import { PepeRunner } from '@/components/pepe-runner'
 import { HomeroTokenLogo } from '@/components/homero-token-logo'
 import { LocalizedTree } from '@/components/site-language-provider'
-import { initializeAdsLabInterstitial, showAdsLabInterstitial } from '@/lib/adslab-interstitial'
 
 type ArcadeState = {
   energy: number
   energyCap: number
+  unlimitedEnergy: boolean
+  unlimitedRanked: boolean
   dailyEnergyEarned: number
   dailyEnergyCap: number
   dailyRunsToday: number
@@ -68,12 +69,8 @@ function ArcadeCard({ children, className = '' }: { children: ReactNode; classNa
   return <section className={`min-w-0 rounded-[24px] border border-white/[0.08] bg-[#09090B] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] sm:p-5 ${className}`}>{children}</section>
 }
 
-export function ArcadePage({ userId }: { userId: string }) {
+export function ArcadePage() {
   const router = useRouter()
-
-  useEffect(() => {
-    initializeAdsLabInterstitial(userId)
-  }, [userId])
   const { data: state, error: stateError, isLoading, mutate: refreshState } = useSWR<ArcadeState>('/api/arcade/state', getJson, { revalidateOnFocus: true })
   const { trigger: sendHeartbeat } = useSWRMutation('/api/arcade/run/heartbeat', (url, { arg }: { arg: { sessionId: string; active: boolean } }) => postJson(url, arg))
   const [run, setRun] = useState<ActiveRun | null>(null)
@@ -209,7 +206,6 @@ export function ArcadePage({ userId }: { userId: string }) {
 
   const startRun = async () => {
     if (busy || run) return
-    void showAdsLabInterstitial()
     setBusy(true)
     setMessage(null)
     setPendingFinish(null)
@@ -259,7 +255,8 @@ export function ArcadePage({ userId }: { userId: string }) {
   const energyBalanceLabel = state ? formatEnergy(energyValue) : isLoading ? '—' : '0'
   const missingEnergy = Math.max(0, 1 - energyValue)
   const missingEnergyLabel = missingEnergy === 1 ? 'Need 1 energy' : `Need ${formatEnergy(missingEnergy)} more energy`
-  const startRunLabel = state?.dailyRunsAvailable === false ? 'Daily limit reached' : mode === 'casual' ? 'Start free run' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
+  const rankedDailyLimitReached = mode === 'ranked' && state?.dailyRunsAvailable === false
+  const startRunLabel = rankedDailyLimitReached ? 'Daily limit reached' : mode === 'casual' ? 'Start free run' : state?.unlimitedEnergy ? 'Start ranked run · unlimited energy' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
   const showLives = mode === 'ranked'
   const lifeCount = run ? runLives : state?.inventory.life ?? 0
 
@@ -355,7 +352,7 @@ export function ArcadePage({ userId }: { userId: string }) {
                 {run ? (
                   <button type="button" onPointerDown={(event) => { if (event.button === 0) requestJump() }} onClick={(event) => { if (event.detail === 0) requestJump() }} disabled={busy || isPaused} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] touch-manipulation transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-wait disabled:opacity-60"><Zap size={15} />{busy ? 'Saving run…' : isPaused ? 'Paused' : 'JUMP'}</button>
                 ) : (
-                  <button type="button" onClick={() => void startRun()} disabled={busy || state?.dailyRunsAvailable === false || (mode === 'ranked' && energyValue < 1) || isLoading} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"><Gamepad2 size={15} />{busy ? 'Starting…' : startRunLabel}</button>
+                  <button type="button" onClick={() => void startRun()} disabled={busy || rankedDailyLimitReached || (mode === 'ranked' && !state?.unlimitedEnergy && energyValue < 1) || isLoading} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"><Gamepad2 size={15} />{busy ? 'Starting…' : startRunLabel}</button>
                 )}
               </div>
               {pendingFinish && <button type="button" onClick={() => void finishRun(pendingFinish.activeRun, pendingFinish.jumpTimes)} disabled={busy || isPaused} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-amber-300/25 bg-amber-300/[0.07] px-4 py-2 text-[10px] font-extrabold text-amber-100 transition hover:bg-amber-300/[0.12] disabled:cursor-not-allowed disabled:opacity-50">Retry verified run save</button>}
@@ -379,9 +376,9 @@ export function ArcadePage({ userId }: { userId: string }) {
                 <div aria-hidden="true" className="pointer-events-none absolute -right-5 -top-6 size-24 rounded-full bg-amber-100/10 blur-xl" />
                 <div className="relative">
                   <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-amber-100/75">Arcade energy</p><span className="grid size-7 place-items-center rounded-xl border border-amber-100/25 bg-amber-200/10 text-amber-100 shadow-inner"><BatteryCharging size={13} /></span></div>
-                  <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(253,224,71,0.35)]">{energyBalanceLabel}<span className="ml-1 text-[10px] font-extrabold text-amber-100/65">/ {formatEnergy(energyCap)}</span></p>
-                  <div role="progressbar" aria-label="Arcade energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 shadow-[0_0_10px_rgba(253,224,71,0.55)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>
-                  <p className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-2 py-1.5 text-[8px] text-white/65"><span>Arcade runs this Baku day</span><span className="font-mono font-extrabold tabular-nums text-amber-100">{state?.dailyRunsToday ?? 0} / {state?.dailyRunLimit ?? 7}</span></p>
+                  <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(253,224,71,0.35)]">{state?.unlimitedEnergy ? 'Unlimited' : energyBalanceLabel}{!state?.unlimitedEnergy && <span className="ml-1 text-[10px] font-extrabold text-amber-100/65">/ {formatEnergy(energyCap)}</span>}</p>
+                  {!state?.unlimitedEnergy && <div role="progressbar" aria-label="Arcade energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 shadow-[0_0_10px_rgba(253,224,71,0.55)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>}
+                  <p className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-2 py-1.5 text-[8px] text-white/65"><span>Ranked runs this Baku day</span><span className="font-mono font-extrabold tabular-nums text-amber-100">{state?.unlimitedRanked ? 'Unlimited' : `${state?.dailyRunsToday ?? 0} / ${state?.dailyRunLimit ?? 7}`}</span></p>
                 </div>
               </div>
             </div>
@@ -395,11 +392,11 @@ export function ArcadePage({ userId }: { userId: string }) {
                 {visibleShopItems.map((item) => {
                   const isEnergy = item.code === 'energy'
                   const lifeOwned = state?.inventory.life ?? 0
-                  const unavailable = isEnergy ? energyValue >= energyCap : lifeOwned >= 1
+                  const unavailable = isEnergy ? Boolean(state?.unlimitedEnergy) || energyValue >= energyCap : lifeOwned >= 1
                   return <div key={item.code} className={`group relative flex items-center gap-3 overflow-hidden rounded-[22px] border-2 p-3 transition-all duration-200 hover:-translate-y-0.5 ${isEnergy ? 'border-amber-200/45 bg-gradient-to-r from-[#503d17] via-[#2a2219] to-[#111827] shadow-[0_4px_0_rgba(245,158,11,0.16),0_10px_20px_rgba(0,0,0,0.24)]' : 'border-rose-200/40 bg-gradient-to-r from-[#512339] via-[#2a1c2b] to-[#10131f] shadow-[0_4px_0_rgba(244,63,94,0.16),0_10px_20px_rgba(0,0,0,0.24)]'}`}>
                     <span className={`grid size-12 shrink-0 place-items-center rounded-[17px] border-2 shadow-inner ${isEnergy ? 'border-amber-100/35 bg-gradient-to-br from-amber-200/25 to-amber-500/10 text-amber-100' : 'border-rose-100/30 bg-gradient-to-br from-rose-200/25 to-rose-500/10 text-rose-100'}`}>{isEnergy ? <BatteryCharging size={18} /> : <Heart size={18} className="fill-rose-400" />}</span>
-                    <div className="min-w-0 flex-1"><p className="text-[10px] font-black text-white">{item.label}</p><p className="mt-1 text-[9px] leading-4 text-white/60">{isEnergy ? 'Adds 1 energy' : 'One extra heart for any run · maximum 1 held'}</p></div>
-                    <button type="button" onClick={() => void purchaseItem(item.code)} disabled={Boolean(shopBusy) || Boolean(run) || unavailable} className={`shrink-0 rounded-xl border-2 px-3 py-2.5 text-[9px] font-black transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${isEnergy ? 'border-amber-100/70 bg-gradient-to-b from-[#fff0a8] to-[#ffc94d] text-[#382200] shadow-[0_3px_0_#a36d12] hover:brightness-105' : 'border-rose-100/70 bg-gradient-to-b from-[#ffd6e3] to-[#fb7185] text-[#3b0c1d] shadow-[0_3px_0_#a92446] hover:brightness-105'}`}>{shopBusy === item.code ? '…' : unavailable && !isEnergy ? 'Owned' : `${formatPepe(item.priceAtomic)} PEPE`}</button>
+                    <div className="min-w-0 flex-1"><p className="text-[10px] font-black text-white">{item.label}</p><p className="mt-1 text-[9px] leading-4 text-white/60">{isEnergy ? state?.unlimitedEnergy ? 'Energy is unlimited' : 'Adds 1 energy' : 'One extra heart for any run · maximum 1 held'}</p></div>
+                    <button type="button" onClick={() => void purchaseItem(item.code)} disabled={Boolean(shopBusy) || Boolean(run) || unavailable} className={`shrink-0 rounded-xl border-2 px-3 py-2.5 text-[9px] font-black transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 ${isEnergy ? 'border-amber-100/70 bg-gradient-to-b from-[#fff0a8] to-[#ffc94d] text-[#382200] shadow-[0_3px_0_#a36d12] hover:brightness-105' : 'border-rose-100/70 bg-gradient-to-b from-[#ffd6e3] to-[#fb7185] text-[#3b0c1d] shadow-[0_3px_0_#a92446] hover:brightness-105'}`}>{shopBusy === item.code ? '…' : isEnergy && state?.unlimitedEnergy ? 'Included' : unavailable && !isEnergy ? 'Owned' : `${formatPepe(item.priceAtomic)} PEPE`}</button>
                   </div>
                 })}
                 {!visibleShopItems.length && <p className="text-[10px] text-white/40">Shop items are loading.</p>}

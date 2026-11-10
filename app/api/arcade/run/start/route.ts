@@ -2,7 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { and, eq, gte, lt, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
+import { arcadeEntitlements, arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
 import { ARCADE_DAILY_RUN_LIMIT, ARCADE_HEARTBEAT_GRACE_MS, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, getArcadeHomeroCoinsRemaining, type ArcadeBoostCode } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, isRecord, lockArcadeProfile, readJsonBody } from '@/lib/arcade-service'
 import { getArcadeDayWindow } from '@/lib/arcade-time'
@@ -36,6 +36,13 @@ export async function POST(request: NextRequest) {
         .where(and(eq(earningEvents.guestId, access.guestId), eq(earningEvents.source, 'arcade_homero_coin')))
       const homeroCoinsRemaining = getArcadeHomeroCoinsRemaining(coinEarnings?.rewardAtomic ?? 0)
       const now = new Date()
+      const [entitlement] = await transaction
+        .select({ unlimitedRanked: arcadeEntitlements.unlimitedRanked, unlimitedEnergy: arcadeEntitlements.unlimitedEnergy })
+        .from(arcadeEntitlements)
+        .where(eq(arcadeEntitlements.guestId, access.guestId))
+        .limit(1)
+      const unlimitedRanked = entitlement?.unlimitedRanked ?? false
+      const unlimitedEnergy = entitlement?.unlimitedEnergy ?? false
       const [runningSession] = await transaction
         .select({ id: arcadeSessions.id, lastHeartbeatAt: arcadeSessions.lastHeartbeatAt, pausedAt: arcadeSessions.pausedAt })
         .from(arcadeSessions)
@@ -52,17 +59,20 @@ export async function POST(request: NextRequest) {
           .where(eq(arcadeSessions.id, runningSession.id))
       }
 
-      const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
-      const [dailyRuns] = await transaction
-        .select({ count: sql<number>`count(*)::int` })
-        .from(arcadeSessions)
-        .where(and(
-          eq(arcadeSessions.guestId, access.guestId),
-          gte(arcadeSessions.startedAt, dayStart),
-          lt(arcadeSessions.startedAt, nextDayStart),
-        ))
-      if ((dailyRuns?.count ?? 0) >= ARCADE_DAILY_RUN_LIMIT) return { status: 'daily_limit' as const }
-      if (mode === 'ranked' && profile.energy < 1) return { status: 'no_energy' as const, energy: profile.energy }
+      if (mode === 'ranked' && !unlimitedRanked) {
+        const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
+        const [dailyRuns] = await transaction
+          .select({ count: sql<number>`count(*)::int` })
+          .from(arcadeSessions)
+          .where(and(
+            eq(arcadeSessions.guestId, access.guestId),
+            eq(arcadeSessions.mode, 'ranked'),
+            gte(arcadeSessions.startedAt, dayStart),
+            lt(arcadeSessions.startedAt, nextDayStart),
+          ))
+        if ((dailyRuns?.count ?? 0) >= ARCADE_DAILY_RUN_LIMIT) return { status: 'daily_limit' as const }
+      }
+      if (mode === 'ranked' && !unlimitedEnergy && profile.energy < 1) return { status: 'no_energy' as const, energy: profile.energy }
 
       for (const boostCode of selectedBoosts) {
         const [inventoryItem] = await transaction
@@ -96,7 +106,7 @@ export async function POST(request: NextRequest) {
       }
 
       let remainingEnergy = profile.energy
-      if (mode === 'ranked') {
+      if (mode === 'ranked' && !unlimitedEnergy) {
         const [updatedProfile] = await transaction
           .update(arcadeProfiles)
           .set({ energy: profile.energy - 1, updatedAt: now })
