@@ -27,6 +27,7 @@ async function sendPromoAction(url: string, { arg }: { arg: BannerPromoAction })
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(arg),
+    keepalive: arg.action === 'click',
   })
   if (!response.ok) throw new Error('Could not update banner promotion.')
   return response.json()
