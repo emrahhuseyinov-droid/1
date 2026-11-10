@@ -1,6 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
+import { Radio, Trophy } from 'lucide-react'
 import { ArcadeWeeklyLeaderboard } from '@/components/arcade-weekly-leaderboard'
 import { LocalizedTree } from '@/components/site-language-provider'
 
@@ -18,7 +19,7 @@ async function getWeeklyLeaderboard(url: string): Promise<WeeklyLeaderboardData>
 }
 
 export function ArcadeWeeklyLeaderboardPage() {
-  const { data, error, isLoading, mutate } = useSWR<WeeklyLeaderboardData>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<WeeklyLeaderboardData>(
     '/api/arcade/leaderboard',
     getWeeklyLeaderboard,
     {
@@ -31,24 +32,32 @@ export function ArcadeWeeklyLeaderboardPage() {
 
   return (
     <LocalizedTree>
-      <main id="top" className="dashboard-page-shell weekly-leaderboard-page space-y-1 text-white">
-        <header className="px-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <h1 className="text-base font-black leading-[18px] tracking-tight text-white sm:text-lg sm:leading-6">Weekly leaderboard</h1>
-            <span className="rounded-sm border border-emerald-300/45 bg-emerald-300/10 px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-emerald-200">FREE</span>
+    <main id="top" className="dashboard-page-shell weekly-leaderboard-page space-y-4 text-white">
+      <header className="flex flex-wrap items-end justify-between gap-4 px-1">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Trophy aria-hidden="true" className="text-amber-200" size={24} />
+            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Weekly leaderboard</h1>
+            <span className="rounded-md border border-emerald-200/35 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-emerald-100">FREE</span>
           </div>
-          <p className="max-w-3xl text-[8px] leading-[10px] text-slate-200/75 sm:text-[9px] sm:leading-3">
+          <p className="mt-1.5 max-w-3xl text-sm leading-6 text-white/75">
             Your best server-verified ranked run earns the spot. Casual and boosted runs stay off the board.
           </p>
-        </header>
+        </div>
+        <div className="inline-flex min-h-9 w-fit items-center gap-2 rounded-full border border-rose-200/25 bg-rose-400/10 px-3 py-1.5 text-xs font-bold text-rose-50 shadow-[0_0_22px_rgba(244,63,94,0.12)]">
+          <span className="size-2 animate-pulse rounded-full bg-rose-300 shadow-[0_0_10px_rgba(251,113,133,0.8)] motion-reduce:animate-none" />
+          <Radio aria-hidden="true" size={14} /> Live
+        </div>
+      </header>
 
-        <ArcadeWeeklyLeaderboard
-          data={data}
-          error={error}
-          isLoading={isLoading}
-          onRefresh={() => void mutate()}
-        />
-      </main>
+      <ArcadeWeeklyLeaderboard
+        data={data}
+        error={error}
+        isLoading={isLoading}
+        isRefreshing={isValidating}
+        onRefresh={() => void mutate()}
+      />
+    </main>
     </LocalizedTree>
   )
 }
