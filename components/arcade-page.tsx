@@ -69,6 +69,27 @@ function ArcadeCard({ children, className = '' }: { children: ReactNode; classNa
   return <section className={`min-w-0 rounded-[24px] border border-white/[0.08] bg-[#09090B] p-4 shadow-[0_16px_50px_rgba(0,0,0,0.22)] sm:p-5 ${className}`}>{children}</section>
 }
 
+const arcadeGuideCards = [
+  {
+    title: 'Weekly leaderboard:',
+    description: 'Take part in Ranked runs to climb the leaderboard. Every result is automatically verified before the weekly results are finalized.',
+    Icon: Trophy,
+    color: 'border-amber-100/90 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-300',
+  },
+  {
+    title: 'Run rewards:',
+    description: 'Valuable coins appear along the route in Ranked mode. Collect them while running to add to your HOMERO balance!',
+    Icon: Coins,
+    color: 'border-cyan-100/90 bg-gradient-to-br from-cyan-100 via-sky-200 to-sky-300',
+  },
+  {
+    title: 'Energy refill:',
+    description: 'Out of energy for another attempt? Complete verified View Ads tasks and jump straight back into the game!',
+    Icon: BatteryCharging,
+    color: 'border-rose-100/90 bg-gradient-to-br from-rose-100 via-pink-200 to-fuchsia-200',
+  },
+] as const
+
 export function ArcadePage() {
   const router = useRouter()
   const { data: state, error: stateError, isLoading, mutate: refreshState } = useSWR<ArcadeState>('/api/arcade/state', getJson, { revalidateOnFocus: true })
@@ -267,14 +288,23 @@ export function ArcadePage() {
   return (
     <LocalizedTree>
     <main id="top" className="dashboard-page-shell min-w-0 space-y-5 text-white">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[30px]"><Gamepad2 className="text-amber-300" size={25} /> Arcade</h1>
-          <p className="mt-1 max-w-xl text-xs leading-5 text-white/55 sm:text-sm">Run as far as you can before a collision. Speed rises every 100 m; Ranked runs are replay-verified for the weekly board. Collect the coin that appears every 100 m in Ranked mode to earn 1 HOMERO, up to 200 HOMERO per account. Earn energy from verified View Ads tasks.</p>
-        </div>
+      <header className="space-y-4">
+        <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[30px]"><Gamepad2 className="text-amber-300" size={25} /> Arcade</h1>
+        <section aria-label="Arcade guide" className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {arcadeGuideCards.map(({ title, description, Icon, color }, index) => (
+            <article key={title} className={cn('relative min-h-[158px] overflow-hidden rounded-[26px] border-2 p-4 text-[#241600] shadow-[0_5px_0_rgba(0,0,0,0.25),0_14px_28px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-1 sm:p-5', color)}>
+              <div className="flex items-start justify-between gap-3">
+                <span aria-hidden="true" className="rounded-full border-2 border-white/80 bg-white/60 px-2.5 py-1 text-[9px] font-black tracking-[0.14em] shadow-[0_2px_0_rgba(0,0,0,0.12)]">{String(index + 1).padStart(2, '0')}</span>
+                <span aria-hidden="true" className="grid size-10 rotate-3 place-items-center rounded-[15px] border-2 border-white/80 bg-white/65 text-[#241600] shadow-[0_3px_0_rgba(0,0,0,0.13)]"><Icon size={18} /></span>
+              </div>
+              <h2 className="mt-3 text-sm font-black tracking-tight sm:text-base">{title}</h2>
+              <p className="mt-1.5 text-[11px] font-semibold leading-[1.55] text-[#241600]/80 sm:text-xs">{description}</p>
+            </article>
+          ))}
+        </section>
       </header>
 
-      <div className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(310px,0.85fr)]">
+      <div className={cn('grid min-w-0 grid-cols-1 gap-5', mode === 'ranked' ? 'xl:grid-cols-[minmax(0,1.55fr)_minmax(310px,0.85fr)]' : 'xl:grid-cols-1')}>
         <div className="min-w-0 space-y-5">
           <ArcadeCard className={cn('overflow-hidden border-amber-300/15 p-0', mode !== 'casual' && 'xl:pb-[38px]')}>
             <div className="relative isolate aspect-[2.55] min-h-[132px] w-full min-w-0 overflow-hidden rounded-[24px] bg-[#09090B] sm:aspect-[20/7] sm:min-h-[160px]">
@@ -361,7 +391,7 @@ export function ArcadePage() {
           </ArcadeCard>
         </div>
 
-        <aside className="min-w-0 space-y-5">
+        {mode === 'ranked' && <aside className="min-w-0 space-y-5">
           <ArcadeCard className="border-2 border-sky-300/25 bg-gradient-to-br from-[#111b32] via-[#0c1326] to-[#09090B] shadow-[0_8px_0_rgba(56,189,248,0.08),0_18px_50px_rgba(0,0,0,0.35)]">
             <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-amber-200/70">Player profile</p><h2 className="mt-1 text-sm font-black">Your stats</h2></div><Trophy size={18} className="text-amber-300" /></div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -384,7 +414,7 @@ export function ArcadePage() {
             </div>
           </ArcadeCard>
 
-          {mode !== 'casual' && <ArcadeCard className="relative overflow-hidden border-2 border-amber-200/30 bg-gradient-to-br from-[#261d2c] via-[#171521] to-[#0b101c] shadow-[0_8px_0_rgba(251,191,36,0.08),0_18px_50px_rgba(0,0,0,0.35)]">
+          <ArcadeCard className="relative overflow-hidden border-2 border-amber-200/30 bg-gradient-to-br from-[#261d2c] via-[#171521] to-[#0b101c] shadow-[0_8px_0_rgba(251,191,36,0.08),0_18px_50px_rgba(0,0,0,0.35)]">
             <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-12 size-36 rounded-full bg-amber-300/[0.08] blur-3xl" />
             <div className="relative">
               <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-amber-200/70">PEPE shop</p><h2 className="mt-1 flex items-center gap-2 text-sm font-black"><ShoppingBag size={14} className="text-amber-300" /> Run essentials</h2></div><Coins size={17} className="text-white/45" /></div>
@@ -402,8 +432,8 @@ export function ArcadePage() {
                 {!visibleShopItems.length && <p className="text-[10px] text-white/40">Shop items are loading.</p>}
               </div>
             </div>
-          </ArcadeCard>}
-        </aside>
+          </ArcadeCard>
+        </aside>}
       </div>
     </main>
     </LocalizedTree>
