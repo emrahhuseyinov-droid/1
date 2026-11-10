@@ -5,11 +5,19 @@ import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, referralCommissions } from '@/lib/db/schema'
-import { ADVERTISER_WALLET_EVENT_SOURCES } from '@/lib/advertiser-wallet'
 import { getDashboardBalancesAtomic } from '@/lib/dashboard'
 import { calculatePepeSwapFeeAtomic, parsePepeAmountToAtomic } from '@/lib/pepe-amount'
 import {
-  getPepeReserveAdminProfile,
+  createHomeroSwapQuote,
+  getHomeroRateNumerator,
+  getHomeroSpotRate,
+  getHomeroTreasuryAdminProfile,
+  getHomeroTreasurySnapshot,
+  HOMERO_RATE_SCALE,
+  HOMERO_TREASURY_EVENT_SOURCES,
+  verifyHomeroSwapQuote,
+} from '@/lib/homero-treasury'
+import {
   getPepeReserveSnapshot,
   isPepeReserveAdmin,
   PEPE_RESERVE_EVENT_SOURCES,
@@ -27,22 +35,44 @@ export async function GET(request: NextRequest) {
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
 
+  const amountText = request.nextUrl.searchParams.get('amount')
+  const amountAtomic = amountText === null ? null : parsePepeAmountToAtomic(amountText)
+  if (amountText !== null && amountAtomic === null) {
+    return NextResponse.json({ error: 'Enter a valid positive HOMERO amount.' }, { status: 400, headers: noStoreHeaders })
+  }
+  if (amountText !== null) {
+    const limited = await enforceApiRateLimit('homero-swap-quote', account.session.user.id, { windowSeconds: 60, max: 60 })
+    if (limited) return limited
+  }
+
   try {
-    const reserveAdmin = await getPepeReserveAdminProfile()
+    const reserveAdmin = await getHomeroTreasuryAdminProfile()
     if (!reserveAdmin) {
       return NextResponse.json({ error: 'The configured exchange administrator account is not available.' }, { status: 503, headers: noStoreHeaders })
     }
 
-    const [balancesAtomic, reserve] = await Promise.all([
+    const [balancesAtomic, pepeReserve, treasury] = await Promise.all([
       getDashboardBalancesAtomic(account.profile.id),
       getPepeReserveSnapshot(reserveAdmin.id),
+      db.transaction((transaction) => getHomeroTreasurySnapshot(transaction, reserveAdmin.id)),
     ])
+    const distributedAtomic = BigInt(treasury.distributedAtomic)
+    const homeroRatePepePerToken = getHomeroSpotRate(distributedAtomic)
+    const swapQuote = amountAtomic !== null && treasury.initialReserveSeeded
+      ? createHomeroSwapQuote(amountAtomic, distributedAtomic, account.session.user.id)
+      : null
 
     return NextResponse.json({
       balancesAtomic,
-      reserveAvailableAtomic: reserve.availableAtomic,
-      initialReserveSeeded: reserve.initialReserveSeeded,
+      reserveAvailableAtomic: pepeReserve.availableAtomic,
+      initialReserveSeeded: pepeReserve.initialReserveSeeded,
+      homeroTreasuryAvailableAtomic: treasury.availableAtomic,
+      homeroDistributedAtomic: treasury.distributedAtomic,
+      homeroRemainingSupplyAtomic: treasury.remainingSupplyAtomic,
+      homeroTreasurySeeded: treasury.initialReserveSeeded,
+      homeroRatePepePerToken,
       isReserveAdmin: isPepeReserveAdmin(account.session.user.email, account.session.user.emailVerified),
+      swapQuote,
     }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[pepe-swap] Could not load swap balances:', error)
@@ -74,17 +104,29 @@ export async function POST(request: NextRequest) {
   const idempotencyKey = typeof input.idempotencyKey === 'string' && uuidPattern.test(input.idempotencyKey)
     ? input.idempotencyKey.toLowerCase()
     : null
-  if (amountAtomic === null || !idempotencyKey) {
-    return NextResponse.json({ error: 'Enter a valid positive amount and retry the exchange.' }, { status: 400, headers: noStoreHeaders })
+  const signedQuote = verifyHomeroSwapQuote(input.quoteToken, account.session.user.id)
+  if (
+    amountAtomic === null ||
+    !idempotencyKey ||
+    !signedQuote ||
+    signedQuote.amountAtomic !== String(amountAtomic)
+  ) {
+    return NextResponse.json({ error: 'The exchange quote is invalid. Request a fresh quote and try again.' }, { status: 400, headers: noStoreHeaders })
   }
 
-  const feeAtomic = calculatePepeSwapFeeAtomic(amountAtomic)
+  const quoteAmountAtomic = BigInt(signedQuote.amountAtomic)
+  const grossPepeAtomic = BigInt(signedQuote.grossPepeAtomic)
+  const feeAtomic = BigInt(signedQuote.feePepeAtomic)
+  const pepeCreditAtomic = BigInt(signedQuote.netPepeAtomic)
+  if ([grossPepeAtomic, feeAtomic, pepeCreditAtomic].some((value) => value > BigInt(Number.MAX_SAFE_INTEGER))) {
+    return NextResponse.json({ error: 'The exchange quote is too large.' }, { status: 400, headers: noStoreHeaders })
+  }
+
   const feeAmountAtomic = Number(feeAtomic)
-  const pepeCreditAtomic = BigInt(amountAtomic) - feeAtomic
   const pepeCreditAmountAtomic = Number(pepeCreditAtomic)
 
   try {
-    const reserveAdmin = await getPepeReserveAdminProfile()
+    const reserveAdmin = await getHomeroTreasuryAdminProfile()
     if (!reserveAdmin) {
       return NextResponse.json({ error: 'The exchange administrator account is not configured.' }, { status: 503, headers: noStoreHeaders })
     }
@@ -142,42 +184,43 @@ export async function POST(request: NextRequest) {
         ])
 
         if (!existingCredit || !existingReserveDebit) return { status: 'ledger_inconsistent' as const }
+        const oldGross = -BigInt(existingReserveDebit.rewardAtomic)
+        const oldFee = BigInt(existingCommission?.rewardAtomic ?? 0)
         if (
           existingDebit.rewardAtomic !== -amountAtomic ||
-          existingReserveDebit.rewardAtomic !== -amountAtomic
+          existingCredit.rewardAtomic <= 0 ||
+          oldGross <= 0n ||
+          BigInt(existingCredit.rewardAtomic) + oldFee !== oldGross
         ) {
-          return { status: 'idempotency_conflict' as const }
-        }
-
-        if (existingCommission) {
-          if (
-            existingCommission.rewardAtomic !== feeAmountAtomic ||
-            existingCredit.rewardAtomic !== pepeCreditAmountAtomic
-          ) {
-            return { status: 'idempotency_conflict' as const }
-          }
-
-          return {
-            status: 'completed' as const,
-            homeroDebitedAtomic: amountAtomic,
-            pepeCreditedAtomic: pepeCreditAmountAtomic,
-            feeAtomic: feeAmountAtomic,
-            alreadyProcessed: true,
-          }
-        }
-
-        if (existingCredit.rewardAtomic !== amountAtomic) {
           return { status: 'idempotency_conflict' as const }
         }
 
         return {
           status: 'completed' as const,
           homeroDebitedAtomic: amountAtomic,
-          pepeCreditedAtomic: amountAtomic,
-          feeAtomic: 0,
+          pepeGrossAtomic: Number(oldGross),
+          pepeCreditedAtomic: existingCredit.rewardAtomic,
+          feeAtomic: Number(oldFee),
+          homeroRatePepePerToken: getHomeroSpotRate(BigInt(signedQuote.distributedAtomic)),
           alreadyProcessed: true,
         }
       }
+
+      if (Date.now() >= signedQuote.expiresAt) return { status: 'quote_expired' as const }
+
+      const treasury = await getHomeroTreasurySnapshot(transaction, reserveAdmin.id)
+      if (!treasury.initialReserveSeeded) return { status: 'treasury_not_seeded' as const }
+      const distributedAtomic = BigInt(treasury.distributedAtomic)
+      if (signedQuote.distributedAtomic !== distributedAtomic.toString()) return { status: 'quote_stale' as const }
+      const expectedRateNumerator = getHomeroRateNumerator(distributedAtomic)
+      const expectedGross = (quoteAmountAtomic * expectedRateNumerator) / HOMERO_RATE_SCALE
+      const expectedFee = calculatePepeSwapFeeAtomic(expectedGross)
+      if (
+        signedQuote.rateNumerator !== expectedRateNumerator.toString() ||
+        grossPepeAtomic !== expectedGross ||
+        feeAtomic !== expectedFee ||
+        pepeCreditAtomic !== expectedGross - expectedFee
+      ) return { status: 'quote_invalid' as const }
 
       const [homeroBalance] = await transaction
         .select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
@@ -185,7 +228,7 @@ export async function POST(request: NextRequest) {
         .where(and(
           eq(earningEvents.guestId, account.profile.id),
           eq(earningEvents.tokenSymbol, 'HOMERO'),
-          notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES]),
+          notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES]),
         ))
       const [commissionBalance] = await transaction
         .select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
@@ -193,7 +236,7 @@ export async function POST(request: NextRequest) {
         .where(eq(referralCommissions.referrerId, account.profile.id))
 
       const spendableHomeroAtomic = BigInt(homeroBalance?.amount ?? '0') + BigInt(commissionBalance?.amount ?? '0')
-      if (spendableHomeroAtomic < BigInt(amountAtomic)) return { status: 'insufficient_homero' as const }
+      if (spendableHomeroAtomic < quoteAmountAtomic) return { status: 'insufficient_homero' as const }
 
       const [reserveBalance] = await transaction
         .select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
@@ -203,8 +246,7 @@ export async function POST(request: NextRequest) {
           eq(earningEvents.tokenSymbol, 'PEPE'),
           inArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES]),
         ))
-      const availableReserveAtomic = BigInt(reserveBalance?.amount ?? '0')
-      if (availableReserveAtomic < BigInt(amountAtomic)) return { status: 'insufficient_reserve' as const }
+      if (BigInt(reserveBalance?.amount ?? '0') < grossPepeAtomic) return { status: 'insufficient_reserve' as const }
 
       const now = new Date()
       await transaction.insert(earningEvents).values([
@@ -218,17 +260,16 @@ export async function POST(request: NextRequest) {
           rewardAtomic: -amountAtomic,
           createdAt: now,
         },
-          {
-            id: randomUUID(),
-            guestId: account.profile.id,
-            source: 'swap',
-            sourceKey: pepeCreditKey,
-            itemId: 'HOMERO→PEPE',
-            tokenSymbol: 'PEPE',
-            rewardAtomic: pepeCreditAmountAtomic,
-            createdAt: now,
-          },
-
+        {
+          id: randomUUID(),
+          guestId: account.profile.id,
+          source: 'swap',
+          sourceKey: pepeCreditKey,
+          itemId: 'HOMERO→PEPE',
+          tokenSymbol: 'PEPE',
+          rewardAtomic: pepeCreditAmountAtomic,
+          createdAt: now,
+        },
         {
           id: randomUUID(),
           guestId: reserveAdmin.id,
@@ -236,7 +277,7 @@ export async function POST(request: NextRequest) {
           sourceKey: requestKey,
           itemId: 'HOMERO→PEPE reserve payout',
           tokenSymbol: 'PEPE',
-          rewardAtomic: -amountAtomic,
+          rewardAtomic: -Number(grossPepeAtomic),
           createdAt: now,
         },
       ])
@@ -257,8 +298,10 @@ export async function POST(request: NextRequest) {
       return {
         status: 'completed' as const,
         homeroDebitedAtomic: amountAtomic,
+        pepeGrossAtomic: Number(grossPepeAtomic),
         pepeCreditedAtomic: pepeCreditAmountAtomic,
         feeAtomic: feeAmountAtomic,
+        homeroRatePepePerToken: Number(expectedRateNumerator) / Number(HOMERO_RATE_SCALE),
         alreadyProcessed: false,
       }
     })
@@ -270,10 +313,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient HOMERO balance.' }, { status: 409, headers: noStoreHeaders })
     }
     if (result.status === 'insufficient_reserve') {
-      return NextResponse.json({ error: 'The exchange balance does not cover this amount.' }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'The PEPE treasury balance does not cover this quote.' }, { status: 409, headers: noStoreHeaders })
+    }
+    if (result.status === 'quote_expired' || result.status === 'quote_stale') {
+      return NextResponse.json({ error: 'The quote expired or the curve changed. Request a fresh quote and try again.' }, { status: 409, headers: noStoreHeaders })
+    }
+    if (result.status === 'treasury_not_seeded') {
+      return NextResponse.json({ error: 'The HOMERO treasury has not been initialized yet.' }, { status: 409, headers: noStoreHeaders })
+    }
+    if (result.status === 'quote_invalid') {
+      return NextResponse.json({ error: 'The exchange quote could not be verified. Request a fresh quote.' }, { status: 409, headers: noStoreHeaders })
     }
     if (result.status === 'idempotency_conflict') {
-      return NextResponse.json({ error: 'This request key was already used for a different swap amount.' }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'This request key was already used for a different swap.' }, { status: 409, headers: noStoreHeaders })
     }
     if (result.status === 'ledger_inconsistent') {
       return NextResponse.json({ error: 'The swap record could not be confirmed. Contact support before retrying.' }, { status: 500, headers: noStoreHeaders })
@@ -281,8 +333,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       homeroDebitedAtomic: result.homeroDebitedAtomic,
+      pepeGrossAtomic: result.pepeGrossAtomic,
       pepeCreditedAtomic: result.pepeCreditedAtomic,
       feeAtomic: result.feeAtomic,
+      homeroRatePepePerToken: result.homeroRatePepePerToken,
       alreadyProcessed: result.alreadyProcessed,
     }, { headers: noStoreHeaders })
   } catch (error) {

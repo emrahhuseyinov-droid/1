@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPepeMarketQuote } from '@/lib/pepe-market-price'
 
 const priceCacheHeaders = {
-  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+  'Cache-Control': 'no-store',
 }
 
 export async function GET() {
