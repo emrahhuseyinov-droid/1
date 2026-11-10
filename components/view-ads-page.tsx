@@ -85,7 +85,7 @@ export function ViewAdsPage() {
               <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-extrabold text-white shadow-sm backdrop-blur"><Sparkles size={12} />{isRussian ? 'Смотри · выполняй · зарабатывай' : 'Watch · complete · earn'}</span>
             </div>
           </div>
-          <div className="relative mt-4 flex justify-center rounded-2xl border border-white/25 bg-white/10 p-2 shadow-inner shadow-indigo-950/10 backdrop-blur-sm xl:mt-0 xl:flex-1">
+          <div className="relative mt-4 flex w-full justify-center xl:mt-0 xl:w-[320px] xl:flex-none">
             <AdsLabBanner
               id="unit-4x13z1u8z"
               container="adslab-banner-unit-4x13z1u8z"

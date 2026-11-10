@@ -754,7 +754,6 @@ const ruPhrases = new Map<string, string>([
   ['Could not complete the purchase.', 'Не удалось завершить покупку.'],
   ['Arcade energy', 'Энергия аркады'],
   ['Arcade runs this Baku day', 'Забеги аркады за бакинский игровой день'],
-  ['Ad energy this Baku day', 'Энергия от рекламы за бакинский игровой день'],
   ['Daily ad energy limit reached.', 'Дневной лимит энергии от рекламы достигнут.'],
   ['You have reached the daily limit of 7 arcade runs. Resets at 17:38 Baku time.', 'Достигнут дневной лимит аркады — 7 запусков. Сброс в 17:38 по бакинскому времени.'],
   ['A successful Daily Bonus also adds up to 1 Arcade energy. Energy cannot exceed 10.00, so the amount credited may be lower when you are close to the cap or already full.', 'За получение ежедневного бонуса начисляется до 1 единицы энергии Arcade. Запас не может превышать 10,00, поэтому при заполненном или почти заполненном запасе будет начислено меньше.'],
