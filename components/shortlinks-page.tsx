@@ -2,7 +2,6 @@
 
 import { Link2, Sparkles } from 'lucide-react'
 import { AdsLabShortlinksTaskList } from '@/components/adslab-shortlinks-task-list'
-import { AdsLabLinkShortener } from '@/components/adslab-link-shortener'
 import { useSiteLanguage } from '@/components/site-language-provider'
 
 export function ShortlinksPage() {
@@ -16,15 +15,12 @@ export function ShortlinksPage() {
         <div className="relative flex items-center gap-3">
           <span aria-hidden="true" className="flex size-14 shrink-0 rotate-[-4deg] items-center justify-center rounded-[22px] border-2 border-white/60 bg-[#8de8ff] text-[#19244a] shadow-lg shadow-indigo-950/25"><Link2 size={25} /></span>
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100">AdsLab · {isRussian ? 'короткие ссылки' : 'short links'}</p>
             <h1 className="mt-0.5 text-2xl font-black tracking-tight sm:text-3xl">Shortlinks</h1>
-            <p className="mt-1 text-xs leading-5 text-white/85">{isRussian ? 'Переходите по ссылкам AdsLab и получайте PEPE за подтверждённые задания.' : 'Visit AdsLab links and earn PEPE for verified tasks.'}</p>
-            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-extrabold text-white shadow-sm backdrop-blur"><Sparkles size={12} />{isRussian ? 'Открывай · выполняй · зарабатывай' : 'Open · complete · earn'}</span>
+            <p className="mt-1 text-xs leading-5 text-white/85">{isRussian ? 'Переходите по ссылкам и получайте PEPE за подтверждённые задания.' : 'Visit AdsLab links and earn PEPE for verified tasks.'}</p>
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-extrabold text-white shadow-sm backdrop-blur"><Sparkles size={12} />{isRussian ? 'Открывай · Выполняй · Зарабатывай' : 'Open · complete · earn'}</span>
           </div>
         </div>
       </header>
-
-      <AdsLabLinkShortener />
 
       <section aria-label={isRussian ? 'Доступные Shortlinks' : 'Available Shortlinks'} className="cartoon-panel overflow-hidden rounded-[32px] border-2 border-dashboard-outline bg-[#171f40] shadow-xl shadow-indigo-950/30">
         <header className="border-b-2 border-white/10 bg-gradient-to-r from-[#252f5b] to-[#20294e] px-4 py-4 sm:px-5">

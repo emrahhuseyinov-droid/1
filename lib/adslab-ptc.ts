@@ -271,9 +271,14 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     throw new AdsLabPtcError('AdsLab placement ID is not configured.', 503, { stage: 'configuration_missing' })
   }
 
-  const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY_2?.trim() || process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
+  const apiKey = category === 'shortlinks'
+    ? process.env.api_7?.trim()
+    : process.env.ADSLAB_PUBLISHER_API_KEY_2?.trim() || process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
   if (!apiKey) {
-    throw new AdsLabPtcError('AdsLab publisher API key is not configured.', 503, { stage: 'configuration_missing' })
+    const message = category === 'shortlinks'
+      ? 'AdsLab Shortlinks API key is not configured.'
+      : 'AdsLab publisher API key is not configured.'
+    throw new AdsLabPtcError(message, 503, { stage: 'configuration_missing' })
   }
 
   const ipAddress = getClientIp(headers)
