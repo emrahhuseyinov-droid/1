@@ -258,6 +258,43 @@
   html.light .dashboard-page-shell::after {
     opacity: 0.22;
   }
+
+  .dashboard-page-shell.weekly-leaderboard-page::before {
+    background:
+      radial-gradient(ellipse at 52% 7%, rgb(41 103 188 / 0.26), transparent 42%),
+      radial-gradient(ellipse at 15% 26%, rgb(22 130 174 / 0.14), transparent 36%),
+      radial-gradient(ellipse at 88% 20%, rgb(130 62 155 / 0.16), transparent 34%),
+      linear-gradient(180deg, rgb(8 17 37 / 0.36), transparent 80%);
+  }
+
+  .dashboard-page-shell.weekly-leaderboard-page::after {
+    inset: 0.5rem 0 auto;
+    height: 100%;
+    background-image:
+      radial-gradient(circle, rgb(205 220 255 / 0.72) 0.8px, transparent 1.3px),
+      radial-gradient(circle, rgb(116 176 255 / 0.52) 1px, transparent 1.5px);
+    background-position: 0 0, 17px 13px;
+    background-size: 43px 43px, 83px 83px;
+    mask-image: linear-gradient(to bottom, black 0%, black 76%, transparent 100%);
+    opacity: 0.28;
+  }
+
+  .weekly-leaderboard-panel {
+    background-color: #0b1427;
+    background-image:
+      radial-gradient(ellipse at 52% 15%, rgb(34 87 152 / 0.18), transparent 48%),
+      linear-gradient(145deg, #0b1427 0%, #0b1324 60%, #10142c 100%);
+  }
+
+  .weekly-leaderboard-stars {
+    background-image:
+      radial-gradient(circle, rgb(205 220 255 / 0.6) 0.8px, transparent 1.3px),
+      radial-gradient(circle, rgb(95 164 239 / 0.48) 1px, transparent 1.5px);
+    background-position: 0 0, 13px 19px;
+    background-size: 37px 37px, 71px 71px;
+    mask-image: linear-gradient(to bottom, black, transparent 94%);
+    opacity: 0.36;
+  }
 }
 
 dialog.adslab-captcha-dialog[open] {
