@@ -51,7 +51,7 @@ const rules = [
     tone: 'text-emerald-200 bg-emerald-300/10 ring-emerald-200/15',
     points: [
       'The withdrawal form supports PEPE only and requires a registered, verified FaucetPay account email.',
-      'The minimum request is 5,000 PEPE. The daily limit is 50,000 PEPE and resets at 00:00 UTC.',
+      'The minimum request is 1,000 PEPE. The daily limit is 50,000 PEPE and resets at 00:00 UTC.',
       'Pending and paid requests count toward that day’s limit. The requested PEPE is reserved while the transfer is being processed.',
       'If FaucetPay rejects a request, the PEPE is returned to your balance. If the status is pending, do not submit the same withdrawal again; the balance remains reserved to prevent a duplicate transfer.',
     ],
@@ -98,7 +98,7 @@ export function RulesPage() {
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
               <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/45">Minimum payout</p>
-              <p className="mt-2 font-mono text-xl font-black text-amber-100">5,000 PEPE</p>
+              <p className="mt-2 font-mono text-xl font-black text-amber-100">1,000 PEPE</p>
             </div>
             <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
               <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/45">Daily limit</p>

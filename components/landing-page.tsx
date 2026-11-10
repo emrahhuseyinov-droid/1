@@ -10,7 +10,6 @@ import {
   ArrowLeftRight,
   ArrowRight,
   CalendarDays,
-  Check,
   ChevronDown,
   CircleHelp,
   Gift,
@@ -51,7 +50,7 @@ const features = [
   },
   {
     title: 'PEPE payouts',
-    description: 'Request payouts to a verified FaucetPay account. Minimum: 5,000 PEPE; daily limit: 50,000 PEPE.',
+    description: 'Request payouts to a verified FaucetPay account. Minimum: 1,000 PEPE; daily limit: 50,000 PEPE.',
     icon: Wallet,
     tone: 'text-blue-200 bg-blue-300/10 ring-blue-200/15',
   },
@@ -99,7 +98,7 @@ const steps = [
   },
   {
     title: 'Withdraw your PEPE',
-    description: 'Have at least 5,000 PEPE? Add your FaucetPay account and request a payout instantly!',
+    description: 'Have at least 1,000 PEPE? Add your FaucetPay account and request a payout instantly!',
     icon: Wallet,
   },
 ]
@@ -177,18 +176,9 @@ function HeroPreview() {
             <span className="size-1.5 rounded-full bg-amber-300" />
             <span className="text-[8px] font-extrabold uppercase tracking-[0.16em] text-white/80 sm:text-[9px]">Arcade preview</span>
           </div>
-          <div className="absolute right-3 top-3 rounded-xl border border-white/10 bg-[#080c12]/70 px-2.5 py-1.5 text-right backdrop-blur sm:right-4 sm:top-4 sm:px-3">
-            <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-white/55">Choose a mode</p>
-            <p className="mt-0.5 text-[9px] font-extrabold text-amber-100 sm:text-[10px]">Ranked · Casual</p>
-          </div>
-          <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 sm:bottom-4 sm:left-4 sm:right-4">
-            <div>
-              <p className="text-[8px] font-extrabold uppercase tracking-[0.16em] text-amber-200">Play · Complete tasks · Track rewards</p>
-              <p className="mt-1 text-base font-black tracking-tight text-white sm:text-xl">One home for your progress</p>
-            </div>
-            <span className="mb-0.5 grid size-9 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur">
-              <ArrowRight size={15} aria-hidden="true" />
-            </span>
+          <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
+            <p className="text-[8px] font-extrabold uppercase tracking-[0.16em] text-amber-200">Play · Complete tasks · Track rewards</p>
+            <p className="mt-1 text-base font-black tracking-tight text-white sm:text-xl">One home for your progress</p>
           </div>
         </div>
 
@@ -244,7 +234,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
               <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">{'Minimum payout'}</dt>
-              <dd className="mt-1.5 font-mono text-[14px] font-bold text-amber-100">{'5,000 PEPE'}</dd>
+              <dd className="mt-1.5 font-mono text-[14px] font-bold text-amber-100">{'1,000 PEPE'}</dd>
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
               <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">{'Daily limit'}</dt>
@@ -351,16 +341,16 @@ export function LandingPage({ referralCode }: LandingPageProps) {
       <LandingHeader signInHref={signInHref} signUpHref={signUpHref} />
 
       <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-5 pb-20 pt-12 sm:gap-12 sm:px-8 sm:pb-24 sm:pt-16 md:grid-cols-[0.92fr_1.08fr] md:gap-10 lg:gap-16 lg:pb-28 lg:pt-20">
-        <div className="relative z-10 max-w-xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/70 sm:text-[10px]">
+        <div className="relative z-10 max-w-[560px]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.055] px-4 py-2.5 text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/75 shadow-[0_8px_26px_rgba(3,8,30,0.18)] sm:text-[10px]">
             <span className="size-1.5 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(252,211,77,0.8)]" />
             Tasks · Arcade · PEPE payouts
           </div>
-          <h1 className="mt-6 max-w-[620px] text-balance text-[clamp(2.75rem,6vw,4.25rem)] font-extrabold leading-[1.02] tracking-[-0.045em] text-white lg:text-[clamp(3rem,3.75vw,3.75rem)]">
+          <h1 className="mt-6 max-w-[620px] text-balance text-[clamp(2.9rem,6.2vw,4.5rem)] font-extrabold leading-[0.99] tracking-[-0.05em] text-white lg:text-[clamp(3.25rem,3.9vw,4rem)]">
             <span className="block">Play.</span>
             <span className="mt-1 block bg-gradient-to-r from-amber-200 via-yellow-100 to-cyan-200 bg-clip-text text-transparent">Earn PEPE.</span>
           </h1>
-          <p className="mt-6 max-w-lg text-base leading-7 text-white/65 sm:text-[17px] sm:leading-8">
+          <p className="mt-6 max-w-[29rem] text-base leading-7 text-white/70 sm:text-[17px] sm:leading-8">
             Complete verified tasks, play the neon Arcade, and request PEPE payouts through FaucetPay.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -370,11 +360,6 @@ export function LandingPage({ referralCode }: LandingPageProps) {
             <a href="#features" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/10 px-6 text-sm font-bold text-white/75 transition hover:border-white/20 hover:bg-white/[0.04] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100">
               Explore features <ChevronDown size={15} aria-hidden="true" />
             </a>
-          </div>
-          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-semibold text-white/60 sm:text-[13px]">
-            <span className="inline-flex items-center gap-1.5"><Check size={13} className="text-emerald-300" aria-hidden="true" /> FaucetPay PEPE payouts</span>
-            <span className="inline-flex items-center gap-1.5"><Check size={13} className="text-emerald-300" aria-hidden="true" /> Clear limits</span>
-            <span className="inline-flex items-center gap-1.5"><Check size={13} className="text-emerald-300" aria-hidden="true" /> Ranked & Casual Arcade</span>
           </div>
         </div>
 

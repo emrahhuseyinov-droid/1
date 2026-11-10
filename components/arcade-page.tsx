@@ -277,6 +277,7 @@ export function ArcadePage() {
   const missingEnergy = Math.max(0, 1 - energyValue)
   const missingEnergyLabel = missingEnergy === 1 ? 'Need 1 energy' : `Need ${formatEnergy(missingEnergy)} more energy`
   const rankedDailyLimitReached = mode === 'ranked' && state?.dailyRunsAvailable === false
+  const rankedRunsRemaining = Math.max(0, (state?.dailyRunLimit ?? 0) - (state?.dailyRunsToday ?? 0))
   const startRunLabel = rankedDailyLimitReached ? 'Daily limit reached' : mode === 'casual' ? 'Start free run' : state?.unlimitedEnergy ? 'Start ranked run · unlimited energy' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
   const showLives = mode === 'ranked'
   const lifeCount = run ? runLives : state?.inventory.life ?? 0
@@ -394,7 +395,7 @@ export function ArcadePage() {
           <ArcadeCard className="border-2 border-sky-300/25 bg-gradient-to-br from-[#111b32] via-[#0c1326] to-[#09090B] shadow-[0_8px_0_rgba(56,189,248,0.08),0_18px_50px_rgba(0,0,0,0.35)]">
             <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-amber-200/70">Player profile</p><h2 className="mt-1 text-sm font-black">Your stats</h2></div><Trophy size={18} className="text-amber-300" /></div>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <div className="group relative overflow-hidden rounded-[22px] border-2 border-sky-200/35 bg-gradient-to-br from-[#24405d] via-[#172943] to-[#10172e] p-3 shadow-[0_4px_0_rgba(14,165,233,0.2),0_12px_24px_rgba(0,0,0,0.3)] sm:self-start">
+              <div className="group relative overflow-hidden rounded-[22px] border-2 border-sky-200/35 bg-gradient-to-br from-[#24405d] via-[#172943] to-[#10172e] p-3 shadow-[0_4px_0_rgba(14,165,233,0.2),0_12px_24px_rgba(0,0,0,0.3)]">
                 <div aria-hidden="true" className="pointer-events-none absolute -right-4 -top-5 size-20 rounded-full bg-sky-300/10 blur-xl" />
                 <div className="relative">
                   <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-sky-100/70">Personal best</p><span className="grid size-7 place-items-center rounded-xl border border-sky-100/20 bg-sky-200/10 text-sky-100 shadow-inner"><Trophy size={12} /></span></div>
@@ -407,7 +408,14 @@ export function ArcadePage() {
                   <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-amber-100/75">Pepe Runner Energy</p><span className="grid size-7 place-items-center rounded-xl border border-amber-100/25 bg-amber-200/10 text-amber-100 shadow-inner"><BatteryCharging size={13} /></span></div>
                   <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(253,224,71,0.35)]">{state?.unlimitedEnergy ? 'Unlimited' : energyBalanceLabel}{!state?.unlimitedEnergy && <span className="ml-1 text-[10px] font-extrabold text-amber-100/65">/ {formatEnergy(energyCap)}</span>}</p>
                   {!state?.unlimitedEnergy && <div role="progressbar" aria-label="Pepe Runner Energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 shadow-[0_0_10px_rgba(253,224,71,0.55)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>}
-                  <p className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-2 py-1.5 text-[8px] text-white/65"><span>Ranked runs this Baku day</span><span className="font-mono font-extrabold tabular-nums text-amber-100">{state?.unlimitedRanked ? 'Unlimited' : `${state?.dailyRunsToday ?? 0} / ${state?.dailyRunLimit ?? 20}`}</span></p>
+                </div>
+              </div>
+              <div className="relative overflow-hidden rounded-[22px] border-2 border-emerald-200/30 bg-gradient-to-br from-[#123831] via-[#122b2c] to-[#10172e] p-3 shadow-[0_4px_0_rgba(16,185,129,0.16),0_12px_24px_rgba(0,0,0,0.3)]">
+                <div aria-hidden="true" className="pointer-events-none absolute -right-5 -top-6 size-24 rounded-full bg-emerald-100/10 blur-xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-emerald-100/75">Ranked runs left</p><span className="grid size-7 place-items-center rounded-xl border border-emerald-100/25 bg-emerald-200/10 text-emerald-100 shadow-inner"><Gamepad2 size={13} /></span></div>
+                  <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(110,231,183,0.35)]">{state ? state.unlimitedRanked ? 'Unlimited' : rankedRunsRemaining : '—'}{state && !state.unlimitedRanked && <span className="ml-1 text-[10px] font-extrabold text-emerald-100/65">/ {state.dailyRunLimit}</span>}</p>
+                  {state && !state.unlimitedRanked && <div role="progressbar" aria-label="Ranked runs remaining" aria-valuemin={0} aria-valuemax={Math.max(1, state.dailyRunLimit)} aria-valuenow={rankedRunsRemaining} aria-valuetext={`${rankedRunsRemaining} of ${state.dailyRunLimit} ranked runs remaining`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 shadow-[0_0_10px_rgba(110,231,183,0.45)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (rankedRunsRemaining / Math.max(1, state.dailyRunLimit)) * 100)}%` }} /></div>}
                 </div>
               </div>
             </div>

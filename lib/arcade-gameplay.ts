@@ -3,7 +3,7 @@ export type ArcadeObstacleKind = 'candle' | 'cactus'
 
 export const ARCADE_ENERGY_CAP = 10
 export const ARCADE_DAILY_ENERGY_EARNED_CAP = 20
-export const ARCADE_DAILY_RUN_LIMIT = 20
+export const ARCADE_DAILY_RUN_LIMIT = 5
 export const ARCADE_PTC_ENERGY_REWARD = 0.02
 export const ARCADE_VIEW_AD_ENERGY_REWARD = 0.25
 export const ARCADE_MAX_JUMPS = 100_000
@@ -56,21 +56,23 @@ export const ARCADE_MILESTONES = [
   { key: 'milestone_2000', distanceM: 2000, amountAtomic: 250_000_000_000 },
 ] as const
 
-export const ARCADE_WEEKLY_PRIZE_TIERS = [
-  { startRank: 1, endRank: 1, amount: 50_000, tokenSymbol: 'HOMERO' },
-  { startRank: 2, endRank: 2, amount: 25_000, tokenSymbol: 'HOMERO' },
-  { startRank: 3, endRank: 3, amount: 12_500, tokenSymbol: 'HOMERO' },
-  { startRank: 4, endRank: 4, amount: 750, tokenSymbol: 'PEPE' },
-  { startRank: 5, endRank: 5, amount: 500, tokenSymbol: 'PEPE' },
-  { startRank: 6, endRank: 6, amount: 350, tokenSymbol: 'PEPE' },
-  { startRank: 7, endRank: 7, amount: 250, tokenSymbol: 'PEPE' },
-  { startRank: 8, endRank: 8, amount: 200, tokenSymbol: 'PEPE' },
-  { startRank: 9, endRank: 9, amount: 150, tokenSymbol: 'PEPE' },
-  { startRank: 10, endRank: 10, amount: 100, tokenSymbol: 'PEPE' },
-  { startRank: 11, endRank: 20, amount: 75, tokenSymbol: 'PEPE' },
-  { startRank: 21, endRank: 50, amount: 50, tokenSymbol: 'PEPE' },
-  { startRank: 51, endRank: 100, amount: 25, tokenSymbol: 'PEPE' },
-] as const
+type ArcadeWeeklyPrizeTier = {
+  startRank: number
+  endRank: number
+  amount: number
+  tokenSymbol: 'PEPE' | 'HOMERO'
+}
+
+export const ARCADE_WEEKLY_PRIZE_TIERS: readonly ArcadeWeeklyPrizeTier[] = [
+  { startRank: 1, endRank: 1, amount: 10_000, tokenSymbol: 'PEPE' },
+  { startRank: 2, endRank: 2, amount: 5_000, tokenSymbol: 'PEPE' },
+  { startRank: 3, endRank: 3, amount: 2_500, tokenSymbol: 'PEPE' },
+  { startRank: 4, endRank: 4, amount: 1_250, tokenSymbol: 'PEPE' },
+  { startRank: 5, endRank: 10, amount: 750, tokenSymbol: 'PEPE' },
+  { startRank: 11, endRank: 20, amount: 500, tokenSymbol: 'PEPE' },
+  { startRank: 21, endRank: 50, amount: 250, tokenSymbol: 'PEPE' },
+  { startRank: 51, endRank: 100, amount: 100, tokenSymbol: 'PEPE' },
+]
 
 export const ARCADE_WEEKLY_PRIZE_BUDGET_PEPE = ARCADE_WEEKLY_PRIZE_TIERS.reduce(
   (total, tier) => total + (tier.tokenSymbol === 'PEPE' ? (tier.endRank - tier.startRank + 1) * tier.amount : 0),

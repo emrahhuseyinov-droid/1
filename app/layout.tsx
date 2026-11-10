@@ -10,13 +10,13 @@ export async function generateMetadata(): Promise<Metadata> {
   if (savedLanguage === 'en') {
     return {
       title: 'pepe.casa | Rewards, Arcade & PEPE Payouts',
-      description: 'Complete reward activities, play the neon Arcade, and request PEPE payouts through FaucetPay. Withdrawals require a verified FaucetPay account, with a 5,000 PEPE minimum and a 50,000 PEPE daily cap.',
+      description: 'Complete reward activities, play the neon Arcade, and request PEPE payouts through FaucetPay. Withdrawals require a verified FaucetPay account, with a 1,000 PEPE minimum and a 50,000 PEPE daily cap.',
     }
   }
 
   return {
     title: 'pepe.casa | Награды, аркада и выплаты PEPE',
-    description: 'Выполняйте задания, играйте в неоновую аркаду и запрашивайте выплаты PEPE через FaucetPay. Для вывода нужен подтверждённый аккаунт FaucetPay: минимум 5 000 PEPE, дневной лимит — 50 000 PEPE.',
+    description: 'Выполняйте задания, играйте в неоновую аркаду и запрашивайте выплаты PEPE через FaucetPay. Для вывода нужен подтверждённый аккаунт FaucetPay: минимум 1 000 PEPE, дневной лимит — 50 000 PEPE.',
   }
 }
 

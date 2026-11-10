@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
     : null
 
   if (amountAtomic === null || BigInt(amountAtomic) < BigInt(MIN_WITHDRAWAL_ATOMIC)) {
-    return NextResponse.json({ error: 'The minimum withdrawal is 5,000 PEPE.' }, { status: 400, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'The minimum withdrawal is 1,000 PEPE.' }, { status: 400, headers: noStoreHeaders })
   }
   if (BigInt(amountAtomic) > BigInt(DAILY_WITHDRAWAL_LIMIT_ATOMIC)) {
     return NextResponse.json({ error: 'The daily withdrawal limit is 50,000 PEPE.' }, { status: 400, headers: noStoreHeaders })

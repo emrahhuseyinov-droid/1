@@ -193,7 +193,6 @@ export function ArcadeWeeklyLeaderboard({
                   <p className="mt-1 text-sm text-white/75">Reward by final rank</p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-sky-50">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">HOMERO budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_HOMERO.toLocaleString()} HOMERO</span></span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">PEPE budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_PEPE.toLocaleString()} PEPE</span></span>
                 </div>
               </div>
@@ -205,7 +204,7 @@ export function ArcadeWeeklyLeaderboard({
                   </li>
                 ))}
               </ul>
-              <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">The top three prizes are paid in HOMERO from the internal treasury. Ranks 4–100 are paid in PEPE; claims remain pending if reserve funds are temporarily unavailable.</p>
+              <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">All weekly prizes, from 1st to 100th place, are paid in PEPE; claims remain pending if reserve funds are temporarily unavailable.</p>
             </section>
           </div>
 
