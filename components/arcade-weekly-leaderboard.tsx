@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
-import { AlertCircle, Clock3, Crown, Medal, RefreshCw, Search, Trophy } from 'lucide-react'
-import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
-import { ARCADE_WEEKLY_PRIZE_BUDGET_PEPE, ARCADE_WEEKLY_PRIZE_TIERS } from '@/lib/arcade-gameplay'
+import { AlertCircle, Coins, RefreshCw, Search, Trophy } from 'lucide-react'
+import { LocalizedTree } from '@/components/site-language-provider'
+import { ARCADE_WEEKLY_PRIZE_TIERS } from '@/lib/arcade-gameplay'
 
 type LeaderboardPlayer = {
   rank: number
@@ -24,25 +24,11 @@ type ArcadeWeeklyLeaderboardProps = {
   data?: WeeklyLeaderboardData
   error?: unknown
   isLoading: boolean
-  isRefreshing: boolean
   onRefresh: () => void
 }
 
 function formatRankRange(startRank: number, endRank: number) {
   return startRank === endRank ? `#${startRank}` : `#${startRank}–${endRank}`
-}
-
-function formatWeekStart(periodStart?: string, language: 'en' | 'ru' = 'en') {
-  if (!periodStart) return '—'
-
-  const weekStart = new Date(`${periodStart}T00:00:00.000Z`)
-  if (Number.isNaN(weekStart.getTime())) return periodStart
-
-  return new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'Asia/Baku',
-  }).format(weekStart)
 }
 
 function WeeklyResetCountdown({ periodEnd }: { periodEnd?: string }) {
@@ -74,35 +60,31 @@ function WeeklyResetCountdown({ periodEnd }: { periodEnd?: string }) {
 
   return (
     <LocalizedTree>
-      <section aria-labelledby="weekly-reset-title" className="relative isolate overflow-hidden rounded-[24px] border-2 border-amber-100/25 bg-gradient-to-br from-[#172641] via-[#18203a] to-[#251e3e] p-4 shadow-[0_12px_32px_rgba(6,12,30,0.28)] sm:p-5">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-amber-300/10 blur-2xl" />
-        <div className="relative z-10 flex items-center gap-2 text-amber-100">
-          <Clock3 aria-hidden="true" size={18} />
-          <h3 id="weekly-reset-title" className="text-base font-extrabold">Weekly reset countdown</h3>
-        </div>
-        <p id="weekly-reset-label" className="mt-2 text-sm text-white/75">Time until standings reset · Mondays at 17:38 Baku time</p>
-        <div role="timer" aria-live="off" aria-labelledby="weekly-reset-label" className="relative z-10 mt-4 grid grid-cols-4 gap-2">
+      <section aria-labelledby="weekly-reset-title" className="relative isolate overflow-hidden rounded-[9px] border-2 border-amber-200/70 bg-gradient-to-br from-[#17243b] via-[#111b30] to-[#10182a] p-1.5 shadow-[0_5px_14px_rgba(0,0,0,0.38)] ring-1 ring-inset ring-amber-100/10 sm:p-2">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-amber-100/80 to-transparent" />
+        <h3 id="weekly-reset-title" className="text-[8px] font-extrabold leading-3 text-amber-50 sm:text-[10px]">Arcade</h3>
+        <p id="weekly-reset-label" className="text-[6px] leading-[1.1] text-slate-200/80 sm:text-[7px]">Time until standings reset · Mondays at 17:38 Baku time</p>
+        <div role="timer" aria-live="off" aria-labelledby="weekly-reset-label" className="mt-1 grid grid-cols-4 gap-1">
           {countdownValues.map((value, index) => (
-            <div key={countdownLabels[index]} className="min-w-0 rounded-[17px] border border-white/15 bg-gradient-to-b from-[#293756] to-[#11192d] px-1.5 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_5px_12px_rgba(0,0,0,0.18)] sm:px-2">
-              <span className="block font-mono text-2xl font-black tabular-nums text-white drop-shadow sm:text-3xl">{value}</span>
-              <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide text-white/75 sm:text-xs">{countdownLabels[index]}</span>
+            <div key={countdownLabels[index]} className="min-w-0 rounded-[4px] border border-slate-200/25 bg-gradient-to-b from-[#29354c] to-[#111a2a] px-0.5 py-0.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_5px_rgba(0,0,0,0.25)] sm:py-1">
+              <span className="block font-mono text-sm font-black leading-5 tabular-nums text-white sm:text-base">{value}</span>
+              <span className="mt-0.5 block text-[6px] font-semibold leading-none text-slate-200/80 sm:text-[7px]">{countdownLabels[index]}</span>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-sm leading-6 text-white/75">The leaderboard refreshes every 30 seconds.</p>
       </section>
     </LocalizedTree>
   )
 }
 
 function podiumCardStyle(rank: number, isCurrentUser: boolean) {
-  const base = 'absolute z-10 flex min-w-0 flex-col items-center overflow-hidden rounded-[20px] border px-2 py-2.5 text-center text-white shadow-[0_12px_28px_rgba(0,0,0,0.42)] backdrop-blur-md transition duration-300 motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:rounded-[24px] sm:px-4 sm:py-3'
+  const base = 'absolute z-10 flex min-w-0 flex-col items-center justify-center rounded-[6px] border px-1 pb-1 text-center text-white shadow-[0_5px_12px_rgba(0,0,0,0.4)] backdrop-blur-[2px]'
   const rankStyle = rank === 1
-    ? 'left-1/2 top-[40%] min-h-[132px] w-[36%] -translate-x-1/2 border-amber-200/65 bg-gradient-to-b from-[#46371f]/95 via-[#1b2035]/95 to-[#11182b]/95 shadow-[0_0_34px_rgba(250,204,21,0.2)] sm:min-h-[150px]'
+    ? 'left-1/2 top-[30%] h-[54%] w-[28%] -translate-x-1/2 border-amber-100/65 bg-gradient-to-b from-[#503f27]/90 to-[#101827]/90 pt-3'
     : rank === 2
-      ? 'left-[1%] top-[49%] min-h-[112px] w-[31%] border-sky-100/55 bg-gradient-to-b from-[#253a57]/95 via-[#17223a]/95 to-[#11182b]/95 shadow-[0_0_26px_rgba(125,211,252,0.16)] sm:min-h-[130px]'
-      : 'right-[1%] top-[49%] min-h-[112px] w-[31%] border-fuchsia-100/55 bg-gradient-to-b from-[#3b294e]/95 via-[#221d3c]/95 to-[#17172d]/95 shadow-[0_0_26px_rgba(232,121,249,0.16)] sm:min-h-[130px]'
-  const userStyle = isCurrentUser ? 'ring-2 ring-cyan-200/80' : ''
+      ? 'left-[9%] top-[44%] h-[43%] w-[25%] border-sky-100/55 bg-gradient-to-b from-[#29405a]/90 to-[#101827]/90 pt-3'
+      : 'right-[9%] top-[44%] h-[43%] w-[25%] border-fuchsia-100/55 bg-gradient-to-b from-[#452d4c]/90 to-[#171627]/90 pt-3'
+  const userStyle = isCurrentUser ? 'ring-1 ring-cyan-100/80' : ''
 
   return `${base} ${rankStyle} ${userStyle}`
 }
@@ -122,9 +104,9 @@ function tableRankStyle(rank: number) {
   return 'border-violet-200/15 bg-violet-300/[0.07] text-violet-100'
 }
 
-function PlayerAvatar({ player, compact = false }: { player: LeaderboardPlayer; compact?: boolean }) {
+function PlayerAvatar({ player, compact = false, tiny = false }: { player: LeaderboardPlayer; compact?: boolean; tiny?: boolean }) {
   const initials = player.displayName.trim().split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0] ?? '').join('').toUpperCase() || '?'
-  const size = compact ? 'size-7 text-[9px]' : 'size-9 text-xs'
+  const size = tiny ? 'size-3 text-[5px]' : compact ? 'size-6 text-[8px]' : 'size-9 text-xs'
   const tone = player.rank === 1
     ? 'border-amber-200/40 bg-amber-300/20 text-amber-50'
     : player.rank === 2
@@ -140,10 +122,8 @@ export function ArcadeWeeklyLeaderboard({
   data,
   error,
   isLoading,
-  isRefreshing,
   onRefresh,
 }: ArcadeWeeklyLeaderboardProps) {
-  const { language } = useSiteLanguage()
   const leaderboard = data?.leaderboard ?? []
   const [searchQuery, setSearchQuery] = useState('')
   const showError = Boolean(error) && !data
@@ -157,52 +137,25 @@ export function ArcadeWeeklyLeaderboard({
 
   return (
     <LocalizedTree>
-      <section
-        aria-label="Weekly leaderboard content"
-        className="weekly-leaderboard-panel relative isolate overflow-hidden rounded-[30px] border border-sky-100/20 p-4 shadow-[0_26px_78px_rgba(7,12,30,0.52)] ring-1 ring-inset ring-white/[0.05] sm:p-6"
-      >
-        <div aria-hidden="true" className="weekly-leaderboard-stars pointer-events-none absolute inset-0" />
-        <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-violet-300/[0.12] blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-[28%] size-56 rounded-full bg-cyan-300/[0.08] blur-3xl" />
-
+      <section aria-label="Weekly leaderboard content" className="relative isolate min-w-0">
         <div className="relative z-10">
-          <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
-            <span className="inline-flex min-h-9 items-center rounded-full border border-white/15 bg-[#111a2e]/80 px-3 font-mono text-xs font-bold text-white/80">
-              {language === 'ru' ? 'Баку' : 'Baku'} · {formatWeekStart(data?.periodStart, language)}
-            </span>
-            <button
-              type="button"
-              aria-label="Refresh weekly leaderboard"
-              title="Refresh leaderboard"
-              onClick={onRefresh}
-              disabled={isLoading || isRefreshing}
-              className="inline-flex size-9 items-center justify-center rounded-full border border-white/15 bg-[#111a2e]/80 text-white/80 transition hover:border-cyan-100/40 hover:text-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B] disabled:cursor-wait disabled:opacity-55"
-            >
-              <RefreshCw aria-hidden="true" size={15} className={isRefreshing ? 'animate-spin motion-reduce:animate-none' : ''} />
-            </button>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="grid grid-cols-[0.8fr_1fr] gap-2 sm:gap-3">
             <WeeklyResetCountdown periodEnd={data?.periodEnd} />
 
-            <section aria-labelledby="weekly-prizes-title" className="relative isolate overflow-hidden rounded-[24px] border-2 border-sky-100/35 bg-gradient-to-br from-[#172944] via-[#17223d] to-[#202044] p-4 shadow-[0_12px_32px_rgba(6,12,30,0.25)] sm:p-5">
-              <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 size-32 rounded-full bg-sky-300/10 blur-2xl" />
-              <div className="relative z-10 flex flex-wrap items-baseline justify-between gap-2">
-                <div>
-                  <h3 id="weekly-prizes-title" className="text-base font-extrabold text-white">Fixed weekly prizes</h3>
-                  <p className="mt-1 text-sm text-white/75">Reward by final rank</p>
-                </div>
-                <span className="inline-flex flex-wrap items-center gap-1.5 rounded-full border border-sky-100/20 bg-[#101a2e]/70 px-3 py-1.5 text-xs text-sky-50"><span className="font-semibold">Max weekly budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_PEPE.toLocaleString()} PEPE</span></span>
-              </div>
-              <ul aria-label="Weekly prize tiers" className="relative z-10 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+            <section aria-labelledby="weekly-prizes-title" className="relative isolate overflow-hidden rounded-[9px] border-2 border-sky-100/65 bg-gradient-to-br from-[#172940] via-[#111b31] to-[#111a2a] p-1.5 shadow-[0_5px_14px_rgba(0,0,0,0.36)] ring-1 ring-inset ring-sky-100/10 sm:p-2">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-sky-100/85 to-transparent" />
+              <h3 id="weekly-prizes-title" className="text-[8px] font-extrabold leading-3 text-white sm:text-[10px]">Fixed weekly prizes</h3>
+              <ul aria-label="Weekly prize tiers" className="mt-1 grid grid-cols-3 gap-px xl:grid-cols-4">
                 {ARCADE_WEEKLY_PRIZE_TIERS.map((tier) => (
-                  <li key={`${tier.startRank}-${tier.endRank}`} className={`flex min-h-10 items-center justify-between gap-1.5 rounded-xl border bg-gradient-to-br px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] transition-colors hover:brightness-110 sm:px-3 ${prizeTierStyle(tier.startRank)}`}>
-                    <span className="text-xs font-bold text-white/90 sm:text-sm">{formatRankRange(tier.startRank, tier.endRank)}</span>
-                    <span className="whitespace-nowrap font-mono text-xs font-extrabold tabular-nums text-white sm:text-sm">{tier.amountPepe.toLocaleString()} PEPE</span>
+                  <li key={`${tier.startRank}-${tier.endRank}`} className={`flex min-w-0 items-center justify-between gap-0.5 rounded-[3px] border bg-gradient-to-br px-1 py-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:px-1.5 ${prizeTierStyle(tier.startRank)}`}>
+                    <span className="truncate text-[6px] font-bold leading-none text-white/90 sm:text-[7px]">{formatRankRange(tier.startRank, tier.endRank)}</span>
+                    <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap font-mono text-[6px] font-extrabold leading-none tabular-nums text-white sm:text-[7px]">
+                      {tier.amountPepe.toLocaleString()} PEPE
+                      <Coins aria-hidden="true" size={6} className="text-amber-200" />
+                    </span>
                   </li>
                 ))}
               </ul>
-              <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">Awards are paid from the platform&apos;s general PEPE capital. If funds are temporarily unavailable, claims remain pending.</p>
             </section>
           </div>
 
@@ -241,39 +194,31 @@ export function ArcadeWeeklyLeaderboard({
 
           {leaderboard.length > 0 && (
             <>
-              <section aria-labelledby="weekly-podium-title" className="mt-6">
-                <div className="mb-1 flex flex-wrap items-end justify-between gap-3 px-1">
-                  <div>
-                    <h3 id="weekly-podium-title" className="text-base font-extrabold text-white">Weekly podium</h3>
-                    <p className="mt-1 text-xs text-white/65">Top three weekly players</p>
-                  </div>
-                  <span className="rounded-full border border-emerald-200/20 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-bold text-emerald-100">Live standings</span>
-                </div>
-                <div className="relative isolate mx-auto h-[240px] w-full max-w-[1000px] sm:h-[300px] lg:h-[340px]">
+              <section aria-labelledby="weekly-podium-title" className="mt-1">
+                <h3 id="weekly-podium-title" className="sr-only">Weekly podium</h3>
+                <div className="relative isolate mx-auto aspect-[3.2] min-h-[140px] w-full max-w-[980px]">
                   <Image
                     src="/images/weekly-leaderboard-podium-wide.png"
                     alt=""
                     aria-hidden="true"
                     fill
-                    sizes="(max-width: 768px) 100vw, 1000px"
-                    className="pointer-events-none select-none object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.3)] sm:object-fill"
+                    sizes="(max-width: 768px) 100vw, 980px"
+                    className="pointer-events-none select-none object-fill drop-shadow-[0_12px_20px_rgba(0,0,0,0.3)]"
                   />
                   <ol aria-label="Top three weekly players" className="absolute inset-0">
                     {leaderboard.slice(0, 3).map((player) => {
                       const placeLabel = player.rank === 1 ? '1st place' : player.rank === 2 ? '2nd place' : '3rd place'
-                      const RankIcon = player.rank === 1 ? Crown : Medal
-                      const medalTone = player.rank === 1 ? 'text-amber-100' : player.rank === 2 ? 'text-sky-100' : 'text-fuchsia-100'
                       return (
                         <li key={`podium-${player.rank}`} className={podiumCardStyle(player.rank, player.isCurrentUser)}>
-                          <div className="flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
+                          <div className="absolute -top-3 left-1/2 flex -translate-x-1/2 items-center gap-0.5">
                             <PlayerAvatar player={player} compact />
-                            <RankIcon aria-hidden="true" className={medalTone} size={16} />
-                            {player.isCurrentUser && <span className="rounded-full border border-cyan-100/25 bg-cyan-300/15 px-1.5 py-0.5 text-[8px] font-extrabold text-cyan-50 sm:text-[9px]">You</span>}
+                            {player.isCurrentUser && <span className="rounded-sm border border-cyan-100/25 bg-cyan-950/85 px-1 text-[6px] font-extrabold text-cyan-50">You</span>}
                           </div>
-                          <span className="mt-1 block text-[9px] font-extrabold uppercase tracking-[0.1em] text-white/70 sm:text-[10px] sm:tracking-[0.14em]">{placeLabel}</span>
-                          <p className="mt-0.5 max-w-full truncate text-[11px] font-extrabold text-white sm:text-sm">{player.displayName}</p>
-                          <p className="mt-0.5 whitespace-nowrap font-mono text-sm font-black tabular-nums text-white sm:text-lg">{player.bestDistanceM.toLocaleString()} <span className="text-[9px] font-bold text-white/70 sm:text-xs">m</span></p>
-                          <span className="mt-1 inline-flex max-w-full rounded-full border border-white/15 bg-white/10 px-2 py-0.5 font-mono text-[9px] font-extrabold tabular-nums text-white sm:text-[11px]">{player.prizePepe.toLocaleString()} PEPE</span>
+                          <span className="w-full text-left font-mono text-[6px] font-extrabold text-white/70 sm:text-[8px]">№{player.rank}</span>
+                          <span className="mt-0.5 block text-[6px] font-extrabold uppercase tracking-wide text-white/75 sm:text-[8px]">{placeLabel}</span>
+                          <p className="max-w-full truncate text-[8px] font-extrabold text-white sm:text-[10px]">{player.displayName}</p>
+                          <p className="whitespace-nowrap font-mono text-[8px] font-black tabular-nums text-white sm:text-[10px]">{player.bestDistanceM.toLocaleString()} <span className="text-[6px] font-bold text-white/70 sm:text-[8px]">m</span></p>
+                          <span className="inline-flex max-w-full items-center gap-0.5 font-mono text-[7px] font-extrabold tabular-nums text-white sm:text-[9px]">{player.prizePepe.toLocaleString()} PEPE</span>
                         </li>
                       )
                     })}
@@ -281,60 +226,56 @@ export function ArcadeWeeklyLeaderboard({
                 </div>
               </section>
 
-              <section aria-labelledby="top-100-title" className="mt-7">
-                <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <h3 id="top-100-title" className="text-base font-extrabold text-white">Top 100 weekly players</h3>
-                    <p className="mt-1 text-sm text-white/75">
-                      {'Showing'} <span className="font-bold text-white">{filteredPlayers.length}</span> {'of'} <span className="font-bold text-white">{leaderboard.length}</span> {'players'}
-                    </p>
-                  </div>
-                  <label className="flex min-h-11 w-full items-center gap-2 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-[#1c2543] to-[#221d3e] px-3 text-white/75 shadow-inner focus-within:border-cyan-200/50 focus-within:ring-2 focus-within:ring-cyan-200/30 sm:max-w-xs">
-                    <Search aria-hidden="true" size={17} className="shrink-0" />
+              <section aria-labelledby="top-100-title" className="mt-1">
+                <header className="mb-1 flex items-center justify-between gap-2">
+                  <h3 id="top-100-title" className="text-[9px] font-extrabold text-white sm:text-[11px]">Top 100 weekly players</h3>
+                  <label className="flex h-[18px] w-28 items-center gap-1 rounded-full border border-slate-300/20 bg-[#111a2c]/80 px-2 text-slate-200/75 focus-within:border-sky-200/50 focus-within:ring-1 focus-within:ring-sky-200/30 sm:w-40">
+                    <Search aria-hidden="true" size={8} className="shrink-0" />
                     <span className="sr-only">Search players</span>
                     <input
                       type="search"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       placeholder="Search players"
-                      className="min-w-0 flex-1 bg-transparent py-2 text-sm text-white placeholder:text-white/65 focus:outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-[7px] text-white placeholder:text-slate-300/65 focus:outline-none sm:text-[9px]"
                     />
                   </label>
                 </header>
 
                 {filteredPlayers.length > 0 ? (
-                  <div role="region" aria-label="Top 100 weekly players" tabIndex={0} className="mt-3 overflow-x-auto rounded-[20px] border border-sky-100/15 bg-[#0d1729]/90 shadow-[0_14px_35px_rgba(7,12,38,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
-                    <table className="w-full min-w-[600px] border-collapse text-left">
+                  <div role="region" aria-label="Top 100 weekly players" tabIndex={0} className="overflow-x-auto rounded-[7px] border border-sky-100/15 bg-[#0a1424]/85 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-200">
+                    <table className="w-full min-w-[340px] border-collapse text-left">
                       <caption className="sr-only">Weekly top 100 ranked players and fixed PEPE prizes</caption>
-                      <thead className="bg-[#1b2944] text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky-100/80 sm:text-xs">
+                      <thead className="bg-[#17243a] text-[6px] font-extrabold uppercase tracking-[0.1em] text-slate-200/80 sm:text-[8px]">
                         <tr>
-                          <th scope="col" className="px-4 py-3">Rank</th>
-                          <th scope="col" className="px-4 py-3">Player</th>
-                          <th scope="col" className="px-4 py-3 text-right">Best result</th>
-                          <th scope="col" className="px-4 py-3 text-right">Prize</th>
+                          <th scope="col" className="px-2 py-1">Rank</th>
+                          <th scope="col" className="px-2 py-1">Player</th>
+                          <th scope="col" className="px-2 py-1 text-right">Best result</th>
+                          <th scope="col" className="px-2 py-1 text-right">Prize</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-sky-100/[0.08]">
                         {filteredPlayers.map((player) => (
-                          <tr key={`rank-${player.rank}`} className={player.isCurrentUser ? 'bg-gradient-to-r from-cyan-300/[0.13] via-violet-300/[0.08] to-transparent' : 'bg-white/[0.012] transition-colors hover:bg-white/[0.035]'}>
-                            <th scope="row" className="whitespace-nowrap px-4 py-2.5 font-mono text-sm font-extrabold"><span className={`inline-flex min-w-10 justify-center rounded-lg border px-2 py-1 ${tableRankStyle(player.rank)}`}>#{String(player.rank).padStart(2, '0')}</span></th>
-                            <td className="px-4 py-2.5 text-sm font-semibold text-white">
-                              <div className="flex min-w-0 items-center gap-2.5">
-                                <PlayerAvatar player={player} compact />
+                          <tr key={`rank-${player.rank}`} className={player.isCurrentUser ? 'bg-cyan-300/[0.1]' : 'bg-white/[0.012]'}>
+                            <th scope="row" className="whitespace-nowrap px-2 py-0.5 font-mono text-[7px] font-extrabold sm:text-[9px]"><span className={`inline-flex min-w-5 justify-center rounded-[3px] border px-1 py-0 ${tableRankStyle(player.rank)}`}>#{String(player.rank).padStart(2, '0')}</span></th>
+                            <td className="px-2 py-0.5 text-[8px] font-semibold text-white sm:text-[10px]">
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                <PlayerAvatar player={player} tiny />
                                 <span className="min-w-0 truncate">{player.displayName}</span>
-                                {player.isCurrentUser && <span className="rounded-full border border-cyan-100/20 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-extrabold text-cyan-50">You</span>}
+                                {player.isCurrentUser && <span className="rounded-sm border border-cyan-100/20 bg-cyan-300/15 px-1 text-[6px] font-extrabold text-cyan-50">You</span>}
                               </div>
                             </td>
-                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-bold tabular-nums text-white">{player.bestDistanceM.toLocaleString()} m</td>
-                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{player.prizePepe.toLocaleString()} PEPE</td>
+                            <td className="whitespace-nowrap px-2 py-0.5 text-right font-mono text-[7px] font-bold tabular-nums text-white sm:text-[9px]">{player.bestDistanceM.toLocaleString()} m</td>
+                            <td className="whitespace-nowrap px-2 py-0.5 text-right font-mono text-[7px] font-extrabold tabular-nums text-white sm:text-[9px]">{player.prizePepe.toLocaleString()} PEPE</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p role="status" className="mt-3 rounded-xl border border-white/10 bg-black/20 px-4 py-5 text-sm text-white/75">No players match this search.</p>
+                  <p role="status" className="rounded-md border border-white/10 bg-black/20 px-3 py-2 text-[8px] text-white/75">No players match this search.</p>
                 )}
+                <p className="mt-1 text-center text-[6px] leading-3 text-white/55 sm:text-[8px]">Awards are paid from the platform&apos;s general PEPE capital. If funds are temporarily unavailable, claims remain pending.</p>
               </section>
             </>
           )}

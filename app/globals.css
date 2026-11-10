@@ -259,41 +259,30 @@
     opacity: 0.22;
   }
 
+  .dashboard-page-shell.weekly-leaderboard-page {
+    padding-block: 0.4375rem 1rem;
+  }
+
   .dashboard-page-shell.weekly-leaderboard-page::before {
+    height: 100%;
+    border-radius: 1rem;
     background:
-      radial-gradient(ellipse at 52% 7%, rgb(41 103 188 / 0.26), transparent 42%),
-      radial-gradient(ellipse at 15% 26%, rgb(22 130 174 / 0.14), transparent 36%),
-      radial-gradient(ellipse at 88% 20%, rgb(130 62 155 / 0.16), transparent 34%),
-      linear-gradient(180deg, rgb(8 17 37 / 0.36), transparent 80%);
+      radial-gradient(ellipse at 47% 28%, rgb(17 91 157 / 0.4), transparent 42%),
+      radial-gradient(ellipse at 8% 43%, rgb(10 95 146 / 0.24), transparent 35%),
+      radial-gradient(ellipse at 88% 22%, rgb(87 48 131 / 0.24), transparent 38%),
+      linear-gradient(180deg, #07111f 0%, #06101d 54%, #080f1b 100%);
   }
 
   .dashboard-page-shell.weekly-leaderboard-page::after {
-    inset: 0.5rem 0 auto;
     height: 100%;
+    border-radius: 1rem;
     background-image:
-      radial-gradient(circle, rgb(205 220 255 / 0.72) 0.8px, transparent 1.3px),
+      radial-gradient(circle, rgb(205 220 255 / 0.74) 0.8px, transparent 1.3px),
       radial-gradient(circle, rgb(116 176 255 / 0.52) 1px, transparent 1.5px);
     background-position: 0 0, 17px 13px;
-    background-size: 43px 43px, 83px 83px;
-    mask-image: linear-gradient(to bottom, black 0%, black 76%, transparent 100%);
-    opacity: 0.28;
-  }
-
-  .weekly-leaderboard-panel {
-    background-color: #0b1427;
-    background-image:
-      radial-gradient(ellipse at 52% 15%, rgb(34 87 152 / 0.18), transparent 48%),
-      linear-gradient(145deg, #0b1427 0%, #0b1324 60%, #10142c 100%);
-  }
-
-  .weekly-leaderboard-stars {
-    background-image:
-      radial-gradient(circle, rgb(205 220 255 / 0.6) 0.8px, transparent 1.3px),
-      radial-gradient(circle, rgb(95 164 239 / 0.48) 1px, transparent 1.5px);
-    background-position: 0 0, 13px 19px;
-    background-size: 37px 37px, 71px 71px;
-    mask-image: linear-gradient(to bottom, black, transparent 94%);
-    opacity: 0.36;
+    background-size: 37px 37px, 73px 73px;
+    mask-image: linear-gradient(to bottom, black 0%, black 82%, transparent 100%);
+    opacity: 0.24;
   }
 }
 
