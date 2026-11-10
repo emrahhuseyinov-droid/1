@@ -6,9 +6,9 @@ import { db } from '@/lib/db'
 import { bannerPromoEvents, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { grantArcadeEnergy } from '@/lib/arcade-service'
 
-export const BANNER_PROMO_REWARD_ATOMIC = 1_500_000_000
+export const BANNER_PROMO_REWARD_ATOMIC = 7_000_000_000
 const MAX_DAILY_IMPRESSIONS = 5
-const PROMO_INTERVAL_MS = 30 * 1000
+const PROMO_INTERVAL_MS = 3 * 60 * 60 * 1000
 
 export type BannerPromoState =
   | { phase: 'waiting'; nextAt: string }

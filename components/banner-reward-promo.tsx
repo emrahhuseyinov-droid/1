@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
@@ -26,36 +27,38 @@ async function sendPromoAction(url: string, { arg }: { arg: BannerPromoAction })
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(arg),
+    keepalive: arg.action === 'click',
   })
   if (!response.ok) throw new Error('Could not update banner promotion.')
   return response.json()
 }
 
 export function BannerRewardPromo() {
+  const [rewardedPromoId, setRewardedPromoId] = useState<string | null>(null)
   const router = useRouter()
   const { language } = useSiteLanguage()
   const copy = language === 'ru'
     ? {
         label: 'Бонус AdsLab',
-        title: 'Заберите 15 PEPE',
+        title: 'Заберите 70 PEPE',
         adLabel: 'Рекламный баннер',
         bannerHint: 'Жми сюда!',
         claim: 'Нажми на рекламный баннер',
-        reward: '+15 PEPE сразу',
+        reward: '+70 PEPE сразу',
         destination: 'AdsLab откроется в новой вкладке',
         dismiss: 'Закрыть бонусный баннер',
-        ariaLabel: 'Бонус AdsLab: 15 PEPE за нажатие',
+        ariaLabel: 'Бонус AdsLab: 70 PEPE за нажатие',
       }
     : {
         label: 'AdsLab bonus',
-        title: 'Claim 15 PEPE',
+        title: 'Claim 70 PEPE',
         adLabel: 'Sponsored banner',
         bannerHint: 'Click here!',
         claim: 'Click the ad banner',
-        reward: '+15 PEPE instantly',
+        reward: '+70 PEPE instantly',
         destination: 'AdsLab opens in a new tab',
         dismiss: 'Dismiss reward banner',
-        ariaLabel: 'AdsLab bonus: 15 PEPE per click',
+        ariaLabel: 'AdsLab bonus: 70 PEPE per click',
       }
 
   const { data, mutate } = useSWR<BannerPromoState>('/api/banner-promo', fetchPromoState, {
@@ -78,6 +81,7 @@ export function BannerRewardPromo() {
     try {
       const result = await trigger({ action, promoId })
       const { rewardGranted, ...nextState } = result
+      if (action === 'click' && rewardGranted) setRewardedPromoId(promoId)
       await mutate(nextState, { revalidate: false })
       if (action === 'click' && rewardGranted) router.refresh()
     } catch {
@@ -85,7 +89,7 @@ export function BannerRewardPromo() {
     }
   }
 
-  if (data?.phase !== 'active') return null
+  if (data?.phase !== 'active' || data.promoId === rewardedPromoId) return null
 
   return (
     <aside className="pointer-events-none fixed right-3 top-[74px] z-50 w-[calc(100vw-1.5rem)] max-w-[360px] sm:right-5 sm:top-[78px]">
