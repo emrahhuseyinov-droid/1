@@ -20,7 +20,6 @@ export const HOMERO_TREASURY_SEED_SOURCE_KEYS = Array.from(
 )
 
 export const HOMERO_RATE_SCALE = 1_000_000_000_000n
-const HOMERO_BASE_RATE_NUMERATOR = 200_000_000_000n
 export const HOMERO_SWAP_QUOTE_TTL_MS = 30_000
 
 type HomeroTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -143,14 +142,8 @@ export async function getHomeroTreasurySnapshot(transaction: HomeroTransaction, 
   }
 }
 
-export function getHomeroRateNumerator(distributedAtomic: bigint) {
-  const cappedDistribution = distributedAtomic < 0n
-    ? 0n
-    : distributedAtomic > HOMERO_TREASURY_CAP_ATOMIC
-      ? HOMERO_TREASURY_CAP_ATOMIC
-      : distributedAtomic
-  return HOMERO_BASE_RATE_NUMERATOR
-    + (HOMERO_BASE_RATE_NUMERATOR * cappedDistribution) / HOMERO_TREASURY_CAP_ATOMIC
+export function getHomeroRateNumerator(_distributedAtomic: bigint) {
+  return HOMERO_RATE_SCALE
 }
 
 export function getHomeroSpotRate(distributedAtomic: bigint) {
