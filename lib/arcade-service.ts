@@ -19,8 +19,9 @@ import {
   user,
 } from '@/lib/db/schema'
 import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
+import { getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
-import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrizeAtomic } from '@/lib/arcade-gameplay'
+import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
 
 export const arcadeNoStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 export type ArcadeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -129,9 +130,14 @@ async function lockArcadeReserve(transaction: ArcadeTransaction) {
   return reserve
 }
 
-export async function settlePendingArcadeRewards(transaction: ArcadeTransaction, now = new Date()) {
+export async function settlePendingArcadeRewards(
+  transaction: ArcadeTransaction,
+  now = new Date(),
+  homeroTreasuryAdminId?: string | null,
+) {
   const reserve = await lockArcadeReserve(transaction)
-  let balanceAtomic = reserve.balanceAtomic
+  let pepeBalanceAtomic = reserve.balanceAtomic
+  let homeroPaidCount = 0
   let paidCount = 0
   const pendingClaims = await transaction
     .select()
@@ -141,43 +147,80 @@ export async function settlePendingArcadeRewards(transaction: ArcadeTransaction,
     .for('update')
     .limit(100)
 
+  const hasHomeroClaims = pendingClaims.some((claim) => claim.tokenSymbol === 'HOMERO')
+  let homeroBalanceAtomic = 0n
+  let homeroDistributedAtomic = 0n
+  let homeroTreasuryReady = false
+  if (homeroTreasuryAdminId) {
+    if (hasHomeroClaims) {
+      await lockHomeroTreasuryProfiles(transaction, [homeroTreasuryAdminId, ...pendingClaims.map((claim) => claim.guestId)])
+    }
+    const treasury = await getHomeroTreasurySnapshot(transaction, homeroTreasuryAdminId)
+    homeroBalanceAtomic = BigInt(treasury.availableAtomic)
+    homeroDistributedAtomic = BigInt(treasury.distributedAtomic)
+    homeroTreasuryReady = treasury.initialReserveSeeded
+  }
+
   for (const claim of pendingClaims) {
-    if (claim.amountAtomic > balanceAtomic) break
-    const sourceType = claim.rewardType === 'weekly' ? 'weekly_payout' : 'milestone_payout'
-    await transaction.insert(arcadeReserveEntries).values({
-      sourceType,
-      sourceKey: claim.id,
-      amountAtomic: -claim.amountAtomic,
-      createdAt: now,
-    })
-    await transaction.insert(earningEvents).values({
-      id: randomUUID(),
-      guestId: claim.guestId,
-      source: 'arcade_reward',
-      sourceKey: claim.id,
-      itemId: claim.rewardKey,
-      tokenSymbol: 'PEPE',
-      rewardAtomic: claim.amountAtomic,
-      createdAt: now,
-    })
+    if (claim.tokenSymbol === 'HOMERO') {
+      const amountAtomic = BigInt(claim.amountAtomic)
+      if (!homeroTreasuryReady || amountAtomic > homeroBalanceAtomic || homeroDistributedAtomic + amountAtomic > HOMERO_TREASURY_CAP_ATOMIC) break
+      await recordHomeroTreasuryTransfer(
+        transaction,
+        homeroTreasuryAdminId as string,
+        claim.guestId,
+        claim.amountAtomic,
+        claim.id,
+        'arcade_reward',
+        claim.rewardKey,
+        now,
+      )
+      homeroBalanceAtomic -= amountAtomic
+      homeroDistributedAtomic += amountAtomic
+      homeroPaidCount += 1
+    } else {
+      if (claim.amountAtomic > pepeBalanceAtomic) break
+      await transaction.insert(arcadeReserveEntries).values({
+        sourceType: 'milestone_payout',
+        sourceKey: claim.id,
+        amountAtomic: -claim.amountAtomic,
+        createdAt: now,
+      })
+      await transaction.insert(earningEvents).values({
+        id: randomUUID(),
+        guestId: claim.guestId,
+        source: 'arcade_reward',
+        sourceKey: claim.id,
+        itemId: claim.rewardKey,
+        tokenSymbol: 'PEPE',
+        rewardAtomic: claim.amountAtomic,
+        createdAt: now,
+      })
+      pepeBalanceAtomic -= claim.amountAtomic
+    }
+
     const [paidClaim] = await transaction
       .update(arcadeRewardClaims)
       .set({ status: 'paid', paidAt: now })
       .where(and(eq(arcadeRewardClaims.id, claim.id), eq(arcadeRewardClaims.status, 'pending')))
       .returning({ id: arcadeRewardClaims.id })
     if (!paidClaim) throw new Error('Arcade reward claim changed while locked.')
-    balanceAtomic -= claim.amountAtomic
     paidCount += 1
   }
 
-  if (balanceAtomic !== reserve.balanceAtomic) {
+  if (pepeBalanceAtomic !== reserve.balanceAtomic) {
     await transaction
       .update(arcadeReserve)
-      .set({ balanceAtomic, updatedAt: now })
+      .set({ balanceAtomic: pepeBalanceAtomic, updatedAt: now })
       .where(eq(arcadeReserve.id, 1))
   }
 
-  return { balanceAtomic, paidCount }
+  return {
+    balanceAtomic: pepeBalanceAtomic,
+    homeroTreasuryBalanceAtomic: homeroBalanceAtomic.toString(),
+    paidCount,
+    homeroPaidCount,
+  }
 }
 
 export async function addPtcCommissionToArcadeReserve(
@@ -228,6 +271,7 @@ export async function createMilestoneClaims(
         rewardKey: milestone.key,
         rewardType: 'milestone',
         amountAtomic: milestone.amountAtomic,
+        tokenSymbol: 'HOMERO',
         sourceKey: sessionId,
         createdAt: now,
       })
@@ -283,11 +327,13 @@ export async function getArcadeLeaderboard(start: Date, end: Date, currentGuestI
     const profile = profileById.get(row.guestId)
     const displayName = profile?.nickname?.trim() || (profile?.referralCode ? `Player ${profile.referralCode.slice(0, 4).toUpperCase()}` : 'Arcade player')
     const rank = index + 1
+    const prize = getArcadeWeeklyPrize(rank)
     return {
       rank,
       displayName,
       bestDistanceM: row.distanceM,
-      prizePepe: getArcadeWeeklyPrizeAtomic(rank) / ARCADE_ATOMIC_PER_PEPE,
+      prizeAmount: prize ? prize.amountAtomic / ARCADE_ATOMIC_PER_PEPE : 0,
+      prizeTokenSymbol: prize?.tokenSymbol ?? 'PEPE',
       isCurrentUser: row.guestId === currentGuestId,
     }
   })
@@ -336,12 +382,18 @@ export async function settlePendingWeeklyAwards(
     .for('update')
     .limit(100)
 
-  if (pendingClaims.length === 0) {
-    return { balanceAtomic: (await getPepeReserveBalanceAtomic(transaction, reserveGuestId)).toString(), paidCount: 0 }
-  }
-
   await lockPepeReserveProfiles(transaction, [reserveGuestId, ...pendingClaims.map((claim) => claim.guestId)])
-  let balanceAtomic = await getPepeReserveBalanceAtomic(transaction, reserveGuestId)
+  let pepeBalanceAtomic = await getPepeReserveBalanceAtomic(transaction, reserveGuestId)
+  const homeroClaims = pendingClaims.some((claim) => claim.tokenSymbol === 'HOMERO')
+  let homeroBalanceAtomic = 0n
+  let homeroDistributedAtomic = 0n
+  let homeroTreasuryReady = false
+  if (homeroClaims) {
+    const treasury = await getHomeroTreasurySnapshot(transaction, reserveGuestId)
+    homeroBalanceAtomic = BigInt(treasury.availableAtomic)
+    homeroDistributedAtomic = BigInt(treasury.distributedAtomic)
+    homeroTreasuryReady = treasury.initialReserveSeeded
+  }
   let paidCount = 0
 
   let claimIndex = 0
@@ -353,41 +405,66 @@ export async function settlePendingWeeklyAwards(
       claimIndex += 1
     }
 
-    const periodCost = periodClaims.reduce((total, claim) => total + BigInt(claim.amountAtomic), 0n)
-    if (periodCost > balanceAtomic) break
+    const pepeCost = periodClaims
+      .filter((claim) => claim.tokenSymbol === 'PEPE')
+      .reduce((total, claim) => total + BigInt(claim.amountAtomic), 0n)
+    const homeroCost = periodClaims
+      .filter((claim) => claim.tokenSymbol === 'HOMERO')
+      .reduce((total, claim) => total + BigInt(claim.amountAtomic), 0n)
+    if (
+      pepeCost > pepeBalanceAtomic ||
+      (homeroCost > 0n && (!homeroTreasuryReady || homeroCost > homeroBalanceAtomic || homeroDistributedAtomic + homeroCost > HOMERO_TREASURY_CAP_ATOMIC))
+    ) break
 
+    await lockHomeroTreasuryProfiles(transaction, [reserveGuestId, ...periodClaims.map((claim) => claim.guestId)])
     for (const claim of periodClaims) {
-      const [debit] = await transaction
-        .insert(earningEvents)
-        .values({
-          id: randomUUID(),
-          guestId: reserveGuestId,
-          source: PEPE_RESERVE_ARCADE_WEEKLY_SOURCE,
-          sourceKey: claim.id,
-          itemId: claim.rewardKey,
-          tokenSymbol: 'PEPE',
-          rewardAtomic: -claim.amountAtomic,
-          createdAt: now,
-        })
-        .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-        .returning({ id: earningEvents.id })
-      if (!debit) throw new Error('Weekly PEPE reserve debit already exists for a pending award.')
+      if (claim.tokenSymbol === 'HOMERO') {
+        await recordHomeroTreasuryTransfer(
+          transaction,
+          reserveGuestId,
+          claim.guestId,
+          claim.amountAtomic,
+          claim.id,
+          'arcade_reward',
+          claim.rewardKey,
+          now,
+        )
+        homeroBalanceAtomic -= BigInt(claim.amountAtomic)
+        homeroDistributedAtomic += BigInt(claim.amountAtomic)
+      } else {
+        const [debit] = await transaction
+          .insert(earningEvents)
+          .values({
+            id: randomUUID(),
+            guestId: reserveGuestId,
+            source: PEPE_RESERVE_ARCADE_WEEKLY_SOURCE,
+            sourceKey: claim.id,
+            itemId: claim.rewardKey,
+            tokenSymbol: 'PEPE',
+            rewardAtomic: -claim.amountAtomic,
+            createdAt: now,
+          })
+          .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+          .returning({ id: earningEvents.id })
+        if (!debit) throw new Error('Weekly PEPE reserve debit already exists for a pending award.')
 
-      const [credit] = await transaction
-        .insert(earningEvents)
-        .values({
-          id: randomUUID(),
-          guestId: claim.guestId,
-          source: 'arcade_reward',
-          sourceKey: claim.id,
-          itemId: claim.rewardKey,
-          tokenSymbol: 'PEPE',
-          rewardAtomic: claim.amountAtomic,
-          createdAt: now,
-        })
-        .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-        .returning({ id: earningEvents.id })
-      if (!credit) throw new Error('Weekly PEPE reward already exists for a pending award.')
+        const [credit] = await transaction
+          .insert(earningEvents)
+          .values({
+            id: randomUUID(),
+            guestId: claim.guestId,
+            source: 'arcade_reward',
+            sourceKey: claim.id,
+            itemId: claim.rewardKey,
+            tokenSymbol: 'PEPE',
+            rewardAtomic: claim.amountAtomic,
+            createdAt: now,
+          })
+          .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+          .returning({ id: earningEvents.id })
+        if (!credit) throw new Error('Weekly PEPE reward already exists for a pending award.')
+        pepeBalanceAtomic -= BigInt(claim.amountAtomic)
+      }
 
       const [paidClaim] = await transaction
         .update(arcadeRewardClaims)
@@ -395,13 +472,15 @@ export async function settlePendingWeeklyAwards(
         .where(and(eq(arcadeRewardClaims.id, claim.id), eq(arcadeRewardClaims.status, 'pending')))
         .returning({ id: arcadeRewardClaims.id })
       if (!paidClaim) throw new Error('Weekly reward claim changed while locked.')
-
-      balanceAtomic -= BigInt(claim.amountAtomic)
       paidCount += 1
     }
   }
 
-  return { balanceAtomic: balanceAtomic.toString(), paidCount }
+  return {
+    balanceAtomic: pepeBalanceAtomic.toString(),
+    homeroTreasuryBalanceAtomic: homeroBalanceAtomic.toString(),
+    paidCount,
+  }
 }
 
 export async function settlePreviousWeekAwards(now = new Date()) {
@@ -417,8 +496,8 @@ export async function settlePreviousWeekAwards(now = new Date()) {
     for (let index = 0; index < winners.length; index += 1) {
       const winner = winners[index]
       const placement = index + 1
-      const amountAtomic = getArcadeWeeklyPrizeAtomic(placement)
-      if (!Number.isSafeInteger(amountAtomic) || amountAtomic <= 0) continue
+      const prize = getArcadeWeeklyPrize(placement)
+      if (!prize || !Number.isSafeInteger(prize.amountAtomic) || prize.amountAtomic <= 0) continue
 
       const [claim] = await transaction
         .insert(arcadeRewardClaims)
@@ -426,7 +505,8 @@ export async function settlePreviousWeekAwards(now = new Date()) {
           guestId: winner.guestId,
           rewardKey: `weekly:${previousPeriodStart}:rank:${placement}`,
           rewardType: 'weekly',
-          amountAtomic,
+          amountAtomic: prize.amountAtomic,
+          tokenSymbol: prize.tokenSymbol,
           sourceKey: `week:${previousPeriodStart}:rank:${placement}`,
           placement,
           periodStart: previousPeriodStart,
@@ -448,6 +528,7 @@ export async function settlePreviousWeekAwards(now = new Date()) {
       paidClaims: settled.paidCount,
       capitalAvailable: true,
       capitalBalanceAtomic: settled.balanceAtomic,
+      homeroTreasuryBalanceAtomic: settled.homeroTreasuryBalanceAtomic,
     }
   })
 }

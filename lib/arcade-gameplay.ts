@@ -2,8 +2,8 @@ export type ArcadeBoostCode = 'jetpack' | 'shield'
 export type ArcadeObstacleKind = 'candle' | 'cactus'
 
 export const ARCADE_ENERGY_CAP = 10
-export const ARCADE_DAILY_ENERGY_EARNED_CAP = 15
-export const ARCADE_DAILY_RUN_LIMIT = 7
+export const ARCADE_DAILY_ENERGY_EARNED_CAP = 20
+export const ARCADE_DAILY_RUN_LIMIT = 20
 export const ARCADE_PTC_ENERGY_REWARD = 0.02
 export const ARCADE_VIEW_AD_ENERGY_REWARD = 0.25
 export const ARCADE_MAX_JUMPS = 100_000
@@ -57,34 +57,38 @@ export const ARCADE_MILESTONES = [
 ] as const
 
 export const ARCADE_WEEKLY_PRIZE_TIERS = [
-  { startRank: 1, endRank: 1, amountPepe: 5_000 },
-  { startRank: 2, endRank: 2, amountPepe: 2_500 },
-  { startRank: 3, endRank: 3, amountPepe: 1_250 },
-  { startRank: 4, endRank: 4, amountPepe: 750 },
-  { startRank: 5, endRank: 5, amountPepe: 500 },
-  { startRank: 6, endRank: 6, amountPepe: 350 },
-  { startRank: 7, endRank: 7, amountPepe: 250 },
-  { startRank: 8, endRank: 8, amountPepe: 200 },
-  { startRank: 9, endRank: 9, amountPepe: 150 },
-  { startRank: 10, endRank: 10, amountPepe: 100 },
-  { startRank: 11, endRank: 20, amountPepe: 75 },
-  { startRank: 21, endRank: 50, amountPepe: 50 },
-  { startRank: 51, endRank: 100, amountPepe: 25 },
+  { startRank: 1, endRank: 1, amount: 50_000, tokenSymbol: 'HOMERO' },
+  { startRank: 2, endRank: 2, amount: 25_000, tokenSymbol: 'HOMERO' },
+  { startRank: 3, endRank: 3, amount: 12_500, tokenSymbol: 'HOMERO' },
+  { startRank: 4, endRank: 4, amount: 750, tokenSymbol: 'PEPE' },
+  { startRank: 5, endRank: 5, amount: 500, tokenSymbol: 'PEPE' },
+  { startRank: 6, endRank: 6, amount: 350, tokenSymbol: 'PEPE' },
+  { startRank: 7, endRank: 7, amount: 250, tokenSymbol: 'PEPE' },
+  { startRank: 8, endRank: 8, amount: 200, tokenSymbol: 'PEPE' },
+  { startRank: 9, endRank: 9, amount: 150, tokenSymbol: 'PEPE' },
+  { startRank: 10, endRank: 10, amount: 100, tokenSymbol: 'PEPE' },
+  { startRank: 11, endRank: 20, amount: 75, tokenSymbol: 'PEPE' },
+  { startRank: 21, endRank: 50, amount: 50, tokenSymbol: 'PEPE' },
+  { startRank: 51, endRank: 100, amount: 25, tokenSymbol: 'PEPE' },
 ] as const
 
 export const ARCADE_WEEKLY_PRIZE_BUDGET_PEPE = ARCADE_WEEKLY_PRIZE_TIERS.reduce(
-  (total, tier) => total + (tier.endRank - tier.startRank + 1) * tier.amountPepe,
+  (total, tier) => total + (tier.tokenSymbol === 'PEPE' ? (tier.endRank - tier.startRank + 1) * tier.amount : 0),
   0,
 )
 
-export function getArcadeWeeklyPrizeAtomic(rank: number) {
-  if (!Number.isInteger(rank) || rank < 1 || rank > 100) return 0
+export const ARCADE_WEEKLY_PRIZE_BUDGET_HOMERO = ARCADE_WEEKLY_PRIZE_TIERS.reduce(
+  (total, tier) => total + (tier.tokenSymbol === 'HOMERO' ? (tier.endRank - tier.startRank + 1) * tier.amount : 0),
+  0,
+)
+
+export function getArcadeWeeklyPrize(rank: number) {
+  if (!Number.isInteger(rank) || rank < 1 || rank > 100) return null
   const tier = ARCADE_WEEKLY_PRIZE_TIERS.find((item) => rank >= item.startRank && rank <= item.endRank)
-  return tier ? tier.amountPepe * ARCADE_ATOMIC_PER_PEPE : 0
+  return tier ? { amountAtomic: tier.amount * ARCADE_ATOMIC_PER_PEPE, tokenSymbol: tier.tokenSymbol } : null
 }
 
 export const ARCADE_SHOP = {
-  energy: { code: 'energy', label: '+1 Energy', priceAtomic: 5_000_000_000 },
   life: { code: 'life', label: 'Extra Life', priceAtomic: 6_000_000_000 },
 } as const
 

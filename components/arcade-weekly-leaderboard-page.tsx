@@ -8,7 +8,7 @@ import { LocalizedTree } from '@/components/site-language-provider'
 type WeeklyLeaderboardData = {
   periodStart: string
   periodEnd: string
-  leaderboard: Array<{ rank: number; displayName: string; bestDistanceM: number; prizePepe: number; isCurrentUser: boolean }>
+  leaderboard: Array<{ rank: number; displayName: string; bestDistanceM: number; prizeAmount: number; prizeTokenSymbol: 'HOMERO' | 'PEPE'; isCurrentUser: boolean }>
 }
 
 async function getWeeklyLeaderboard(url: string): Promise<WeeklyLeaderboardData> {

@@ -313,7 +313,7 @@ export const arcadeProfiles = pgTable('earnpepe_arcade_profiles', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   check('earnpepe_arcade_profiles_energy_check', sql`${table.energy} between 0 and 10`),
-  check('earnpepe_arcade_profiles_daily_energy_check', sql`${table.dailyEnergyEarned} between 0 and 15`),
+  check('earnpepe_arcade_profiles_daily_energy_check', sql`${table.dailyEnergyEarned} between 0 and 20`),
   check('earnpepe_arcade_profiles_total_runs_check', sql`${table.totalRuns} >= 0`),
 ])
 
@@ -392,6 +392,7 @@ export const arcadeRewardClaims = pgTable('earnpepe_arcade_reward_claims', {
   rewardKey: text('reward_key').notNull(),
   rewardType: text('reward_type').$type<ArcadeRewardType>().notNull(),
   amountAtomic: bigint('amount_atomic', { mode: 'number' }).notNull(),
+  tokenSymbol: text('token_symbol').$type<WalletCoinSymbol>().notNull().default('PEPE'),
   status: text('status').$type<ArcadeRewardStatus>().notNull().default('pending'),
   sourceKey: text('source_key').notNull(),
   placement: integer('placement'),

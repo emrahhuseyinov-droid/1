@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
 import { ARCADE_HEARTBEAT_GRACE_MS, getArcadeMaximumDistanceM, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, ARCADE_HOMERO_COIN_REWARD_ATOMIC, ARCADE_MAX_JUMPS, getArcadeHomeroCoinsRemaining, simulateArcadeRun } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, createMilestoneClaims, isRecord, isUuid, lockArcadeProfile, readJsonBody, settlePendingArcadeRewards } from '@/lib/arcade-service'
+import { getHomeroTreasuryAdminProfile, getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 
 export const runtime = 'nodejs'
 
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   const jumpTimes = body.jumpTimes as number[]
 
   try {
+    const homeroTreasuryAdmin = await getHomeroTreasuryAdminProfile()
     const result = await db.transaction(async (transaction) => {
       const profile = await lockArcadeProfile(transaction, access.guestId)
       const [session] = await transaction
@@ -43,15 +45,29 @@ export async function POST(request: NextRequest) {
         return { status: 'invalid' as const }
       }
 
-      const canEarnHomeroCoins = session.mode === 'ranked' && session.boostCodes.length === 0
+      let treasuryBalanceAtomic = 0n
+      let treasuryDistributedAtomic = 0n
+      let treasuryReady = false
+      if (homeroTreasuryAdmin) {
+        await lockHomeroTreasuryProfiles(transaction, [homeroTreasuryAdmin.id, access.guestId])
+        const treasury = await getHomeroTreasurySnapshot(transaction, homeroTreasuryAdmin.id)
+        treasuryBalanceAtomic = BigInt(treasury.availableAtomic)
+        treasuryDistributedAtomic = BigInt(treasury.distributedAtomic)
+        treasuryReady = treasury.initialReserveSeeded
+      }
+
+      const canEarnHomeroCoins = session.mode === 'ranked' && session.boostCodes.length === 0 && treasuryReady
       const [coinEarnings] = canEarnHomeroCoins
         ? await transaction
           .select({ rewardAtomic: sql<number>`least(coalesce(sum(${earningEvents.rewardAtomic}), 0), ${ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC})::double precision` })
           .from(earningEvents)
           .where(and(eq(earningEvents.guestId, access.guestId), eq(earningEvents.source, 'arcade_homero_coin')))
         : [undefined]
-      const homeroCoinsRemaining = getArcadeHomeroCoinsRemaining(coinEarnings?.rewardAtomic ?? 0)
-      const score = simulateArcadeRun(session.runSeed, jumpTimes, session.boostCodes, elapsedMs, session.extraLives, canEarnHomeroCoins && homeroCoinsRemaining > 0, homeroCoinsRemaining)
+      const playerCoinLimit = getArcadeHomeroCoinsRemaining(coinEarnings?.rewardAtomic ?? 0)
+      const treasuryCoinLimit = Number(treasuryBalanceAtomic / BigInt(ARCADE_HOMERO_COIN_REWARD_ATOMIC))
+      const supplyCoinLimit = Number((HOMERO_TREASURY_CAP_ATOMIC - treasuryDistributedAtomic) / BigInt(ARCADE_HOMERO_COIN_REWARD_ATOMIC))
+      const homeroCoinsRemaining = canEarnHomeroCoins ? Math.min(playerCoinLimit, treasuryCoinLimit, supplyCoinLimit) : 0
+      const score = simulateArcadeRun(session.runSeed, jumpTimes, session.boostCodes, elapsedMs, session.extraLives, homeroCoinsRemaining > 0, homeroCoinsRemaining)
       const maximumDistanceM = getArcadeMaximumDistanceM(elapsedMs, session.boostCodes)
       if (!score.valid || score.distanceM < 0 || score.distanceM > maximumDistanceM) {
         await transaction.update(arcadeSessions).set({ status: 'invalid', finishedAt: now }).where(eq(arcadeSessions.id, session.id))
@@ -76,46 +92,62 @@ export async function POST(request: NextRequest) {
           })
       }
 
-      const [updatedProfile] = await transaction
-        .update(arcadeProfiles)
-        .set({
-          bestDistanceM: sql`greatest(${arcadeProfiles.bestDistanceM}, ${score.distanceM})`,
-          totalRuns: sql`${arcadeProfiles.totalRuns} + 1`,
-          updatedAt: now,
-        })
-        .where(eq(arcadeProfiles.guestId, access.guestId))
-        .returning({ bestDistanceM: arcadeProfiles.bestDistanceM, totalRuns: arcadeProfiles.totalRuns })
-      if (!updatedProfile) throw new Error('Could not update arcade profile.')
+      let bestDistanceM = profile.bestDistanceM
+      let totalRuns = profile.totalRuns
+      if (session.mode === 'ranked') {
+        const [updatedProfile] = await transaction
+          .update(arcadeProfiles)
+          .set({
+            bestDistanceM: sql`greatest(${arcadeProfiles.bestDistanceM}, ${score.distanceM})`,
+            totalRuns: sql`${arcadeProfiles.totalRuns} + 1`,
+            updatedAt: now,
+          })
+          .where(eq(arcadeProfiles.guestId, access.guestId))
+          .returning({ bestDistanceM: arcadeProfiles.bestDistanceM, totalRuns: arcadeProfiles.totalRuns })
+        if (!updatedProfile) throw new Error('Could not update arcade profile.')
+        bestDistanceM = updatedProfile.bestDistanceM
+        totalRuns = updatedProfile.totalRuns
+      }
 
       const eligibleCoinMilestones = canEarnHomeroCoins
         ? score.collectedHomeroCoinMilestones.slice(0, homeroCoinsRemaining)
         : []
-      const creditedCoins = eligibleCoinMilestones.length > 0
-        ? await transaction.insert(earningEvents).values(eligibleCoinMilestones.map((milestoneM) => ({
-          id: randomUUID(),
-          guestId: access.guestId,
-          source: 'arcade_homero_coin',
-          sourceKey: `${session.id}:${milestoneM}`,
-          itemId: `${milestoneM}m`,
-          tokenSymbol: 'HOMERO' as const,
-          rewardAtomic: ARCADE_HOMERO_COIN_REWARD_ATOMIC,
-          createdAt: now,
-        }))).onConflictDoNothing().returning({ id: earningEvents.id })
-        : []
+      let creditedCoinCount = 0
+      if (homeroTreasuryAdmin && treasuryReady) {
+        for (const milestoneM of eligibleCoinMilestones) {
+          const rewardAtomic = ARCADE_HOMERO_COIN_REWARD_ATOMIC
+          const rewardBigInt = BigInt(rewardAtomic)
+          if (rewardBigInt > treasuryBalanceAtomic || treasuryDistributedAtomic + rewardBigInt > HOMERO_TREASURY_CAP_ATOMIC) break
+          await recordHomeroTreasuryTransfer(
+            transaction,
+            homeroTreasuryAdmin.id,
+            access.guestId,
+            rewardAtomic,
+            `${session.id}:${milestoneM}`,
+            'arcade_homero_coin',
+            `${milestoneM}m`,
+            now,
+          )
+          treasuryBalanceAtomic -= rewardBigInt
+          treasuryDistributedAtomic += rewardBigInt
+          creditedCoinCount += 1
+        }
+      }
       const newClaims = await createMilestoneClaims(transaction, access.guestId, score.distanceM, session.id, now)
-      const settled = await settlePendingArcadeRewards(transaction, now)
+      const settled = await settlePendingArcadeRewards(transaction, now, homeroTreasuryAdmin?.id)
       return {
         status: 'completed' as const,
         distanceM: score.distanceM,
         hits: score.hits,
-        bestDistanceM: updatedProfile.bestDistanceM,
-        totalRuns: updatedProfile.totalRuns,
+        bestDistanceM,
+        totalRuns,
         ranked: session.mode === 'ranked' && session.boostCodes.length === 0,
-        homeroCoinsCollected: creditedCoins.length,
-        homeroRewardAtomic: String(creditedCoins.length * ARCADE_HOMERO_COIN_REWARD_ATOMIC),
+        homeroCoinsCollected: creditedCoinCount,
+        homeroRewardAtomic: String(creditedCoinCount * ARCADE_HOMERO_COIN_REWARD_ATOMIC),
         queuedMilestones: newClaims,
         paidRewards: settled.paidCount,
         reserveBalanceAtomic: String(settled.balanceAtomic),
+        homeroTreasuryBalanceAtomic: settled.homeroTreasuryBalanceAtomic,
       }
     })
 

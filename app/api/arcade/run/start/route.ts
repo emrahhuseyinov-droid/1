@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (result.status === 'already_running') return NextResponse.json({ error: 'Finish or close your active run first.' }, { status: 409, headers: arcadeNoStoreHeaders })
-    if (result.status === 'daily_limit') return NextResponse.json({ error: 'You have reached the daily limit of 7 arcade runs. Resets at 17:38 Baku time.' }, { status: 409, headers: arcadeNoStoreHeaders })
+    if (result.status === 'daily_limit') return NextResponse.json({ error: 'You have reached the daily limit of 20 arcade runs. Resets at 17:38 Baku time.' }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'no_energy') return NextResponse.json({ error: 'You need 1 energy to start a run.', energy: result.energy }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'missing_boost') return NextResponse.json({ error: `You do not have a ${result.boostCode} boost.` }, { status: 409, headers: arcadeNoStoreHeaders })
 

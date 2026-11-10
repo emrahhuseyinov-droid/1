@@ -7,6 +7,13 @@ import { db } from '@/lib/db'
 import { earningEvents, guestProfiles } from '@/lib/db/schema'
 import { parsePepeAmountToAtomic } from '@/lib/pepe-amount'
 import {
+  HOMERO_TREASURY_CAP_ATOMIC,
+  HOMERO_TREASURY_SEED_CHUNK_ATOMIC,
+  HOMERO_TREASURY_SEED_SOURCE,
+  HOMERO_TREASURY_SEED_SOURCE_KEYS,
+  getHomeroTreasurySnapshot,
+} from '@/lib/homero-treasury'
+import {
   getPepeReserveAdminProfile,
   getPepeReserveSnapshot,
   isPepeReserveAdmin,
@@ -40,7 +47,7 @@ export async function POST(request: NextRequest) {
   }
 
   const input = body as Record<string, unknown>
-  const action = input.action === 'initialize' || input.action === 'fund' ? input.action : null
+  const action = input.action === 'initialize' || input.action === 'initialize_homero' || input.action === 'fund' ? input.action : null
   if (!action) return NextResponse.json({ error: 'Unsupported reserve action.' }, { status: 400, headers: noStoreHeaders })
 
   const amountAtomic = action === 'fund' ? parsePepeAmountToAtomic(input.amount) : null
@@ -96,6 +103,40 @@ export async function POST(request: NextRequest) {
         return { status: 'initialized' as const }
       }
 
+      if (action === 'initialize_homero') {
+        const existingSeeds = await transaction
+          .select({ sourceKey: earningEvents.sourceKey, rewardAtomic: earningEvents.rewardAtomic })
+          .from(earningEvents)
+          .where(and(
+            eq(earningEvents.guestId, adminProfile.id),
+            eq(earningEvents.tokenSymbol, 'HOMERO'),
+            eq(earningEvents.source, HOMERO_TREASURY_SEED_SOURCE),
+            inArray(earningEvents.sourceKey, HOMERO_TREASURY_SEED_SOURCE_KEYS),
+          ))
+
+        if (existingSeeds.length === HOMERO_TREASURY_SEED_SOURCE_KEYS.length) {
+          const seededAtomic = existingSeeds.reduce((total, event) => total + BigInt(event.rewardAtomic), 0n)
+          return seededAtomic === HOMERO_TREASURY_CAP_ATOMIC
+            ? { status: 'homero_already_initialized' as const }
+            : { status: 'homero_seed_inconsistent' as const }
+        }
+        if (existingSeeds.length > 0) return { status: 'homero_seed_inconsistent' as const }
+
+        const now = new Date()
+        await transaction.insert(earningEvents).values(HOMERO_TREASURY_SEED_SOURCE_KEYS.map((sourceKey) => ({
+          id: randomUUID(),
+          guestId: adminProfile.id,
+          source: HOMERO_TREASURY_SEED_SOURCE,
+          sourceKey,
+          itemId: 'Initial HOMERO treasury supply',
+          tokenSymbol: 'HOMERO' as const,
+          rewardAtomic: HOMERO_TREASURY_SEED_CHUNK_ATOMIC,
+          createdAt: now,
+        }))).onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+
+        return { status: 'homero_initialized' as const }
+      }
+
       const sourceKey = `manual-${idempotencyKey}`
       const [existingFunding] = await transaction
         .select({ rewardAtomic: earningEvents.rewardAtomic })
@@ -133,17 +174,27 @@ export async function POST(request: NextRequest) {
     if (result.status === 'seed_inconsistent') {
       return NextResponse.json({ error: 'The initial reserve record is incomplete. Contact support before initializing it again.' }, { status: 409, headers: noStoreHeaders })
     }
+    if (result.status === 'homero_seed_inconsistent') {
+      return NextResponse.json({ error: 'The HOMERO treasury seed is incomplete or inconsistent. Contact support before initializing it again.' }, { status: 409, headers: noStoreHeaders })
+    }
     if (result.status === 'idempotency_conflict') {
       return NextResponse.json({ error: 'This funding request key was already used for a different amount.' }, { status: 409, headers: noStoreHeaders })
     }
 
-    const reserve = await getPepeReserveSnapshot(adminProfile.id)
+    const [reserve, treasury] = await Promise.all([
+      getPepeReserveSnapshot(adminProfile.id),
+      db.transaction((transaction) => getHomeroTreasurySnapshot(transaction, adminProfile.id)),
+    ])
+    const homeroInitialized = result.status === 'homero_initialized' || result.status === 'homero_already_initialized'
     return NextResponse.json({
       action,
-      initialized: result.status === 'initialized' || result.status === 'already_initialized',
-      alreadyProcessed: result.status === 'already_initialized' || (result.status === 'funded' && result.alreadyProcessed),
+      initialized: result.status === 'initialized' || result.status === 'already_initialized' || homeroInitialized,
+      alreadyProcessed: result.status === 'already_initialized' || result.status === 'homero_already_initialized' || (result.status === 'funded' && result.alreadyProcessed),
       reserveAvailableAtomic: reserve.availableAtomic,
       initialReserveSeeded: reserve.initialReserveSeeded,
+      homeroTreasuryAvailableAtomic: treasury.availableAtomic,
+      homeroRemainingSupplyAtomic: treasury.remainingSupplyAtomic,
+      homeroTreasurySeeded: treasury.initialReserveSeeded,
     }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[pepe-swap-reserve] Could not update the reserve:', error)
