@@ -159,6 +159,7 @@ export async function GET(request: NextRequest) {
         cooldownRemainingSeconds: Math.max(0, Math.ceil((cooldownUntil - now) / 1000)),
         isInProgress: pendingIsActive,
         awaitingConfirmation,
+        pendingClickId: awaitingConfirmation ? history?.pendingClickId ?? null : null,
         activeRemainingSeconds: pendingIsActive
           ? Math.max(0, task.durationSeconds - (pendingElapsedSeconds ?? 0))
           : null,

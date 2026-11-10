@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { ArrowUpRight, BadgeCheck, Check, Clock3, Coins, Eye, Globe2, Timer } from 'lucide-react'
+import { ArrowUpRight, BadgeCheck, Clock3, Coins, Eye, Globe2, Timer } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 
@@ -21,6 +21,7 @@ type AdsLabTask = {
   cooldownRemainingSeconds: number
   isInProgress: boolean
   awaitingConfirmation: boolean
+  pendingClickId: string | null
   activeRemainingSeconds: number | null
 }
 
@@ -65,6 +66,7 @@ function isAdsLabTask(value: unknown): value is AdsLabTask {
     && typeof value.cooldownRemainingSeconds === 'number' && Number.isFinite(value.cooldownRemainingSeconds)
     && typeof value.isInProgress === 'boolean'
     && typeof value.awaitingConfirmation === 'boolean'
+    && (value.pendingClickId === null || (typeof value.pendingClickId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.pendingClickId)))
     && (value.activeRemainingSeconds === null || (typeof value.activeRemainingSeconds === 'number' && Number.isFinite(value.activeRemainingSeconds)))
 }
 
@@ -152,6 +154,21 @@ export function AdsLabPtcTaskList({
     if (!data) return
     onSummaryChange?.({ availableAds: data.tasks.length, ...data.stats })
   }, [data, onSummaryChange])
+
+  useEffect(() => {
+    const pendingTasks = data?.tasks.filter((task) => task.awaitingConfirmation
+      && task.pendingClickId
+      && task.pendingClickId !== clickId) ?? []
+    if (pendingTasks.length === 0) return
+
+    setDeferredClaims((current) => {
+      const knownClickIds = new Set(current.map((claim) => claim.clickId))
+      const recoveredClaims = pendingTasks
+        .filter((task) => task.pendingClickId && !knownClickIds.has(task.pendingClickId))
+        .map((task) => ({ clickId: task.pendingClickId as string, taskTitle: task.title, tokenSymbol: task.tokenSymbol }))
+      return recoveredClaims.length > 0 ? [...current, ...recoveredClaims] : current
+    })
+  }, [clickId, data])
 
   useEffect(() => {
     if (deadline === null) return
@@ -338,7 +355,7 @@ export function AdsLabPtcTaskList({
           deferredPollingRef.current = false
         }
       })()
-    }, 30_000)
+    }, 5_000)
 
     return () => window.clearInterval(timer)
   }, [deferredClaims, isRussian, mutate, router])
@@ -513,15 +530,16 @@ export function AdsLabPtcTaskList({
 
             <div className="mt-auto pt-3">
               {isActive ? (
-                !claiming && !awaitingPostback ? (
-                  <button type="button" onClick={() => void claimTask()} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl border-2 border-cyan-100/70 bg-dashboard-accent px-3 py-2 text-[11px] font-black text-[#11203e] shadow-md shadow-cyan-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-                    <Check size={14} />{isRussian ? 'Проверить выполнение' : 'Verify completion'}
-                  </button>
-                ) : (
-                  <div role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-gold/30 bg-dashboard-gold/10 px-3 py-2 text-[11px] font-bold text-dashboard-gold">
-                    {claiming ? <><Timer size={14} />{isRussian ? 'Проверяем подтверждение…' : 'Checking confirmation…'}</> : awaitingPostback ? <><Timer size={14} />{isRussian ? 'Ожидаем подтверждение AdsLab…' : 'Waiting for AdsLab confirmation…'}</> : <><Timer size={14} />{isRussian ? `Таймер: ${secondsRemaining} сек.` : `Timer: ${secondsRemaining}s`}</>}
-                  </div>
-                )
+                <div role="status" aria-live="polite" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-gold/30 bg-dashboard-gold/10 px-3 py-2 text-[11px] font-bold text-dashboard-gold">
+                  <Timer size={14} />
+                  {claiming
+                    ? (isRussian ? 'Начисляем подтверждённую награду…' : 'Crediting your confirmed reward…')
+                    : awaitingPostback
+                      ? (isRussian ? 'Ожидаем подтверждение AdsLab…' : 'Waiting for AdsLab confirmation…')
+                      : secondsRemaining > 0
+                        ? (isRussian ? `Автопроверка через ${secondsRemaining} сек.` : `Automatic check in ${secondsRemaining}s`)
+                        : (isRussian ? 'Автоматически проверяем выполнение…' : 'Automatically verifying completion…')}
+                </div>
               ) : onCooldown ? (
                 <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-outline bg-dashboard-surface-raised px-3 py-2 text-center text-[10px] font-bold text-dashboard-muted">
                   <Clock3 size={13} />{isRussian ? `Доступно через ${formatCountdown(task.cooldownRemainingSeconds)}` : `Available in ${formatCountdown(task.cooldownRemainingSeconds)}`}
