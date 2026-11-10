@@ -695,6 +695,8 @@ dialog.adslab-captcha-dialog[open] {
 }
 
 .wheel-sector-label {
+  font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+  letter-spacing: 0.015em;
   paint-order: stroke fill;
   -webkit-text-stroke: 1px rgb(10 12 18 / 0.98);
   text-shadow: 0 2px 0 rgb(8 9 13 / 0.95), 0 4px 8px rgb(0 0 0 / 0.48);

@@ -322,15 +322,13 @@ export function WheelOfFortunePage() {
                     {wheelSectors.map((sector, index) => {
                       const angle = index * 45
                       const radians = angle * Math.PI / 180
-                      const tangentAngle = angle - 90
-                      const readableAngle = tangentAngle > 90 && tangentAngle < 270 ? tangentAngle + 180 : tangentAngle
                       const labelStyle: CSSProperties = {
                         left: `${50 + Math.sin(radians) * 36}%`,
                         top: `${50 - Math.cos(radians) * 36}%`,
-                        transform: `translate(-50%, -50%) rotate(${readableAngle - rotation}deg)`,
+                        transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
                         transitionDuration: `${spinDurationMs}ms`,
                       }
-                      return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] text-center text-[11px] font-black leading-tight sm:max-w-[104px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
+                      return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] text-center text-[11px] font-black leading-tight transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none sm:max-w-[104px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
                     })}
                   </div>
                 </div>
