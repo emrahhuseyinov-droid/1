@@ -65,7 +65,7 @@ export function AdsLabShortlinksTaskList() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   async function openShortlink(task: ShortlinkTask) {
-    if (openingKey) return
+    if (openingKey || data?.awaitingConfirmation) return
     const taskWindow = window.open('about:blank', '_blank')
     if (!taskWindow || taskWindow.closed) {
       setErrorMessage(isRussian ? 'Разрешите всплывающие окна, чтобы открыть ссылку.' : 'Allow pop-ups to open the shortlink.')
@@ -133,7 +133,7 @@ export function AdsLabShortlinksTaskList() {
         </li>
       ) : tasks.map((task) => {
         const onCooldown = task.cooldownRemainingSeconds > 0
-        const disabled = Boolean(openingKey || onCooldown || task.awaitingConfirmation)
+        const disabled = Boolean(openingKey || onCooldown || task.awaitingConfirmation || data?.awaitingConfirmation)
         const palette = getAdsLabTaskCardPalette(task.key)
         const metadataBaseClass = 'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-extrabold shadow-sm'
         const rewardClass = `${metadataBaseClass} ${palette.reward}`

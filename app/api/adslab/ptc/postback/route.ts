@@ -1,5 +1,5 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
-import { and, asc, eq, like } from 'drizzle-orm'
+import { and, asc, eq, like, or } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { ADSLAB_PTC_PLACEMENT_ID, ADSLAB_PTC_TASK_PREFIX, ADSLAB_SHORTLINK_TASK_PREFIX, adsLabPtcRewardMatches, formatHomeroPayoutAtomic, normalizeAdsLabUsd, parseAdsLabGrossRewardAtomic, parseAdsLabRewardAtomic, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
 import { grantArcadeEnergy, grantPtcArcadeEnergy } from '@/lib/arcade-service'
@@ -28,6 +28,13 @@ function readSingleParam(params: URLSearchParams, name: string, maxLength: numbe
   return value.length > 0 && value.length <= maxLength ? value : null
 }
 
+function readSingleAliasParam(params: URLSearchParams, names: readonly string[], maxLength: number) {
+  const values = names.flatMap((name) => params.getAll(name))
+  if (values.length !== 1) return null
+  const value = values[0].trim()
+  return value.length > 0 && value.length <= maxLength ? value : null
+}
+
 function signatureMatches(signature: string, expected: Buffer) {
   if (!signaturePattern.test(signature)) return false
 
@@ -48,9 +55,13 @@ export async function GET(request: NextRequest) {
   const uid = uidIsUuid ? rawUid.toLowerCase() : rawUid
   const pidValues = params.getAll('pid')
   const pid = pidValues.length === 0 ? null : readSingleParam(params, 'pid', 128)
-  const txid = readSingleParam(params, 'txid', 128) ?? ''
+  const txid = readSingleAliasParam(params, ['txid', 'trans_id'], 128) ?? ''
   const type = readSingleParam(params, 'type', 24)?.toLowerCase() ?? ''
-  const status = readSingleParam(params, 'status', 24)?.toLowerCase() ?? ''
+  const statusValues = params.getAll('status')
+  const status = statusValues.length === 0 ? 'credit' : readSingleParam(params, 'status', 24)?.toLowerCase() ?? ''
+  const isCreditStatus = ['credit', 'completed'].includes(status)
+  const isReversalStatus = ['reversed', 'reverse', 'reversal', 'chargeback'].includes(status)
+  const isRejectionStatus = ['rejected', 'reject'].includes(status)
   const reward = readSingleParam(params, 'reward', 64)
   const signature = readSingleParam(params, 'signature', 128) ?? ''
 
@@ -76,11 +87,14 @@ export async function GET(request: NextRequest) {
     return response('postback unavailable', 503)
   }
 
-  if (!uid || !txid || !status || !reward || !signature
+  if (!uid || !txid || !status || (isCreditStatus && !reward) || !signature
     || params.getAll('uid').length !== 1
-    || params.getAll('txid').length !== 1
-    || params.getAll('status').length !== 1
-    || params.getAll('reward').length !== 1
+    || params.getAll('txid').length + params.getAll('trans_id').length !== 1
+    || statusValues.length > 1
+    || (statusValues.length === 1 && !status)
+    || params.getAll('reward').length > 1
+    || (params.getAll('reward').length === 1 && !reward)
+    || (isCreditStatus && params.getAll('reward').length !== 1)
     || params.getAll('signature').length !== 1
     || pidValues.length > 1
     || (pidValues.length === 1 && !pid)
@@ -123,6 +137,7 @@ export async function GET(request: NextRequest) {
         uid: params.getAll('uid').length,
         pid: pidValues.length,
         txid: params.getAll('txid').length,
+        trans_id: params.getAll('trans_id').length,
         type: params.getAll('type').length,
         status: params.getAll('status').length,
         reward: params.getAll('reward').length,
@@ -163,14 +178,22 @@ export async function GET(request: NextRequest) {
     return response('OK')
   }
 
-  if (normalizeAdsLabUsd(reward) === null) {
+  if (isCreditStatus && normalizeAdsLabUsd(reward) === null) {
     return response('Invalid reward', 400)
+  }
+
+  if (!isCreditStatus && !isReversalStatus && !isRejectionStatus) {
+    console.info('[adslab-ptc] Ignored verified postback with unsupported status.', {
+      status,
+      txidFingerprint: signatureFingerprint(txid),
+    })
+    return response('OK')
   }
 
   const shortlinkTypeRequested = ['shortlink', 'shortlinks'].includes(type)
   const ptcTypeRequested = type === 'ptc'
 
-  if (status === 'reversed') {
+  if (isReversalStatus) {
     try {
       const result = await db.transaction(async (transaction) => {
         let [click] = await transaction
@@ -265,8 +288,84 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (status !== 'completed') {
-    console.info('[adslab-ptc] Ignored verified incomplete postback.', {
+  if (isRejectionStatus) {
+    try {
+      const result = await db.transaction(async (transaction) => {
+        const [directPendingClick] = await transaction
+          .select({ clickId: ptcClicks.clickId, userId: ptcClicks.userId, taskId: ptcClicks.taskId, status: ptcClicks.status, rewardUsd: ptcClicks.rewardUsd })
+          .from(ptcClicks)
+          .where(eq(ptcClicks.clickId, uid))
+          .for('update')
+          .limit(1)
+        let pendingClick: typeof directPendingClick | null = directPendingClick ?? null
+
+        if (pendingClick) {
+          if (pendingClick.status !== 'pending') return 'ignored' as const
+          const isShortlink = pendingClick.taskId.startsWith(ADSLAB_SHORTLINK_TASK_PREFIX)
+          if ((shortlinkTypeRequested && !isShortlink) || (ptcTypeRequested && isShortlink)) return 'category_mismatch' as const
+        } else {
+          let userId: string | null = null
+          if (uidIsUuid) {
+            const [profileById] = await transaction
+              .select({ id: guestProfiles.id })
+              .from(guestProfiles)
+              .where(eq(guestProfiles.id, uid))
+              .limit(1)
+            userId = profileById?.id ?? null
+          }
+          if (!userId) {
+            const [profileByAuthId] = await transaction
+              .select({ id: guestProfiles.id })
+              .from(guestProfiles)
+              .where(eq(guestProfiles.userId, uid))
+              .limit(1)
+            userId = profileByAuthId?.id ?? null
+          }
+          if (!userId) return 'ignored' as const
+
+          const taskPrefix = shortlinkTypeRequested || !ptcTypeRequested
+            ? ADSLAB_SHORTLINK_TASK_PREFIX
+            : ADSLAB_PTC_TASK_PREFIX
+          const pendingClicks = await transaction
+            .select({ clickId: ptcClicks.clickId, userId: ptcClicks.userId, taskId: ptcClicks.taskId, status: ptcClicks.status, rewardUsd: ptcClicks.rewardUsd })
+            .from(ptcClicks)
+            .where(and(
+              eq(ptcClicks.userId, userId),
+              eq(ptcClicks.status, 'pending'),
+              like(ptcClicks.taskId, `${taskPrefix}%`),
+            ))
+            .orderBy(asc(ptcClicks.createdAt))
+            .for('update')
+          pendingClick = reward
+            ? pendingClicks.find((candidate) => adsLabPtcRewardMatches(reward, candidate.rewardUsd)) ?? null
+            : pendingClicks.length === 1 ? pendingClicks[0] : null
+          if (!pendingClick) return 'ignored' as const
+        }
+
+        await transaction
+          .update(ptcClicks)
+          .set({ status: 'rejected', updatedAt: new Date() })
+          .where(and(eq(ptcClicks.clickId, pendingClick.clickId), eq(ptcClicks.status, 'pending')))
+        return 'rejected' as const
+      })
+
+      if (result === 'category_mismatch') return response('Transaction type mismatch', 409)
+      console.info('[adslab-ptc] Processed verified rejection.', {
+        outcome: result,
+        uidFingerprint: signatureFingerprint(uid),
+        txidFingerprint: signatureFingerprint(txid),
+      })
+      return response('OK')
+    } catch {
+      console.error('[adslab-ptc] Could not process verified rejection.', {
+        txidFingerprint: signatureFingerprint(txid),
+      })
+      return response('postback error', 500)
+    }
+  }
+
+  if (!isCreditStatus) {
+    console.info('[adslab-ptc] Ignored verified non-credit postback.', {
       status,
       txidFingerprint: signatureFingerprint(txid),
     })
@@ -276,11 +375,14 @@ export async function GET(request: NextRequest) {
   try {
     const result = await db.transaction(async (transaction) => {
       const [clickIdentity] = await transaction
-        .select({ userId: ptcClicks.userId })
+        .select({ userId: ptcClicks.userId, taskId: ptcClicks.taskId })
         .from(ptcClicks)
         .where(and(
           eq(ptcClicks.clickId, uid),
-          like(ptcClicks.taskId, `${ADSLAB_PTC_TASK_PREFIX}%`),
+          or(
+            like(ptcClicks.taskId, `${ADSLAB_PTC_TASK_PREFIX}%`),
+            like(ptcClicks.taskId, `${ADSLAB_SHORTLINK_TASK_PREFIX}%`),
+          ),
         ))
         .limit(1)
 
@@ -319,7 +421,7 @@ export async function GET(request: NextRequest) {
           .for('update')
           .limit(1)
         : []
-      const hasTrustedPtcClickIdentity = Boolean(clickIdentity || pendingClickOwner)
+      const hasTrustedClickIdentity = Boolean(clickIdentity || pendingClickOwner)
       userId = userId ?? pendingClickOwner?.userId ?? null
       if (!userId) return 'unknown_user_identity' as const
 
@@ -329,7 +431,7 @@ export async function GET(request: NextRequest) {
         .where(eq(guestProfiles.id, userId))
         .for('update')
         .limit(1)
-      if (!profile && !hasTrustedPtcClickIdentity) return 'unknown_user_profile' as const
+      if (!profile && !hasTrustedClickIdentity) return 'unknown_user_profile' as const
 
       const [existingTransaction] = await transaction
         .select({ userId: ptcClicks.userId })
@@ -352,9 +454,13 @@ export async function GET(request: NextRequest) {
         formatHomeroPayoutAtomic(rewardAtomic),
         formatHomeroPayoutAtomic(grossRewardAtomic),
       ])
-      const taskPrefix = shortlinkTypeRequested || (!ptcTypeRequested && !clickIdentity)
-        ? ADSLAB_SHORTLINK_TASK_PREFIX
-        : ADSLAB_PTC_TASK_PREFIX
+      const clickIdentityIsShortlink = clickIdentity?.taskId.startsWith(ADSLAB_SHORTLINK_TASK_PREFIX) ?? false
+      if ((shortlinkTypeRequested && clickIdentity && !clickIdentityIsShortlink)
+        || (ptcTypeRequested && clickIdentityIsShortlink)) return 'category_mismatch' as const
+
+      const taskPrefix = clickIdentity
+        ? (clickIdentityIsShortlink ? ADSLAB_SHORTLINK_TASK_PREFIX : ADSLAB_PTC_TASK_PREFIX)
+        : (shortlinkTypeRequested || !ptcTypeRequested ? ADSLAB_SHORTLINK_TASK_PREFIX : ADSLAB_PTC_TASK_PREFIX)
       const pendingClicks = await transaction
         .select({
           clickId: ptcClicks.clickId,
