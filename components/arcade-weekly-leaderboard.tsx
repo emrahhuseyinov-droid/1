@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
 import { AlertCircle, Clock3, Crown, Medal, RefreshCw, Search, Trophy } from 'lucide-react'
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { ARCADE_WEEKLY_PRIZE_BUDGET_PEPE, ARCADE_WEEKLY_PRIZE_TIERS } from '@/lib/arcade-gameplay'
@@ -96,13 +95,13 @@ function WeeklyResetCountdown({ periodEnd }: { periodEnd?: string }) {
 }
 
 function podiumCardStyle(rank: number, isCurrentUser: boolean) {
-  const base = 'absolute z-10 flex min-w-0 flex-col items-center overflow-hidden rounded-[20px] border px-2 py-2.5 text-center text-white shadow-[0_12px_28px_rgba(0,0,0,0.42)] backdrop-blur-md transition duration-300 motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:rounded-[24px] sm:px-4 sm:py-3'
+  const base = 'relative isolate flex min-h-[216px] min-w-0 flex-col items-center justify-center overflow-hidden rounded-[26px] border p-5 text-center text-white shadow-[0_16px_38px_rgba(0,0,0,0.28)] transition duration-300 motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:rounded-[30px]'
   const rankStyle = rank === 1
-    ? 'left-1/2 top-[40%] min-h-[132px] w-[36%] -translate-x-1/2 border-amber-200/65 bg-gradient-to-b from-[#46371f]/95 via-[#1b2035]/95 to-[#11182b]/95 shadow-[0_0_34px_rgba(250,204,21,0.2)] sm:min-h-[150px]'
+    ? 'border-amber-200/50 bg-gradient-to-br from-[#3b321e] via-[#1b2134] to-[#10182a] shadow-[0_18px_42px_rgba(230,177,72,0.15)] sm:col-start-2 sm:row-start-1 sm:min-h-[244px]'
     : rank === 2
-      ? 'left-[1%] top-[49%] min-h-[112px] w-[31%] border-sky-100/55 bg-gradient-to-b from-[#253a57]/95 via-[#17223a]/95 to-[#11182b]/95 shadow-[0_0_26px_rgba(125,211,252,0.16)] sm:min-h-[130px]'
-      : 'right-[1%] top-[49%] min-h-[112px] w-[31%] border-fuchsia-100/55 bg-gradient-to-b from-[#3b294e]/95 via-[#221d3c]/95 to-[#17172d]/95 shadow-[0_0_26px_rgba(232,121,249,0.16)] sm:min-h-[130px]'
-  const userStyle = isCurrentUser ? 'ring-2 ring-cyan-200/80' : ''
+      ? 'border-slate-200/25 bg-gradient-to-br from-[#243653] via-[#172238] to-[#10182a] sm:col-start-1 sm:row-start-1'
+      : 'border-violet-200/25 bg-gradient-to-br from-[#332746] via-[#201d36] to-[#13162a] sm:col-start-3 sm:row-start-1'
+  const userStyle = isCurrentUser ? 'ring-2 ring-cyan-200/80 ring-offset-2 ring-offset-[#0c1425]' : ''
 
   return `${base} ${rankStyle} ${userStyle}`
 }
@@ -144,7 +143,7 @@ export function ArcadeWeeklyLeaderboard({
   onRefresh,
 }: ArcadeWeeklyLeaderboardProps) {
   const { language } = useSiteLanguage()
-  const leaderboard = data?.leaderboard ?? []
+  const leaderboard = (data?.leaderboard ?? []).slice(0, 100)
   const [searchQuery, setSearchQuery] = useState('')
   const showError = Boolean(error) && !data
   const showLoading = isLoading && !data && !showError
@@ -241,39 +240,44 @@ export function ArcadeWeeklyLeaderboard({
 
           {leaderboard.length > 0 && (
             <>
-              <section aria-labelledby="weekly-podium-title" className="mt-6">
-                <div className="mb-1 flex flex-wrap items-end justify-between gap-3 px-1">
+              <section aria-labelledby="weekly-podium-title" className="mt-8">
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3 px-1">
                   <div>
-                    <h3 id="weekly-podium-title" className="text-base font-extrabold text-white">Weekly podium</h3>
-                    <p className="mt-1 text-xs text-white/65">Top three weekly players</p>
+                    <h3 id="weekly-podium-title" className="text-lg font-black tracking-tight text-white sm:text-xl">Weekly podium</h3>
+                    <p className="mt-1 text-sm text-white/65">Top three weekly players</p>
                   </div>
-                  <span className="rounded-full border border-emerald-200/20 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-bold text-emerald-100">Live standings</span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-bold text-emerald-100"><span aria-hidden="true" className="size-1.5 rounded-full bg-emerald-300" />Live standings</span>
                 </div>
-                <div className="relative isolate mx-auto h-[240px] w-full max-w-[1000px] sm:h-[300px] lg:h-[340px]">
-                  <Image
-                    src="/images/weekly-leaderboard-podium-wide.png"
-                    alt=""
-                    aria-hidden="true"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 1000px"
-                    className="pointer-events-none select-none object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.3)] sm:object-fill"
-                  />
-                  <ol aria-label="Top three weekly players" className="absolute inset-0">
+                <div className="relative isolate overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-[#111e34] via-[#10192d] to-[#19182f] p-3 shadow-[0_20px_55px_rgba(4,9,24,0.35)] sm:p-5">
+                  <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-violet-400/[0.08] blur-3xl" />
+                  <div aria-hidden="true" className="pointer-events-none absolute -bottom-20 left-[32%] size-56 rounded-full bg-cyan-300/[0.07] blur-3xl" />
+                  <ol aria-label="Top three weekly players" className="relative grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end sm:gap-4">
                     {leaderboard.slice(0, 3).map((player) => {
                       const placeLabel = player.rank === 1 ? '1st place' : player.rank === 2 ? '2nd place' : '3rd place'
                       const RankIcon = player.rank === 1 ? Crown : Medal
-                      const medalTone = player.rank === 1 ? 'text-amber-100' : player.rank === 2 ? 'text-sky-100' : 'text-fuchsia-100'
+                      const medalTone = player.rank === 1 ? 'text-amber-100' : player.rank === 2 ? 'text-sky-100' : 'text-violet-100'
                       return (
                         <li key={`podium-${player.rank}`} className={podiumCardStyle(player.rank, player.isCurrentUser)}>
-                          <div className="flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
-                            <PlayerAvatar player={player} compact />
-                            <RankIcon aria-hidden="true" className={medalTone} size={16} />
-                            {player.isCurrentUser && <span className="rounded-full border border-cyan-100/25 bg-cyan-300/15 px-1.5 py-0.5 text-[8px] font-extrabold text-cyan-50 sm:text-[9px]">You</span>}
+                          <div aria-hidden="true" className={`pointer-events-none absolute -right-10 -top-12 size-36 rounded-full blur-3xl ${player.rank === 1 ? 'bg-amber-300/10' : player.rank === 2 ? 'bg-sky-300/[0.08]' : 'bg-violet-300/[0.08]'}`} />
+                          <div className="relative z-10 flex w-full flex-col items-center">
+                            <div className="flex items-center gap-2">
+                              <span className={`grid size-10 place-items-center rounded-2xl border font-mono text-sm font-black ${player.rank === 1 ? 'border-amber-100/30 bg-amber-200/10 text-amber-100' : player.rank === 2 ? 'border-sky-100/25 bg-sky-200/[0.08] text-sky-100' : 'border-violet-100/25 bg-violet-200/[0.08] text-violet-100'}`}>#{player.rank}</span>
+                              <RankIcon aria-hidden="true" className={medalTone} size={19} />
+                              {player.isCurrentUser && <span className="rounded-full border border-cyan-100/25 bg-cyan-300/15 px-2 py-1 text-[10px] font-extrabold text-cyan-50">You</span>}
+                            </div>
+                            <div className="mt-4 flex max-w-full items-center gap-3">
+                              <PlayerAvatar player={player} />
+                              <div className="min-w-0 text-left">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{placeLabel}</p>
+                                <p className="mt-1 max-w-full truncate text-base font-extrabold text-white sm:text-lg">{player.displayName}</p>
+                              </div>
+                            </div>
+                            <p className="mt-4 flex items-baseline gap-1 font-mono text-2xl font-black tracking-tight tabular-nums text-white sm:text-3xl">{player.bestDistanceM.toLocaleString()} <span className="text-xs font-bold text-white/60 sm:text-sm">m</span></p>
+                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/15 px-3 py-1.5">
+                              <span className="text-xs font-semibold text-white/60">Prize</span>
+                              <span className="font-mono text-xs font-extrabold tabular-nums text-cyan-100">{player.prizePepe.toLocaleString()} PEPE</span>
+                            </div>
                           </div>
-                          <span className="mt-1 block text-[9px] font-extrabold uppercase tracking-[0.1em] text-white/70 sm:text-[10px] sm:tracking-[0.14em]">{placeLabel}</span>
-                          <p className="mt-0.5 max-w-full truncate text-[11px] font-extrabold text-white sm:text-sm">{player.displayName}</p>
-                          <p className="mt-0.5 whitespace-nowrap font-mono text-sm font-black tabular-nums text-white sm:text-lg">{player.bestDistanceM.toLocaleString()} <span className="text-[9px] font-bold text-white/70 sm:text-xs">m</span></p>
-                          <span className="mt-1 inline-flex max-w-full rounded-full border border-white/15 bg-white/10 px-2 py-0.5 font-mono text-[9px] font-extrabold tabular-nums text-white sm:text-[11px]">{player.prizePepe.toLocaleString()} PEPE</span>
                         </li>
                       )
                     })}
@@ -288,6 +292,7 @@ export function ArcadeWeeklyLeaderboard({
                     <p className="mt-1 text-sm text-white/75">
                       {'Showing'} <span className="font-bold text-white">{filteredPlayers.length}</span> {'of'} <span className="font-bold text-white">{leaderboard.length}</span> {'players'}
                     </p>
+                    <p className="mt-1 text-xs leading-5 text-white/55">{'Up to'} <span>100</span> {'players'}</p>
                   </div>
                   <label className="flex min-h-11 w-full items-center gap-2 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-[#1c2543] to-[#221d3e] px-3 text-white/75 shadow-inner focus-within:border-cyan-200/50 focus-within:ring-2 focus-within:ring-cyan-200/30 sm:max-w-xs">
                     <Search aria-hidden="true" size={17} className="shrink-0" />
@@ -303,10 +308,10 @@ export function ArcadeWeeklyLeaderboard({
                 </header>
 
                 {filteredPlayers.length > 0 ? (
-                  <div role="region" aria-label="Top 100 weekly players" tabIndex={0} className="mt-3 overflow-x-auto rounded-[20px] border border-sky-100/15 bg-[#0d1729]/90 shadow-[0_14px_35px_rgba(7,12,38,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
+                  <div role="region" aria-label="Top 100 weekly players" tabIndex={0} className="mt-3 max-h-[70vh] overflow-auto rounded-[20px] border border-sky-100/15 bg-[#0d1729]/90 shadow-[0_14px_35px_rgba(7,12,38,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
                     <table className="w-full min-w-[600px] border-collapse text-left">
                       <caption className="sr-only">Weekly top 100 ranked players and fixed PEPE prizes</caption>
-                      <thead className="bg-[#1b2944] text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky-100/80 sm:text-xs">
+                      <thead className="sticky top-0 z-10 bg-[#1b2944] text-[10px] font-extrabold uppercase tracking-[0.12em] text-sky-100/80 sm:text-xs">
                         <tr>
                           <th scope="col" className="px-4 py-3">Rank</th>
                           <th scope="col" className="px-4 py-3">Player</th>
