@@ -1,7 +1,7 @@
-import { and, eq, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, like, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
-import { AdsLabPtcError, getAdsLabShortlinkTasks } from '@/lib/adslab-ptc'
+import { ADSLAB_SHORTLINK_TASK_PREFIX, AdsLabPtcError, getAdsLabShortlinkTasks } from '@/lib/adslab-ptc'
 import { db } from '@/lib/db'
 import { ptcClicks } from '@/lib/db/schema'
 
@@ -36,6 +36,21 @@ async function loadShortlinkTaskHistory(userId: string, taskIds: string[]) {
     .groupBy(ptcClicks.taskId)
 }
 
+async function loadLatestPendingShortlinkStart(userId: string) {
+  const [pending] = await db
+    .select({ startedAt: ptcClicks.createdAt })
+    .from(ptcClicks)
+    .where(and(
+      eq(ptcClicks.userId, userId),
+      eq(ptcClicks.status, 'pending'),
+      like(ptcClicks.taskId, `${ADSLAB_SHORTLINK_TASK_PREFIX}%`),
+    ))
+    .orderBy(desc(ptcClicks.createdAt))
+    .limit(1)
+
+  return timestampToMs(pending?.startedAt)
+}
+
 export async function GET(request: NextRequest) {
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
@@ -43,6 +58,8 @@ export async function GET(request: NextRequest) {
   let failureStage = 'provider_feed'
   try {
     const providerFeed = await getAdsLabShortlinkTasks(request.headers, account.profile.id)
+    failureStage = 'pending_shortlink_query'
+    const latestPendingShortlinkStart = await loadLatestPendingShortlinkStart(account.profile.id)
     const taskIds = providerFeed.tasks.map((task) => task.key)
     let histories: Awaited<ReturnType<typeof loadShortlinkTaskHistory>> = []
     try {
@@ -62,6 +79,8 @@ export async function GET(request: NextRequest) {
     const safeHistories = Array.isArray(histories) ? histories : []
     const historyByTask = new Map(safeHistories.map((history) => [history.taskId, history]))
     const now = Date.now()
+    const awaitingConfirmation = latestPendingShortlinkStart !== null
+      && now - latestPendingShortlinkStart <= PENDING_GRACE_MS
 
     const tasks = providerFeed.tasks.flatMap((task) => {
       const history = historyByTask.get(task.key)
@@ -70,7 +89,8 @@ export async function GET(request: NextRequest) {
       if (visitsRemaining === 0) return []
 
       const pendingStartedAt = timestampToMs(history?.pendingStartedAt)
-      const awaitingConfirmation = pendingStartedAt !== null && now - pendingStartedAt <= PENDING_GRACE_MS
+      const taskAwaitingConfirmation = awaitingConfirmation
+        || (pendingStartedAt !== null && now - pendingStartedAt <= PENDING_GRACE_MS)
       const latestCompletedAt = timestampToMs(history?.latestCompletedAt)
       const cooldownUntil = latestCompletedAt === null
         ? 0
@@ -87,11 +107,11 @@ export async function GET(request: NextRequest) {
         cooldownMinutes: task.cooldownMinutes,
         visitsRemaining,
         cooldownRemainingSeconds: Math.max(0, Math.ceil((cooldownUntil - now) / 1000)),
-        awaitingConfirmation,
+        awaitingConfirmation: taskAwaitingConfirmation,
       }]
     })
 
-    return NextResponse.json({ tasks, pepeUsdPrice: providerFeed.pepeUsdPrice }, { headers: noStoreHeaders })
+    return NextResponse.json({ tasks, pepeUsdPrice: providerFeed.pepeUsdPrice, awaitingConfirmation }, { headers: noStoreHeaders })
   } catch (error) {
     if (error instanceof AdsLabPtcError) {
       console.error('[adslab-shortlinks] task feed failed', {
