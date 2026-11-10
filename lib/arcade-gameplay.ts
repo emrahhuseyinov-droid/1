@@ -56,7 +56,14 @@ export const ARCADE_MILESTONES = [
   { key: 'milestone_2000', distanceM: 2000, amountAtomic: 250_000_000_000 },
 ] as const
 
-export const ARCADE_WEEKLY_PRIZE_TIERS = [
+type ArcadeWeeklyPrizeTier = {
+  startRank: number
+  endRank: number
+  amount: number
+  tokenSymbol: 'PEPE' | 'HOMERO'
+}
+
+export const ARCADE_WEEKLY_PRIZE_TIERS: readonly ArcadeWeeklyPrizeTier[] = [
   { startRank: 1, endRank: 1, amount: 10_000, tokenSymbol: 'PEPE' },
   { startRank: 2, endRank: 2, amount: 5_000, tokenSymbol: 'PEPE' },
   { startRank: 3, endRank: 3, amount: 2_500, tokenSymbol: 'PEPE' },
@@ -65,7 +72,7 @@ export const ARCADE_WEEKLY_PRIZE_TIERS = [
   { startRank: 11, endRank: 20, amount: 500, tokenSymbol: 'PEPE' },
   { startRank: 21, endRank: 50, amount: 250, tokenSymbol: 'PEPE' },
   { startRank: 51, endRank: 100, amount: 100, tokenSymbol: 'PEPE' },
-] as const
+]
 
 export const ARCADE_WEEKLY_PRIZE_BUDGET_PEPE = ARCADE_WEEKLY_PRIZE_TIERS.reduce(
   (total, tier) => total + (tier.tokenSymbol === 'PEPE' ? (tier.endRank - tier.startRank + 1) * tier.amount : 0),

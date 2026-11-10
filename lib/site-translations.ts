@@ -1191,13 +1191,13 @@ const ruPhrases = new Map<string, string>([
   ['· PEPE reference', '· ориентир PEPE'],
   ['· live', '· в реальном времени'],
   ['% fee:', '% комиссии:'],
-  ['Waiting for AdsLab…', 'Ожидаем AdsLab…']
+  ['Waiting for AdsLab…', 'Ожидаем AdsLab…'],
   ['Sector', 'Сектор'],
   ['You won:', 'Ваш выигрыш:'],
   ['Available PEPE balance and withdrawal limits', 'Доступный баланс PEPE и лимиты на вывод'],
   ['Available today:', 'Доступно сегодня:'],
   ['Available', 'Доступно'],
-  ['PEPE. The daily cap resets at 00:00 UTC.', 'PEPE. Дневной лимит сбрасывается в 00:00 UTC.']
+  ['PEPE. The daily cap resets at 00:00 UTC.', 'PEPE. Дневной лимит сбрасывается в 00:00 UTC.'],
   ['Daily withdrawal limit used', 'Использовано дневного лимита вывода'],
   ["Pending and paid requests count toward today's limit. Rejected requests release both the reserved balance and daily quota.", 'Заявки в обработке и выполненные заявки учитываются в сегодняшнем лимите. Отклонённые заявки освобождают зарезервированный баланс и восстанавливают дневной лимит.'],
   ['total', 'итого'],
