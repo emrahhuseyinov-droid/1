@@ -1,6 +1,7 @@
 import 'server-only'
 import { db } from '@/lib/db'
-import { getHomeroRateNumerator, getHomeroTreasuryAdminProfile, getHomeroTreasurySnapshot } from '@/lib/homero-treasury'
+import { getHomeroAmmSnapshot } from '@/lib/homero-amm'
+import { getHomeroTreasuryAdminProfile } from '@/lib/homero-treasury'
 
 const PEPE_ETHEREUM_ADDRESS = '0x6982508145454ce325ddbe47a25d4ec3d2311933'
 const PEPE_PAIRS_URL = `https://api.dexscreener.com/token-pairs/v1/ethereum/${PEPE_ETHEREUM_ADDRESS}`
@@ -11,6 +12,7 @@ export type PepeMarketQuote = {
   pepeUsd: number
   homeroUsdReference: number
   homeroToPepeReferenceRate: number
+  homeroAmmSeeded: boolean
   source: 'DEX Screener'
   network: 'Ethereum'
   updatedAt: string
@@ -57,7 +59,6 @@ function pairLiquidityUsd(pair: JsonRecord): number {
 
 const PEPE_PRICE_CACHE_TTL_MS = 60_000
 const MAX_STALE_PRICE_AGE_MS = 10 * 60_000
-const HOMERO_RATE_SCALE = 1_000_000_000_000
 
 type CachedPepePrice = { pepeUsd: number; updatedAtMs: number }
 let cachedPepePrice: CachedPepePrice | null = null
@@ -110,13 +111,14 @@ export async function getPepeMarketQuote(): Promise<PepeMarketQuote> {
     getHomeroTreasuryAdminProfile(),
   ])
 
-  let rate = 0.2
+  let rate = 0
+  let homeroAmmSeeded = false
   let internalRateUnavailable = false
   if (adminProfile) {
     try {
-      const treasury = await db.transaction((transaction) => getHomeroTreasurySnapshot(transaction, adminProfile.id))
-      const distributedAtomic = BigInt(treasury.distributedAtomic)
-      rate = Number(getHomeroRateNumerator(distributedAtomic)) / HOMERO_RATE_SCALE
+      const pool = await db.transaction((transaction) => getHomeroAmmSnapshot(transaction, adminProfile.id))
+      homeroAmmSeeded = pool.seeded
+      if (pool.seeded) rate = pool.homeroToPepeRate
     } catch {
       internalRateUnavailable = true
     }
@@ -126,9 +128,10 @@ export async function getPepeMarketQuote(): Promise<PepeMarketQuote> {
     pepeUsd: pepePrice.pepeUsd,
     homeroUsdReference: pepePrice.pepeUsd * rate,
     homeroToPepeReferenceRate: rate,
+    homeroAmmSeeded,
     source: 'DEX Screener',
     network: 'Ethereum',
     updatedAt: new Date(pepePrice.updatedAtMs).toISOString(),
-    isStale: pepePrice.isStale || internalRateUnavailable,
+    isStale: pepePrice.isStale || internalRateUnavailable || !homeroAmmSeeded,
   }
 }

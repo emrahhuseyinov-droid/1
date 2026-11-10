@@ -11,6 +11,8 @@ import { formatTokenAtomic } from '@/lib/pepe-amount'
 
 type FaucetState = {
   rewardAtomic: string
+  tokenSymbol: 'HOMERO'
+  rewardAvailable: boolean
   dailyLimit: number
   claimsLeft: number
   cooldownUntil: number
@@ -27,6 +29,7 @@ type CaptchaInitResponse = {
 type ClaimResponse = {
   alreadyClaimed: boolean
   rewardAtomic: string
+  tokenSymbol: 'PEPE' | 'HOMERO'
   state: FaucetState
 }
 
@@ -78,8 +81,8 @@ export function ManualFaucetPage() {
   }, [])
 
   const cooldownRemainingMs = data ? Math.max(0, data.cooldownUntil - now) : 0
-  const canClaim = Boolean(data && data.claimsLeft > 0 && cooldownRemainingMs === 0)
-  const reward = data ? formatTokenAtomic(data.rewardAtomic) : '10.00000000'
+  const canClaim = Boolean(data && data.rewardAvailable && data.claimsLeft > 0 && cooldownRemainingMs === 0)
+  const reward = data ? formatTokenAtomic(data.rewardAtomic) : '—'
 
   async function startVerification() {
     if (!canClaim || busy || captchaVerified) return
@@ -121,7 +124,7 @@ export function ManualFaucetPage() {
 
         if (result?.status === 'verified') {
           setCaptchaVerified(true)
-          setMessage('CAPTCHA verified. Your PEPE claim is unlocked.')
+          setMessage('CAPTCHA verified. Your HOMERO claim is unlocked.')
           return
         }
         if (result?.status === 'failed' || result?.status === 'expired') {
@@ -161,7 +164,7 @@ export function ManualFaucetPage() {
     setMessage(null)
     try {
       const result = await postJson<ClaimResponse>('/api/manual-faucet/claim', { stateToken: captchaStateToken })
-      setMessage(result.alreadyClaimed ? 'This CAPTCHA reward has already been added to your account.' : 'PEPE reward added to your wallet.')
+      setMessage(result.alreadyClaimed ? 'This CAPTCHA reward has already been added to your account.' : 'HOMERO reward added to your wallet.')
       setCaptchaVerified(false)
       setCaptchaStateToken(null)
       setCaptchaSessionId(null)
@@ -183,7 +186,7 @@ export function ManualFaucetPage() {
     : cooldownLabel
       ? `Available in ${cooldownLabel}`
       : captchaVerified
-        ? `Claim ${reward} PEPE`
+        ? `Claim ${reward} HOMERO`
         : 'Solve CAPTCHA to unlock'
 
   return (
@@ -192,7 +195,7 @@ export function ManualFaucetPage() {
       <header className="space-y-1">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-cyan-300">Earning features</p>
         <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">Manual Faucet</h1>
-        <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim free PEPE after completing AdsLab&apos;s secure, monetized CAPTCHA.</p>
+        <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim an internal HOMERO reward equivalent to 10 PEPE after completing AdsLab&apos;s secure CAPTCHA.</p>
       </header>
 
       <section aria-label="Faucet reward and claim limit" className="grid gap-4 md:grid-cols-2">
@@ -200,8 +203,8 @@ export function ManualFaucetPage() {
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-cyan-300/10 text-cyan-200"><Gift aria-hidden="true" /></span>
           <div className="min-w-0">
             <p className="text-xs font-bold text-slate-400">Reward per claim</p>
-            <div className="mt-1 flex items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"><TokenLogo symbol="PEPE" size={24} /><span className="truncate">{reward} PEPE</span></div>
-            <p className="mt-1 text-[10px] font-semibold text-slate-500">Credited after server verification</p>
+            <div className="mt-1 flex items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"><TokenLogo symbol="HOMERO" size={24} /><span className="truncate">{reward} HOMERO</span></div>
+            <p className="mt-1 text-[10px] font-semibold text-slate-500">Current AMM rate · 10 PEPE equivalent</p>
           </div>
         </div>
 
@@ -214,6 +217,8 @@ export function ManualFaucetPage() {
           </div>
         </div>
       </section>
+
+      {!data?.rewardAvailable && !isLoading && <p role="status" className="mx-auto w-full max-w-3xl rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] px-4 py-3 text-xs text-amber-100">Faucet claims are paused until the HOMERO exchange pool and treasury are available.</p>}
 
       <section aria-labelledby="faucet-captcha-title" className="mx-auto w-full max-w-3xl rounded-[28px] border border-violet-200/20 bg-[#171e42] p-5 shadow-[0_20px_60px_rgba(4,9,32,0.32)] sm:p-8">
         <div className="mx-auto flex max-w-xl flex-col items-center text-center">
@@ -276,7 +281,8 @@ export function ManualFaucetPage() {
 
       <div className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-center text-[10px] leading-5 text-slate-500">
         <ShieldCheck aria-hidden="true" size={14} className="shrink-0" />
-        <p>CAPTCHA results are checked directly with AdsLab before any PEPE is credited.</p>
+            <p>CAPTCHA results are checked directly with AdsLab before HOMERO is credited from the treasury.</p>
+
       </div>
 
       <AdsLabCaptchaModal

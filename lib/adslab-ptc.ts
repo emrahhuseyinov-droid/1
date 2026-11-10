@@ -27,7 +27,7 @@ export type AdsLabPtcTask = {
   rewardAtomic: number
   rewardUsd: string
   pepeUsdPrice: string
-  tokenSymbol: 'PEPE'
+  tokenSymbol: 'HOMERO'
   durationSeconds: number
   visitsPerUser: number
   cooldownMinutes: number
@@ -264,7 +264,12 @@ function getIconUrl(value: unknown): string | null {
 }
 
 type AdsLabTaskCategory = 'ptc' | 'shortlinks' | 'all'
-type AdsLabTaskPayload = { tasks: unknown[]; pepeUsdPrice: string; ipAddress: string }
+type AdsLabTaskPayload = { tasks: unknown[]; pepeUsdPrice: string; homeroToPepeRate: number; ipAddress: string }
+
+function estimateHomeroRewardAtomic(pepeEquivalentAtomic: number, homeroToPepeRate: number) {
+  const rewardAtomic = Math.floor(pepeEquivalentAtomic / homeroToPepeRate)
+  return Number.isSafeInteger(rewardAtomic) && rewardAtomic > 0 ? rewardAtomic : null
+}
 
 async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category: AdsLabTaskCategory): Promise<AdsLabTaskPayload> {
   if (!ADSLAB_PTC_PLACEMENT_ID) {
@@ -354,21 +359,25 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     })
   }
 
-  let pepeUsdPrice: string
+  let marketQuote: Awaited<ReturnType<typeof getPepeMarketQuote>>
   try {
-    pepeUsdPrice = normalizeAdsLabUsd((await getPepeMarketQuote()).pepeUsd) ?? ''
+    marketQuote = await getPepeMarketQuote()
   } catch {
     throw new AdsLabPtcError('The live PEPE/USD quote is unavailable.', 503, { stage: 'pepe_quote_unavailable' })
   }
+  const pepeUsdPrice = normalizeAdsLabUsd(marketQuote.pepeUsd) ?? ''
   if (!pepeUsdPrice) {
     throw new AdsLabPtcError('The live PEPE/USD quote is unavailable.', 503, { stage: 'pepe_quote_unavailable' })
   }
+  if (!marketQuote.homeroAmmSeeded || !Number.isFinite(marketQuote.homeroToPepeReferenceRate) || marketQuote.homeroToPepeReferenceRate <= 0) {
+    throw new AdsLabPtcError('The internal HOMERO exchange pool is not available.', 503, { stage: 'homero_amm_unavailable' })
+  }
 
-  return { tasks: taskPayload, pepeUsdPrice, ipAddress }
+  return { tasks: taskPayload, pepeUsdPrice, homeroToPepeRate: marketQuote.homeroToPepeReferenceRate, ipAddress }
 }
 
 export async function getAdsLabPtcTasks(headers: Headers, userId: string): Promise<AdsLabPtcFeed> {
-  const { tasks: taskPayload, pepeUsdPrice, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'ptc')
+  const { tasks: taskPayload, pepeUsdPrice, homeroToPepeRate, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'ptc')
   const tasks = new Map<string, AdsLabPtcTask>()
 
   for (const rawTask of taskPayload) {
@@ -380,7 +389,8 @@ export async function getAdsLabPtcTasks(headers: Headers, userId: string): Promi
     const title = readString(rawTask.title, 160) ?? readString(rawTask.name, 160)
     const targetUrl = normalizeTaskUrl(rawTask.url)
     const rewardUsd = normalizeAdsLabUsd(rawTask.reward_usd ?? rawTask.reward)
-    const rewardAtomic = rewardUsd ? parseAdsLabPepeRewardAtomic(rewardUsd, pepeUsdPrice) : null
+    const pepeEquivalentAtomic = rewardUsd ? parseAdsLabPepeRewardAtomic(rewardUsd, pepeUsdPrice) : null
+    const rewardAtomic = pepeEquivalentAtomic === null ? null : estimateHomeroRewardAtomic(pepeEquivalentAtomic, homeroToPepeRate)
     const durationSeconds = parseInteger(rawTask.duration, 1, 3_600)
     if (!title || !targetUrl || !rewardUsd || rewardAtomic === null || durationSeconds === null) continue
 
@@ -395,7 +405,7 @@ export async function getAdsLabPtcTasks(headers: Headers, userId: string): Promi
       rewardAtomic,
       rewardUsd,
       pepeUsdPrice,
-      tokenSymbol: 'PEPE',
+      tokenSymbol: 'HOMERO',
       durationSeconds,
       visitsPerUser: parseInteger(rawTask.visitsPerUser, 1, 10_000) ?? 1,
       cooldownMinutes: parseInteger(rawTask.cooldownMinutes, 0, 525_600) ?? 0,
@@ -406,7 +416,7 @@ export async function getAdsLabPtcTasks(headers: Headers, userId: string): Promi
 }
 
 export async function getAdsLabShortlinkTasks(headers: Headers, userId: string): Promise<AdsLabPtcFeed> {
-  const { tasks: taskPayload, pepeUsdPrice, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'shortlinks')
+  const { tasks: taskPayload, pepeUsdPrice, homeroToPepeRate, ipAddress } = await fetchAdsLabTaskPayload(headers, userId, 'shortlinks')
   const tasks = new Map<string, AdsLabPtcTask>()
 
   for (const rawTask of taskPayload) {
@@ -422,7 +432,8 @@ export async function getAdsLabShortlinkTasks(headers: Headers, userId: string):
       ?? normalizeTaskId(rawTask.id)
       ?? normalizeTaskId(rawTask._id)
     const rewardUsd = normalizeAdsLabUsd(rawTask.rewardPerVisit ?? rawTask.reward_usd ?? rawTask.reward)
-    const rewardAtomic = rewardUsd ? parseAdsLabPepeRewardAtomic(rewardUsd, pepeUsdPrice) : null
+    const pepeEquivalentAtomic = rewardUsd ? parseAdsLabPepeRewardAtomic(rewardUsd, pepeUsdPrice) : null
+    const rewardAtomic = pepeEquivalentAtomic === null ? null : estimateHomeroRewardAtomic(pepeEquivalentAtomic, homeroToPepeRate)
     if (!title || !targetUrl || !taskId || !rewardUsd || rewardAtomic === null) continue
 
     const key = getTaskKey(targetUrl, userId, ipAddress, ADSLAB_SHORTLINK_TASK_PREFIX, taskId)
@@ -436,7 +447,7 @@ export async function getAdsLabShortlinkTasks(headers: Headers, userId: string):
       rewardAtomic,
       rewardUsd,
       pepeUsdPrice,
-      tokenSymbol: 'PEPE',
+      tokenSymbol: 'HOMERO',
       durationSeconds: 0,
       visitsPerUser: parseInteger(rawTask.visitsPerUser, 1, 2_147_483_647) ?? 2_147_483_647,
       cooldownMinutes: parseInteger(rawTask.cooldownMinutes, 0, 525_600) ?? 0,

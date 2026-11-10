@@ -1,7 +1,9 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 import { and, asc, eq, like, or } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
-import { ADSLAB_PTC_PLACEMENT_ID, ADSLAB_PTC_TASK_PREFIX, ADSLAB_SHORTLINK_TASK_PREFIX, adsLabPtcRewardMatches, formatHomeroPayoutAtomic, normalizeAdsLabUsd, parseAdsLabGrossRewardAtomic, parseAdsLabRewardAtomic, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
+import { ADSLAB_PTC_PLACEMENT_ID, ADSLAB_PTC_TASK_PREFIX, ADSLAB_SHORTLINK_TASK_PREFIX, adsLabPtcRewardMatches, formatHomeroPayoutAtomic, normalizeAdsLabUsd, parseAdsLabGrossRewardAtomic, parseAdsLabPepeRewardAtomic, parseAdsLabRewardAtomic } from '@/lib/adslab-ptc'
+import { issueHomeroRewardForPepe } from '@/lib/homero-amm'
+import { getHomeroTreasuryAdminProfile, lockHomeroTreasuryProfiles } from '@/lib/homero-treasury'
 import { grantArcadeEnergy, grantPtcArcadeEnergy } from '@/lib/arcade-service'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, ptcClicks } from '@/lib/db/schema'
@@ -373,6 +375,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const adminProfile = await getHomeroTreasuryAdminProfile()
+    if (!adminProfile) return response('HOMERO treasury is unavailable; retry required', 503)
+
     const result = await db.transaction(async (transaction) => {
       const [clickIdentity] = await transaction
         .select({ userId: ptcClicks.userId, taskId: ptcClicks.taskId })
@@ -425,11 +430,11 @@ export async function GET(request: NextRequest) {
       userId = userId ?? pendingClickOwner?.userId ?? null
       if (!userId) return 'unknown_user_identity' as const
 
+      await lockHomeroTreasuryProfiles(transaction, [userId, adminProfile.id])
       const [profile] = await transaction
         .select({ id: guestProfiles.id })
         .from(guestProfiles)
         .where(eq(guestProfiles.id, userId))
-        .for('update')
         .limit(1)
       if (!profile && !hasTrustedClickIdentity) return 'unknown_user_profile' as const
 
@@ -468,6 +473,7 @@ export async function GET(request: NextRequest) {
           payout: ptcClicks.payout,
           payoutTokenSymbol: ptcClicks.payoutTokenSymbol,
           rewardUsd: ptcClicks.rewardUsd,
+          pepeUsdPrice: ptcClicks.pepeUsdPrice,
         })
         .from(ptcClicks)
         .where(and(
@@ -480,37 +486,20 @@ export async function GET(request: NextRequest) {
 
       const pendingClick = pendingClicks.find((candidate) => {
         if (directClickId && candidate.clickId !== directClickId) return false
-        return candidate.payoutTokenSymbol === 'PEPE'
-          ? adsLabPtcRewardMatches(reward, candidate.rewardUsd)
-          : acceptableLegacyPayouts.has(candidate.payout ?? '')
+        return adsLabPtcRewardMatches(reward, candidate.rewardUsd)
+          || acceptableLegacyPayouts.has(candidate.payout ?? '')
       })
       if (!pendingClick) return pendingClicks.length ? 'reward_mismatch' as const : 'ignored' as const
 
-      const creditRewardAtomic = pendingClick.payoutTokenSymbol === 'PEPE'
-        ? parseHomeroPayoutAtomic(pendingClick.payout)
-        : rewardAtomic
-      if (creditRewardAtomic === null) return 'invalid_payout' as const
+      const pepeEquivalentAtomic = parseAdsLabPepeRewardAtomic(reward, pendingClick.pepeUsdPrice)
+      if (pepeEquivalentAtomic === null) return 'invalid_payout' as const
 
       const now = new Date()
-      const completedPayout = pendingClick.payoutTokenSymbol === 'PEPE'
-        ? pendingClick.payout
-        : formatHomeroPayoutAtomic(rewardAtomic)
-      const [completedClick] = await transaction
-        .update(ptcClicks)
-        .set({ status: 'completed', payout: completedPayout, providerTransactionId: txid, updatedAt: now })
-        .where(and(
-          eq(ptcClicks.clickId, pendingClick.clickId),
-          eq(ptcClicks.userId, userId),
-          eq(ptcClicks.status, 'pending'),
-        ))
-        .returning({ clickId: ptcClicks.clickId })
-      if (!completedClick) return 'ignored' as const
-
       const earningSource = pendingClick.taskId.startsWith(ADSLAB_SHORTLINK_TASK_PREFIX)
         ? 'adslab_shortlink'
         : 'adslab_ptc'
       const [existingCredit] = await transaction
-        .select({ rewardAtomic: earningEvents.rewardAtomic })
+        .select({ rewardAtomic: earningEvents.rewardAtomic, tokenSymbol: earningEvents.tokenSymbol })
         .from(earningEvents)
         .where(and(
           eq(earningEvents.guestId, userId),
@@ -518,23 +507,37 @@ export async function GET(request: NextRequest) {
           eq(earningEvents.sourceKey, pendingClick.clickId),
         ))
         .limit(1)
-      if (existingCredit) return 'duplicate' as const
+      if (existingCredit) {
+        await transaction
+          .update(ptcClicks)
+          .set({ status: 'completed', providerTransactionId: txid, updatedAt: now })
+          .where(and(
+            eq(ptcClicks.clickId, pendingClick.clickId),
+            eq(ptcClicks.userId, userId),
+            eq(ptcClicks.status, 'pending'),
+          ))
+        return 'duplicate' as const
+      }
 
-      const [credit] = await transaction
-        .insert(earningEvents)
-        .values({
-          id: randomUUID(),
-          guestId: userId,
-          source: earningSource,
-          sourceKey: pendingClick.clickId,
-          itemId: pendingClick.taskId,
-          tokenSymbol: pendingClick.payoutTokenSymbol,
-          rewardAtomic: creditRewardAtomic,
-          createdAt: now,
-        })
-        .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-        .returning({ id: earningEvents.id })
-      if (!credit) return 'duplicate' as const
+      const credited = await issueHomeroRewardForPepe(transaction, {
+        adminProfileId: adminProfile.id,
+        recipientProfileId: userId,
+        pepeEquivalentAtomic,
+        sourceKey: pendingClick.clickId,
+        recipientSource: earningSource,
+        itemId: pendingClick.taskId,
+        now,
+      })
+      const [completedClick] = await transaction
+        .update(ptcClicks)
+        .set({ status: 'completed', payout: formatHomeroPayoutAtomic(credited.rewardAtomic), payoutTokenSymbol: 'HOMERO', providerTransactionId: txid, updatedAt: now })
+        .where(and(
+          eq(ptcClicks.clickId, pendingClick.clickId),
+          eq(ptcClicks.userId, userId),
+          eq(ptcClicks.status, 'pending'),
+        ))
+        .returning({ clickId: ptcClicks.clickId })
+      if (!completedClick) throw new Error('The AdsLab click could not be completed after treasury payout.')
 
       if (earningSource === 'adslab_ptc') await grantPtcArcadeEnergy(transaction, userId, now)
       else await grantArcadeEnergy(transaction, userId, now)

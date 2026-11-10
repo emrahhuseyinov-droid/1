@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { earningEvents, referralCommissions } from '@/lib/db/schema'
 import { ADVERTISER_WALLET_EVENT_SOURCES, ADVERTISER_WALLET_TRANSFER_OUT_SOURCE } from '@/lib/advertiser-wallet'
 import { PEPE_RESERVE_EVENT_SOURCES, PEPE_SWAP_COMMISSION_SOURCE } from '@/lib/pepe-reserve'
-import { HOMERO_TREASURY_EVENT_SOURCES } from '@/lib/homero-treasury'
+import { HOMERO_AMM_EVENT_SOURCES, HOMERO_TREASURY_EVENT_SOURCES } from '@/lib/homero-treasury'
 import { getStreakFromDate, getUtcDateKey } from '@/lib/daily-bonus'
 import type { DashboardActivity, DashboardOverview } from '@/lib/dashboard-types'
 import type { WalletBalancesAtomic, WalletCoinSymbol } from '@/lib/wallet-assets'
@@ -13,7 +13,7 @@ export async function getDashboardBalancesAtomic(guestId: string): Promise<Recor
   const [balanceRows, commissionTotal] = await Promise.all([
     db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
-      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
+      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES, ...HOMERO_AMM_EVENT_SOURCES])))
       .groupBy(earningEvents.tokenSymbol),
     db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
       .from(referralCommissions)
@@ -31,14 +31,14 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
   const [balanceRows, commissionTotal, earningRows, commissionRows, dailyRows] = await Promise.all([
     db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
-      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
+      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES, ...HOMERO_AMM_EVENT_SOURCES])))
       .groupBy(earningEvents.tokenSymbol),
     db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
       .from(referralCommissions)
       .where(eq(referralCommissions.referrerId, guestId)),
     db.select({ id: earningEvents.id, source: earningEvents.source, sourceKey: earningEvents.sourceKey, itemId: earningEvents.itemId, tokenSymbol: earningEvents.tokenSymbol, amountAtomic: earningEvents.rewardAtomic, createdAt: earningEvents.createdAt })
       .from(earningEvents)
-      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
+      .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES, ...HOMERO_AMM_EVENT_SOURCES])))
       .orderBy(desc(earningEvents.createdAt))
       .limit(8),
     db.select({ id: referralCommissions.id, amountAtomic: referralCommissions.commissionAmountAtomic, createdAt: referralCommissions.createdAt })

@@ -1,10 +1,11 @@
 import 'server-only'
 
-import { randomUUID } from 'node:crypto'
 import { and, asc, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { bannerPromoEvents, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { grantArcadeEnergy } from '@/lib/arcade-service'
+import { issueHomeroRewardForPepe } from '@/lib/homero-amm'
+import { getHomeroTreasuryAdminProfile, lockHomeroTreasuryProfiles } from '@/lib/homero-treasury'
 
 export const BANNER_PROMO_REWARD_ATOMIC = 7_000_000_000
 const MAX_DAILY_IMPRESSIONS = 15
@@ -137,27 +138,33 @@ export async function recordBannerPromoAction(
 ): Promise<BannerPromoActionResult> {
   const now = new Date()
   let rewardGranted = false
+  const adminProfile = action === 'click' ? await getHomeroTreasuryAdminProfile() : null
+  if (action === 'click' && !adminProfile) throw new Error('The HOMERO treasury is not available for the banner reward.')
 
   await db.transaction(async (transaction) => {
+    if (adminProfile) await lockHomeroTreasuryProfiles(transaction, [adminProfile.id, guestId])
+    else {
+      await transaction
+        .select({ id: guestProfiles.id })
+        .from(guestProfiles)
+        .where(eq(guestProfiles.id, guestId))
+        .for('update')
+        .limit(1)
+    }
+
     const [profile] = await transaction
       .select({ id: guestProfiles.id })
       .from(guestProfiles)
       .where(eq(guestProfiles.id, guestId))
-      .for('update')
       .limit(1)
-
     if (!profile) throw new Error('Guest profile not found for banner promotion.')
 
     const [event] = await transaction
       .select()
       .from(bannerPromoEvents)
-      .where(and(
-        eq(bannerPromoEvents.id, promoId),
-        eq(bannerPromoEvents.guestId, guestId),
-      ))
+      .where(and(eq(bannerPromoEvents.id, promoId), eq(bannerPromoEvents.guestId, guestId)))
       .for('update')
       .limit(1)
-
     if (!event || event.status !== 'shown') return
 
     if (action === 'dismiss') {
@@ -168,33 +175,42 @@ export async function recordBannerPromoAction(
       return
     }
 
+    const [existingCredit] = await transaction
+      .select({ rewardAtomic: earningEvents.rewardAtomic })
+      .from(earningEvents)
+      .where(and(
+        eq(earningEvents.guestId, guestId),
+        eq(earningEvents.source, 'banner_click_promo'),
+        eq(earningEvents.sourceKey, promoId),
+      ))
+      .limit(1)
+
+    if (existingCredit) {
+      await transaction
+        .update(bannerPromoEvents)
+        .set({ status: 'clicked', clickedAt: now, rewardAtomic: existingCredit.rewardAtomic })
+        .where(and(eq(bannerPromoEvents.id, promoId), eq(bannerPromoEvents.status, 'shown')))
+      return
+    }
+
+    const credited = await issueHomeroRewardForPepe(transaction, {
+      adminProfileId: adminProfile!.id,
+      recipientProfileId: guestId,
+      pepeEquivalentAtomic: BANNER_PROMO_REWARD_ATOMIC,
+      sourceKey: promoId,
+      recipientSource: 'banner_click_promo',
+      itemId: 'adslab-offerwall-banner',
+      now,
+    })
     const [updated] = await transaction
       .update(bannerPromoEvents)
-      .set({ status: 'clicked', clickedAt: now, rewardAtomic: BANNER_PROMO_REWARD_ATOMIC })
+      .set({ status: 'clicked', clickedAt: now, rewardAtomic: credited.rewardAtomic })
       .where(and(eq(bannerPromoEvents.id, promoId), eq(bannerPromoEvents.status, 'shown')))
       .returning({ id: bannerPromoEvents.id })
+    if (!updated) throw new Error('The banner promo was not updated after its reward was issued.')
 
-    if (!updated) return
-
-    const [credit] = await transaction
-      .insert(earningEvents)
-      .values({
-        id: randomUUID(),
-        guestId,
-        source: 'banner_click_promo',
-        sourceKey: promoId,
-        itemId: 'adslab-offerwall-banner',
-        tokenSymbol: 'PEPE',
-        rewardAtomic: BANNER_PROMO_REWARD_ATOMIC,
-        createdAt: now,
-      })
-      .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-      .returning({ id: earningEvents.id })
-
-    if (credit) {
-      await grantArcadeEnergy(transaction, guestId, now)
-      rewardGranted = true
-    }
+    await grantArcadeEnergy(transaction, guestId, now)
+    rewardGranted = true
   })
 
   const state = await getBannerPromoState(guestId)

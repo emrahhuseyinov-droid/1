@@ -1,5 +1,5 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { grantArcadeEnergy } from '@/lib/arcade-service'
 import { db } from '@/lib/db'
@@ -139,21 +139,34 @@ export async function GET(request: NextRequest) {
       const now = new Date()
       let reversalRecorded = false
       if (record.rewardReleased) {
-        const [debit] = await transaction
-          .insert(earningEvents)
-          .values({
-            id: randomUUID(),
-            guestId: profile.id,
-            source: 'adslab_offerwall_reversal',
-            sourceKey: txid,
-            itemId: txid,
-            tokenSymbol: 'PEPE',
-            rewardAtomic: -record.rewardAtomic,
-            createdAt: now,
-          })
-          .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-          .returning({ id: earningEvents.id })
-        reversalRecorded = Boolean(debit)
+        const [credited] = await transaction
+          .select({ rewardAtomic: earningEvents.rewardAtomic, tokenSymbol: earningEvents.tokenSymbol })
+          .from(earningEvents)
+          .where(and(
+            eq(earningEvents.guestId, profile.id),
+            eq(earningEvents.source, 'adslab_offerwall'),
+            eq(earningEvents.sourceKey, txid),
+          ))
+          .for('update')
+          .limit(1)
+
+        if (credited) {
+          const [debit] = await transaction
+            .insert(earningEvents)
+            .values({
+              id: randomUUID(),
+              guestId: profile.id,
+              source: 'adslab_offerwall_reversal',
+              sourceKey: txid,
+              itemId: txid,
+              tokenSymbol: credited.tokenSymbol,
+              rewardAtomic: -Math.abs(credited.rewardAtomic),
+              createdAt: now,
+            })
+            .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+            .returning({ id: earningEvents.id })
+          reversalRecorded = Boolean(debit)
+        }
       }
 
       await transaction

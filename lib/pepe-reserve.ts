@@ -8,8 +8,10 @@ export const PEPE_RESERVE_FUNDING_SOURCE = 'pepe_reserve_funding'
 export const PEPE_RESERVE_SWAP_SOURCE = 'pepe_reserve_swap'
 export const PEPE_RESERVE_MINING_SOURCE = 'homero_mining_reserve'
 export const PEPE_RESERVE_ARCADE_WEEKLY_SOURCE = 'arcade_weekly_reward'
+export const PEPE_AMM_POOL_SOURCE = 'pepe_amm_pool'
 export const PEPE_SWAP_COMMISSION_SOURCE = 'pepe_swap_commission'
-export const PEPE_RESERVE_EVENT_SOURCES = [PEPE_RESERVE_FUNDING_SOURCE, PEPE_RESERVE_SWAP_SOURCE, PEPE_RESERVE_MINING_SOURCE, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE] as const
+export const PEPE_RESERVE_BASE_EVENT_SOURCES = [PEPE_RESERVE_FUNDING_SOURCE, PEPE_RESERVE_SWAP_SOURCE, PEPE_RESERVE_MINING_SOURCE, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE] as const
+export const PEPE_RESERVE_EVENT_SOURCES = [...PEPE_RESERVE_BASE_EVENT_SOURCES, PEPE_AMM_POOL_SOURCE] as const
 export const PEPE_RESERVE_INITIAL_SOURCE_KEYS = ['initial-100m-1', 'initial-100m-2'] as const
 export const PEPE_RESERVE_INITIAL_CHUNKS_ATOMIC = [5_000_000_000_000_000, 5_000_000_000_000_000] as const
 
@@ -39,7 +41,7 @@ export async function getPepeReserveSnapshot(guestId: string) {
       .where(and(
         eq(earningEvents.guestId, guestId),
         eq(earningEvents.tokenSymbol, 'PEPE'),
-        inArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES]),
+        inArray(earningEvents.source, [...PEPE_RESERVE_BASE_EVENT_SOURCES]),
       )),
     db.select({ sourceKey: earningEvents.sourceKey })
       .from(earningEvents)

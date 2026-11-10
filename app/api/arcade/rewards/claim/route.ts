@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { arcadeRewardClaims } from '@/lib/db/schema'
+import { getHomeroTreasuryAdminProfile } from '@/lib/homero-treasury'
 import { ARCADE_MILESTONES } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, createMilestoneClaims, isRecord, lockArcadeProfile, readJsonBody, settlePendingArcadeRewards } from '@/lib/arcade-service'
 
@@ -19,11 +20,12 @@ export async function POST(request: NextRequest) {
   if (!milestone) return NextResponse.json({ error: 'Milestone not found.' }, { status: 404, headers: arcadeNoStoreHeaders })
 
   try {
+    const homeroTreasuryAdmin = await getHomeroTreasuryAdminProfile()
     const result = await db.transaction(async (transaction) => {
       const profile = await lockArcadeProfile(transaction, access.guestId)
       if (profile.bestDistanceM < milestone.distanceM) return { status: 'not_earned' as const }
       await createMilestoneClaims(transaction, access.guestId, milestone.distanceM, `claim:${milestone.key}`)
-      const settled = await settlePendingArcadeRewards(transaction)
+      const settled = await settlePendingArcadeRewards(transaction, new Date(), homeroTreasuryAdmin?.id)
       const [claim] = await transaction
         .select({ status: arcadeRewardClaims.status, amountAtomic: arcadeRewardClaims.amountAtomic })
         .from(arcadeRewardClaims)

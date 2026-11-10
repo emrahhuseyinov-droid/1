@@ -18,7 +18,8 @@ import {
   guestProfiles,
   user,
 } from '@/lib/db/schema'
-import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
+import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_BASE_EVENT_SOURCES, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
+import { convertPepeAtomicToHomeroAtomic, getHomeroAmmSnapshot, HomeroAmmUnavailableError } from '@/lib/homero-amm'
 import { getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
@@ -312,28 +313,37 @@ export async function getArcadeLeaderboard(start: Date, end: Date, currentGuestI
   const rows = await db.transaction((transaction) => getLeaderboardRows(transaction, start, end))
   if (rows.length === 0) return []
   const guestIds = rows.map((row) => row.guestId)
-  const profiles = await db
-    .select({
-      guestId: guestProfiles.id,
-      referralCode: guestProfiles.referralCode,
-      nickname: user.name,
-    })
-    .from(guestProfiles)
-    .leftJoin(user, eq(guestProfiles.userId, user.id))
-    .where(inArray(guestProfiles.id, guestIds))
+  const [profiles, adminProfile] = await Promise.all([
+    db
+      .select({ guestId: guestProfiles.id, referralCode: guestProfiles.referralCode, nickname: user.name })
+      .from(guestProfiles)
+      .leftJoin(user, eq(guestProfiles.userId, user.id))
+      .where(inArray(guestProfiles.id, guestIds)),
+    getHomeroTreasuryAdminProfile(),
+  ])
   const profileById = new Map(profiles.map((profile) => [profile.guestId, profile]))
+  const pool = adminProfile
+    ? await db.transaction((transaction) => getHomeroAmmSnapshot(transaction, adminProfile.id))
+    : null
 
   return rows.map((row, index) => {
     const profile = profileById.get(row.guestId)
     const displayName = profile?.nickname?.trim() || (profile?.referralCode ? `Player ${profile.referralCode.slice(0, 4).toUpperCase()}` : 'Arcade player')
     const rank = index + 1
     const prize = getArcadeWeeklyPrize(rank)
+    const convertsToHomero = prize?.tokenSymbol === 'PEPE'
+    const homeroPrizeAtomic = convertsToHomero && pool?.seeded
+      ? convertPepeAtomicToHomeroAtomic(prize.amountAtomic, pool)
+      : null
     return {
       rank,
       displayName,
       bestDistanceM: row.distanceM,
-      prizeAmount: prize ? prize.amountAtomic / ARCADE_ATOMIC_PER_PEPE : 0,
-      prizeTokenSymbol: prize?.tokenSymbol ?? 'PEPE',
+      prizeAmount: convertsToHomero
+        ? homeroPrizeAtomic === null ? 0 : homeroPrizeAtomic / ARCADE_ATOMIC_PER_PEPE
+        : prize ? prize.amountAtomic / ARCADE_ATOMIC_PER_PEPE : 0,
+      prizeTokenSymbol: convertsToHomero ? 'HOMERO' : prize?.tokenSymbol ?? 'HOMERO',
+      prizePending: Boolean(convertsToHomero && homeroPrizeAtomic === null),
       isCurrentUser: row.guestId === currentGuestId,
     }
   })
@@ -360,7 +370,7 @@ async function getPepeReserveBalanceAtomic(transaction: ArcadeTransaction, reser
     .where(and(
       eq(earningEvents.guestId, reserveGuestId),
       eq(earningEvents.tokenSymbol, 'PEPE'),
-      inArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES]),
+      inArray(earningEvents.source, [...PEPE_RESERVE_BASE_EVENT_SOURCES]),
     ))
 
   return BigInt(balance?.amount ?? '0')
@@ -384,18 +394,33 @@ export async function settlePendingWeeklyAwards(
 
   await lockPepeReserveProfiles(transaction, [reserveGuestId, ...pendingClaims.map((claim) => claim.guestId)])
   let pepeBalanceAtomic = await getPepeReserveBalanceAtomic(transaction, reserveGuestId)
-  const homeroClaims = pendingClaims.some((claim) => claim.tokenSymbol === 'HOMERO')
+  const isAmmConversionClaim = (claim: typeof pendingClaims[number]) => claim.tokenSymbol === 'PEPE' && claim.sourceKey.startsWith('homero-amm:')
+  const needsHomeroTreasury = pendingClaims.some((claim) => claim.tokenSymbol === 'HOMERO' || isAmmConversionClaim(claim))
   let homeroBalanceAtomic = 0n
   let homeroDistributedAtomic = 0n
   let homeroTreasuryReady = false
-  if (homeroClaims) {
+  if (needsHomeroTreasury) {
+    await lockHomeroTreasuryProfiles(transaction, [reserveGuestId, ...pendingClaims.map((claim) => claim.guestId)])
     const treasury = await getHomeroTreasurySnapshot(transaction, reserveGuestId)
     homeroBalanceAtomic = BigInt(treasury.availableAtomic)
     homeroDistributedAtomic = BigInt(treasury.distributedAtomic)
     homeroTreasuryReady = treasury.initialReserveSeeded
   }
-  let paidCount = 0
 
+  const ammClaims = pendingClaims.filter(isAmmConversionClaim)
+  const pool = ammClaims.length > 0 ? await getHomeroAmmSnapshot(transaction, reserveGuestId) : null
+  const convertedAmmClaims = new Map<string, number>()
+  if (pool?.seeded) {
+    for (const claim of ammClaims) {
+      try {
+        convertedAmmClaims.set(claim.id, convertPepeAtomicToHomeroAtomic(claim.amountAtomic, pool))
+      } catch (error) {
+        if (!(error instanceof HomeroAmmUnavailableError)) throw error
+      }
+    }
+  }
+
+  let paidCount = 0
   let claimIndex = 0
   while (claimIndex < pendingClaims.length) {
     const periodStart = pendingClaims[claimIndex].periodStart
@@ -405,44 +430,46 @@ export async function settlePendingWeeklyAwards(
       claimIndex += 1
     }
 
-    const pepeCost = periodClaims
-      .filter((claim) => claim.tokenSymbol === 'PEPE')
-      .reduce((total, claim) => total + BigInt(claim.amountAtomic), 0n)
-    const homeroCost = periodClaims
-      .filter((claim) => claim.tokenSymbol === 'HOMERO')
-      .reduce((total, claim) => total + BigInt(claim.amountAtomic), 0n)
+    const legacyPepeClaims = periodClaims.filter((claim) => claim.tokenSymbol === 'PEPE' && !isAmmConversionClaim(claim))
+    const periodAmmClaims = periodClaims.filter(isAmmConversionClaim)
+    if (periodAmmClaims.some((claim) => !convertedAmmClaims.has(claim.id))) break
+
+    const pepeCost = legacyPepeClaims.reduce((total, claim) => total + BigInt(claim.amountAtomic), 0n)
+    const homeroCost = periodClaims.reduce((total, claim) => {
+      if (claim.tokenSymbol === 'HOMERO') return total + BigInt(claim.amountAtomic)
+      if (isAmmConversionClaim(claim)) return total + BigInt(convertedAmmClaims.get(claim.id) ?? 0)
+      return total
+    }, 0n)
     if (
       pepeCost > pepeBalanceAtomic ||
       (homeroCost > 0n && (!homeroTreasuryReady || homeroCost > homeroBalanceAtomic || homeroDistributedAtomic + homeroCost > HOMERO_TREASURY_CAP_ATOMIC))
     ) break
 
-    await lockHomeroTreasuryProfiles(transaction, [reserveGuestId, ...periodClaims.map((claim) => claim.guestId)])
+    if (homeroCost > 0n) await lockHomeroTreasuryProfiles(transaction, [reserveGuestId, ...periodClaims.map((claim) => claim.guestId)])
     for (const claim of periodClaims) {
-      if (claim.tokenSymbol === 'HOMERO') {
+      const isAmmClaim = isAmmConversionClaim(claim)
+      let creditedAtomic = claim.amountAtomic
+      if (claim.tokenSymbol === 'HOMERO' || isAmmClaim) {
+        if (isAmmClaim) creditedAtomic = convertedAmmClaims.get(claim.id) as number
         await recordHomeroTreasuryTransfer(
           transaction,
           reserveGuestId,
           claim.guestId,
-          claim.amountAtomic,
+          creditedAtomic,
           claim.id,
           'arcade_reward',
           claim.rewardKey,
           now,
         )
-        homeroBalanceAtomic -= BigInt(claim.amountAtomic)
-        homeroDistributedAtomic += BigInt(claim.amountAtomic)
+        homeroBalanceAtomic -= BigInt(creditedAtomic)
+        homeroDistributedAtomic += BigInt(creditedAtomic)
       } else {
         const [debit] = await transaction
           .insert(earningEvents)
           .values({
-            id: randomUUID(),
-            guestId: reserveGuestId,
-            source: PEPE_RESERVE_ARCADE_WEEKLY_SOURCE,
-            sourceKey: claim.id,
-            itemId: claim.rewardKey,
-            tokenSymbol: 'PEPE',
-            rewardAtomic: -claim.amountAtomic,
-            createdAt: now,
+            id: randomUUID(), guestId: reserveGuestId, source: PEPE_RESERVE_ARCADE_WEEKLY_SOURCE,
+            sourceKey: claim.id, itemId: claim.rewardKey, tokenSymbol: 'PEPE',
+            rewardAtomic: -claim.amountAtomic, createdAt: now,
           })
           .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
           .returning({ id: earningEvents.id })
@@ -451,14 +478,8 @@ export async function settlePendingWeeklyAwards(
         const [credit] = await transaction
           .insert(earningEvents)
           .values({
-            id: randomUUID(),
-            guestId: claim.guestId,
-            source: 'arcade_reward',
-            sourceKey: claim.id,
-            itemId: claim.rewardKey,
-            tokenSymbol: 'PEPE',
-            rewardAtomic: claim.amountAtomic,
-            createdAt: now,
+            id: randomUUID(), guestId: claim.guestId, source: 'arcade_reward', sourceKey: claim.id,
+            itemId: claim.rewardKey, tokenSymbol: 'PEPE', rewardAtomic: claim.amountAtomic, createdAt: now,
           })
           .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
           .returning({ id: earningEvents.id })
@@ -468,7 +489,9 @@ export async function settlePendingWeeklyAwards(
 
       const [paidClaim] = await transaction
         .update(arcadeRewardClaims)
-        .set({ status: 'paid', paidAt: now })
+        .set(isAmmClaim
+          ? { status: 'paid', paidAt: now, amountAtomic: creditedAtomic, tokenSymbol: 'HOMERO' }
+          : { status: 'paid', paidAt: now })
         .where(and(eq(arcadeRewardClaims.id, claim.id), eq(arcadeRewardClaims.status, 'pending')))
         .returning({ id: arcadeRewardClaims.id })
       if (!paidClaim) throw new Error('Weekly reward claim changed while locked.')
@@ -507,7 +530,9 @@ export async function settlePreviousWeekAwards(now = new Date()) {
           rewardType: 'weekly',
           amountAtomic: prize.amountAtomic,
           tokenSymbol: prize.tokenSymbol,
-          sourceKey: `week:${previousPeriodStart}:rank:${placement}`,
+          sourceKey: prize.tokenSymbol === 'PEPE'
+            ? `homero-amm:week:${previousPeriodStart}:rank:${placement}`
+            : `week:${previousPeriodStart}:rank:${placement}`,
           placement,
           periodStart: previousPeriodStart,
           createdAt: now,
