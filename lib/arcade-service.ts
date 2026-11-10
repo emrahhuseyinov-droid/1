@@ -7,6 +7,7 @@ import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { ADVERTISER_WALLET_EVENT_SOURCES } from '@/lib/advertiser-wallet'
 import { db } from '@/lib/db'
 import {
+  arcadeEntitlements,
   arcadeInventory,
   arcadeProfiles,
   arcadeRewardClaims,
@@ -455,7 +456,7 @@ export async function getArcadeState(guestId: string) {
   const now = new Date()
   const today = getArcadeDayKey(now)
   const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
-  const [profile, inventory, claims, balance, reserve, dailyRuns] = await Promise.all([
+  const [profile, inventory, claims, balance, reserve, dailyRuns, entitlements] = await Promise.all([
     db.select().from(arcadeProfiles).where(eq(arcadeProfiles.guestId, guestId)).limit(1),
     db.select().from(arcadeInventory).where(eq(arcadeInventory.guestId, guestId)),
     db.select().from(arcadeRewardClaims).where(eq(arcadeRewardClaims.guestId, guestId)).orderBy(asc(arcadeRewardClaims.createdAt)),
@@ -471,19 +472,28 @@ export async function getArcadeState(guestId: string) {
       .from(arcadeSessions)
       .where(and(
         eq(arcadeSessions.guestId, guestId),
+        eq(arcadeSessions.mode, 'ranked'),
         gte(arcadeSessions.startedAt, dayStart),
         lt(arcadeSessions.startedAt, nextDayStart),
       )),
+    db.select({ unlimitedRanked: arcadeEntitlements.unlimitedRanked, unlimitedEnergy: arcadeEntitlements.unlimitedEnergy })
+      .from(arcadeEntitlements)
+      .where(eq(arcadeEntitlements.guestId, guestId))
+      .limit(1),
   ])
+  const unlimitedRanked = entitlements[0]?.unlimitedRanked ?? false
+  const unlimitedEnergy = entitlements[0]?.unlimitedEnergy ?? false
 
   return {
     energy: profile[0]?.energy ?? 0,
     energyCap: ARCADE_ENERGY_CAP,
+    unlimitedEnergy,
+    unlimitedRanked,
     dailyEnergyEarned: profile[0]?.dailyEnergyDay === today ? profile[0].dailyEnergyEarned : 0,
     dailyEnergyCap: ARCADE_DAILY_ENERGY_EARNED_CAP,
     dailyRunsToday: dailyRuns[0]?.count ?? 0,
     dailyRunLimit: ARCADE_DAILY_RUN_LIMIT,
-    dailyRunsAvailable: (dailyRuns[0]?.count ?? 0) < ARCADE_DAILY_RUN_LIMIT,
+    dailyRunsAvailable: unlimitedRanked || (dailyRuns[0]?.count ?? 0) < ARCADE_DAILY_RUN_LIMIT,
     bestDistanceM: profile[0]?.bestDistanceM ?? 0,
     totalRuns: profile[0]?.totalRuns ?? 0,
     pepeBalanceAtomic: balance[0]?.amount ?? '0',
