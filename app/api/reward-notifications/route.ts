@@ -13,6 +13,7 @@ const rewardSources = [
   'adslab_shortlink',
   'adslab_offerwall',
   'advertiser_task',
+  'youtube_advertiser_task',
   'view_ads',
   'shortlink',
   'applixir_video',

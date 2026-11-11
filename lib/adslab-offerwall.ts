@@ -1,12 +1,12 @@
 import 'server-only'
 
 import { randomUUID } from 'node:crypto'
-import { and, asc, eq, lte } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { grantArcadeEnergy } from '@/lib/arcade-service'
 import { db } from '@/lib/db'
 import { adslabOfferwallTransactions, earningEvents, guestProfiles } from '@/lib/db/schema'
 
-export async function releaseMatureAdsLabOfferwallRewards(guestId: string) {
+export async function releaseAdsLabOfferwallRewards(guestId: string) {
   const now = new Date()
 
   await db.transaction(async (transaction) => {
@@ -26,7 +26,6 @@ export async function releaseMatureAdsLabOfferwallRewards(guestId: string) {
         eq(adslabOfferwallTransactions.guestId, guestId),
         eq(adslabOfferwallTransactions.status, 'credited'),
         eq(adslabOfferwallTransactions.rewardReleased, false),
-        lte(adslabOfferwallTransactions.releaseAt, now),
       ))
       .orderBy(asc(adslabOfferwallTransactions.releaseAt))
       .for('update')

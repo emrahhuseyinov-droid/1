@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { Check, Coins, Gift, Heart, Sparkles, X } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
@@ -24,6 +25,7 @@ const rewardLabels: Record<string, { en: string; ru: string }> = {
   adslab_shortlink: { en: 'Shortlink task', ru: 'Задание по короткой ссылке' },
   adslab_offerwall: { en: 'Offerwall task', ru: 'Задание по предложению' },
   advertiser_task: { en: 'Advertiser task', ru: 'Рекламное задание' },
+  youtube_advertiser_task: { en: 'Sponsored video', ru: 'Рекламное видео' },
   view_ads: { en: 'View Ads task', ru: 'Задание просмотра рекламы' },
   shortlink: { en: 'Shortlink task', ru: 'Задание Shortlink' },
   applixir_video: { en: 'Watch & Earn video', ru: 'Видео Watch & Earn' },
@@ -46,6 +48,7 @@ const taskSources = new Set([
   'adslab_shortlink',
   'adslab_offerwall',
   'advertiser_task',
+  'youtube_advertiser_task',
   'view_ads',
   'shortlink',
   'applixir_video',
@@ -143,6 +146,7 @@ function RewardToastCard({
 }
 
 export function RewardNotificationCenter() {
+  const router = useRouter()
   const { language } = useSiteLanguage()
   const seenIdsRef = useRef<Set<string> | null>(null)
   const mountedAtRef = useRef(Date.now())
@@ -165,6 +169,7 @@ export function RewardNotificationCenter() {
           <RewardToastCard event={event} isRussian={language === 'ru'} onClose={() => toast.dismiss(toastId)} />
         ), { id: `reward-${event.id}`, duration: 7_200 })
       }
+      if (newEvents.length > 0) router.refresh()
       return
     }
 
@@ -188,12 +193,13 @@ export function RewardNotificationCenter() {
     }
 
     for (const event of data.events) seenIds.add(event.id)
+    if (newEvents.length > 0) router.refresh()
     while (seenIds.size > 200) {
       const oldestId = seenIds.values().next().value
       if (!oldestId) break
       seenIds.delete(oldestId)
     }
-  }, [data, language])
+  }, [data, language, router])
 
   return <Toaster position="top-right" theme="dark" duration={7_200} visibleToasts={3} closeButton={false} gap={14} />
 }

@@ -165,14 +165,14 @@ export function YoutubeAdsPage() {
 
   return (
     <LocalizedTree>
-      <main id="top" className="dashboard-page-shell flex flex-col gap-5 sm:gap-6">
+      <section aria-labelledby="youtube-ads-title" className="flex flex-col gap-5 sm:gap-6">
         <header className="relative isolate overflow-hidden rounded-[32px] border-2 border-white/20 bg-gradient-to-br from-[#401c36] via-[#24234b] to-[#17244a] p-5 text-white shadow-xl shadow-indigo-950/25 sm:p-7">
           <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-16 size-48 rounded-full bg-red-400/10 blur-3xl" />
           <div className="relative flex items-start gap-4">
             <span className="flex size-14 shrink-0 items-center justify-center rounded-[22px] border-2 border-white/20 bg-red-400/15 text-red-100 shadow-lg"><Play size={25} /></span>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-red-100/75">{isRussian ? 'видеозадания рекламодателей' : 'sponsored video tasks'}</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Смотри и зарабатывай' : 'Watch & Earn'}</h1>
+              <h2 id="youtube-ads-title" className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Смотри и зарабатывай' : 'Watch & Earn'}</h2>
               <p className="mt-2 max-w-2xl text-xs leading-5 text-white/75">{isRussian ? 'Смотрите YouTube-видео в плеере сайта, дождитесь таймера и пройдите AdsLab CAPTCHA. У каждого рекламодателя можно выполнить только одну видеокампанию.' : 'Watch a YouTube video in the embedded player, let the timer finish, and pass the AdsLab CAPTCHA. Each advertiser can be completed once per account.'}</p>
             </div>
           </div>
@@ -254,7 +254,7 @@ export function YoutubeAdsPage() {
           onClose={() => setCaptchaChallenge(null)}
           purpose="youtube"
         />
-      </main>
+      </section>
     </LocalizedTree>
   )
 }

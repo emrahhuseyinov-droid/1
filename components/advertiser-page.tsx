@@ -33,6 +33,8 @@ import {
   CAMPAIGN_PROMOTION_FEE_PEPE,
   CAMPAIGN_REWARD_HOMERO,
   CAMPAIGN_REWARD_HOMERO_ATOMIC,
+  getYouTubeCampaignPricing,
+  YOUTUBE_CAMPAIGN_MAX_TASKS,
   parsePepeAmountToAtomic,
 } from '@/lib/pepe-amount'
 
@@ -320,9 +322,11 @@ export function AdvertiserPage() {
   const campaignCostAtomic = getCampaignCostAtomic(parsedTaskCount, promote)
   const hasEnoughCampaignFunds = campaignCostAtomic > 0n && advertiserBalanceAtomic >= campaignCostAtomic
   const parsedYoutubeTaskCount = /^\d+$/.test(youtubeTaskCount) ? Number(youtubeTaskCount) : 0
-  const isYoutubeTaskCountValid = Number.isSafeInteger(parsedYoutubeTaskCount) && parsedYoutubeTaskCount >= 1 && parsedYoutubeTaskCount <= 100_000
-  const youtubeRewardAtomic = BigInt(CAMPAIGN_REWARD_HOMERO_ATOMIC) * BigInt(youtubeDuration / CAMPAIGN_DURATION_SECONDS)
-  const youtubeCostPerTaskAtomic = youtubeRewardAtomic + BigInt(CAMPAIGN_COMMISSION_ATOMIC)
+  const isYoutubeTaskCountValid = Number.isSafeInteger(parsedYoutubeTaskCount) && parsedYoutubeTaskCount >= 1 && parsedYoutubeTaskCount <= YOUTUBE_CAMPAIGN_MAX_TASKS
+  const youtubePricing = getYouTubeCampaignPricing(youtubeDuration)
+  const youtubeRewardAtomic = BigInt(youtubePricing.rewardAtomic)
+  const youtubeCommissionAtomic = BigInt(youtubePricing.commissionAtomic)
+  const youtubeCostPerTaskAtomic = youtubeRewardAtomic + youtubeCommissionAtomic
   const youtubeCampaignCostAtomic = isYoutubeTaskCountValid ? youtubeCostPerTaskAtomic * BigInt(parsedYoutubeTaskCount) : 0n
   function formatUsdEstimate(amountAtomic: bigint) {
     const price = pepeQuote.data?.pepeUsd
@@ -499,7 +503,7 @@ export function AdvertiserPage() {
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100/75">{isRussian ? 'рекламные кампании' : 'campaign management'}</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Кабинет рекламодателя' : 'Advertiser workspace'}</h1>
-              <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube-награда: 150 PEPE за 30 секунд или 300 PEPE за 60 секунд; комиссия — ${CAMPAIGN_COMMISSION_PEPE} PEPE за просмотр.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 150 PEPE for 30 seconds or 300 PEPE for 60 seconds, plus a separate ${CAMPAIGN_COMMISSION_PEPE} PEPE commission per view.`}</p>
+              <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube: награда 950 PEPE + комиссия 380 PEPE за 30 секунд; 1 900 + 760 PEPE за 60 секунд.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 950 PEPE plus a 380 PEPE commission for 30 seconds, or 1,900 plus 760 PEPE for 60 seconds.`}</p>
             </div>
           </div>
         </header>
@@ -642,7 +646,9 @@ export function AdvertiserPage() {
           description={youtubeDescription}
           taskCount={youtubeTaskCount}
           durationSeconds={youtubeDuration}
-          perViewReward={String(Number(youtubeRewardAtomic) / Number(atomicUnitsPerPepe))}
+          perViewReward={formatAtomic(youtubePricing.rewardAtomic, language)}
+          perViewCommission={formatAtomic(youtubePricing.commissionAtomic, language)}
+          perViewTotal={formatAtomic(youtubePricing.rewardAtomic + youtubePricing.commissionAtomic, language)}
           totalCost={formatAtomic(youtubeCampaignCostAtomic, language)}
           estimatedUsd={formatUsdEstimate(youtubeCampaignCostAtomic)}
           validTaskCount={isYoutubeTaskCountValid}
@@ -691,7 +697,7 @@ export function AdvertiserPage() {
                   <p className={`font-mono text-xs font-extrabold ${isCredit ? 'text-emerald-200' : 'text-rose-200'}`}>{isCredit ? '+' : '−'}{formatAtomic(amount < 0n ? -amount : amount, language)} PEPE</p>
                 </li>
               })}
-            </ul> : <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-slate-400">{isRussian ? 'Переведите PEPE из Publisher, чтобы пополнить рекламный кошелёк.' : 'Transfer PEPE from Publisher to fund your advertiser wallet.'}</p>}
+            </ul> : <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-slate-400">{isRussian ? 'Переведите PEPE из Publisher, чтобы п��полнить рекламный кошелёк.' : 'Transfer PEPE from Publisher to fund your advertiser wallet.'}</p>}
         </section>
       </main>
     </LocalizedTree>

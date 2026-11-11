@@ -5,7 +5,7 @@ import { ManualClaimPage } from '@/components/manual-claim-page'
 import { auth } from '@/lib/auth'
 import { ensureAccountProfile } from '@/lib/account-profile'
 import { getDashboardOverview } from '@/lib/dashboard'
-import { releaseMatureAdsLabOfferwallRewards } from '@/lib/adslab-offerwall'
+import { releaseAdsLabOfferwallRewards } from '@/lib/adslab-offerwall'
 import { getDashboardSectionPath, type DashboardSection } from '@/lib/dashboard-sections'
 import { getProfileAvatar } from '@/lib/profile-avatars'
 import { getPromoActivityEligibility, getPromoClaims } from '@/lib/promos'
@@ -71,8 +71,8 @@ export async function DashboardRouteContent({
   const profile = await withDashboardStep(section, 'ensureAccountProfile', () =>
     ensureAccountProfile(session.user.id, guestToken, referralCode),
   )
-  await withDashboardStep(section, 'releaseMatureOfferwallRewards', () =>
-    releaseMatureAdsLabOfferwallRewards(profile.id),
+  await withDashboardStep(section, 'releaseOfferwallRewards', () =>
+    releaseAdsLabOfferwallRewards(profile.id),
   )
   const [referralOverview, promoClaims, dashboardOverview] = await Promise.all([
     withDashboardStep(section, 'getReferralOverview', () => getReferralOverview(profile.id)),

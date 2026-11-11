@@ -26,6 +26,7 @@ import { ArcadeWeeklyLeaderboardPage } from '@/components/arcade-weekly-leaderbo
 import { WithdrawPage } from '@/components/withdraw-page'
 import { ManualFaucetPage } from '@/components/manual-faucet-page'
 import { authClient } from '@/lib/auth-client'
+import { RewardNotificationCenter } from '@/components/reward-notification-center'
 import type { DashboardOverview } from '@/lib/dashboard-types'
 import { walletAssets, type WalletCoinSymbol } from '@/lib/wallet-assets'
 import type { PromoActivityEligibility, PromoClaim } from '@/lib/promo-types'
@@ -261,6 +262,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
         </div>
       </div>
 
+      <RewardNotificationCenter />
       {notice && <div role="status" className="fixed bottom-5 left-1/2 z-[70] -translate-x-1/2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-xs font-semibold text-white shadow-xl"><span className="inline-flex items-center gap-1.5">{notice.includes('HOMERO') && <HomeroTokenLogo size={14} />}{notice}</span></div>}
 
 

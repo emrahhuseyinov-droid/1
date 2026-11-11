@@ -6,7 +6,7 @@ import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { db } from '@/lib/db'
 import { advertiserCampaigns, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE, ADVERTISER_WALLET_EVENT_SOURCES, ADVERTISER_WALLET_PROMOTION_CHARGE_SOURCE } from '@/lib/advertiser-wallet'
-import { CAMPAIGN_COMMISSION_ATOMIC, CAMPAIGN_DURATION_SECONDS, CAMPAIGN_PROMOTION_DURATION_HOURS, CAMPAIGN_PROMOTION_FEE_ATOMIC, CAMPAIGN_REWARD_HOMERO_ATOMIC } from '@/lib/pepe-amount'
+import { CAMPAIGN_COMMISSION_ATOMIC, CAMPAIGN_DURATION_SECONDS, CAMPAIGN_PROMOTION_DURATION_HOURS, CAMPAIGN_PROMOTION_FEE_ATOMIC, CAMPAIGN_REWARD_HOMERO_ATOMIC, getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
 
@@ -65,8 +65,15 @@ export async function POST(request: NextRequest) {
   const durationSeconds = campaignType === 'youtube'
     ? requestedDuration === 60 ? 60 : requestedDuration === 30 ? 30 : 0
     : CAMPAIGN_DURATION_SECONDS
-  const rewardPerTaskAtomic = CAMPAIGN_REWARD_HOMERO_ATOMIC * (campaignType === 'youtube' ? durationSeconds / CAMPAIGN_DURATION_SECONDS : 1)
+  const youtubePricing = durationSeconds === 30 || durationSeconds === 60 ? getYouTubeCampaignPricing(durationSeconds) : null
+  const rewardPerTaskAtomic = campaignType === 'youtube'
+    ? youtubePricing?.rewardAtomic ?? 0
+    : CAMPAIGN_REWARD_HOMERO_ATOMIC
+  const commissionPerTaskAtomic = campaignType === 'youtube'
+    ? youtubePricing?.commissionAtomic ?? 0
+    : CAMPAIGN_COMMISSION_ATOMIC
   const totalTasks = typeof input.totalTasks === 'number' && Number.isSafeInteger(input.totalTasks) ? input.totalTasks : 0
+  const maxTasks = campaignType === 'youtube' ? YOUTUBE_CAMPAIGN_MAX_TASKS : maxCampaignTasks
   const promote = campaignType === 'ptc' && input.promote === true
   const promotionFeeAtomic = promote ? CAMPAIGN_PROMOTION_FEE_ATOMIC : 0
   const rawUrl = typeof input.targetUrl === 'string' ? input.targetUrl.trim() : ''
@@ -84,13 +91,16 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (!campaignId || !campaignType || title.length < 3 || title.length > 80 || description.length > 500 || !targetUrl || durationSeconds === 0 || totalTasks < 1 || totalTasks > maxCampaignTasks) {
+  if (!campaignId || !campaignType || title.length < 3 || title.length > 80 || description.length > 500 || !targetUrl || durationSeconds === 0 || totalTasks < 1 || totalTasks > maxTasks) {
     return NextResponse.json({ error: 'Check the format, URL, title, and task count.' }, { status: 400, headers: noStoreHeaders })
   }
 
-  const totalBudgetAtomic = (rewardPerTaskAtomic + CAMPAIGN_COMMISSION_ATOMIC) * totalTasks
-  const totalChargeAtomic = totalBudgetAtomic + promotionFeeAtomic
-  if (!Number.isSafeInteger(totalBudgetAtomic) || !Number.isSafeInteger(totalChargeAtomic)) return NextResponse.json({ error: 'The total campaign budget exceeds the allowed limit.' }, { status: 400, headers: noStoreHeaders })
+  const totalBudgetBigInt = (BigInt(rewardPerTaskAtomic) + BigInt(commissionPerTaskAtomic)) * BigInt(totalTasks)
+  const totalChargeBigInt = totalBudgetBigInt + BigInt(promotionFeeAtomic)
+  const maxSafeAtomic = BigInt(Number.MAX_SAFE_INTEGER)
+  if (totalBudgetBigInt > maxSafeAtomic || totalChargeBigInt > maxSafeAtomic) return NextResponse.json({ error: 'The total campaign budget exceeds the allowed limit.' }, { status: 400, headers: noStoreHeaders })
+  const totalBudgetAtomic = Number(totalBudgetBigInt)
+  const totalChargeAtomic = Number(totalChargeBigInt)
 
   try {
     const result = await db.transaction(async (transaction) => {
@@ -140,7 +150,7 @@ export async function POST(request: NextRequest) {
         description,
         targetUrl,
         rewardPerTaskAtomic,
-        commissionPerTaskAtomic: CAMPAIGN_COMMISSION_ATOMIC,
+        commissionPerTaskAtomic,
         promotionFeeAtomic,
         promotionStartedAt,
         promotionExpiresAt,

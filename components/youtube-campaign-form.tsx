@@ -3,6 +3,7 @@
 import type { FormEvent } from 'react'
 import { CircleAlert, LoaderCircle, Megaphone, Play } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
+import { getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
 
 export function YoutubeCampaignForm({
   title,
@@ -11,6 +12,8 @@ export function YoutubeCampaignForm({
   taskCount,
   durationSeconds,
   perViewReward,
+  perViewCommission,
+  perViewTotal,
   totalCost,
   estimatedUsd,
   validTaskCount,
@@ -30,6 +33,8 @@ export function YoutubeCampaignForm({
   taskCount: string
   durationSeconds: 30 | 60
   perViewReward: string
+  perViewCommission: string
+  perViewTotal: string
   totalCost: string
   estimatedUsd: string | null
   validTaskCount: boolean
@@ -77,34 +82,54 @@ export function YoutubeCampaignForm({
           <fieldset className="flex flex-col gap-2">
             <legend className="text-[10px] font-bold text-slate-200">{isRussian ? 'Обязательное время просмотра' : 'Required watch time'}</legend>
             <div className="grid grid-cols-2 gap-2">
-              {([30, 60] as const).map((duration) => (
-                <button key={duration} type="button" aria-pressed={durationSeconds === duration} onClick={() => onDurationChange(duration)} disabled={submitting || !ready} className={`min-h-10 rounded-xl border px-3 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:opacity-50 ${durationSeconds === duration ? 'border-red-200/40 bg-red-300/15 text-red-100' : 'border-white/10 bg-[#111a35] text-slate-300 hover:bg-white/[0.05]'}`}>
-                  {duration} {isRussian ? 'секунд' : 'seconds'}
-                </button>
-              ))}
+              {([30, 60] as const).map((duration) => {
+                const pricing = getYouTubeCampaignPricing(duration)
+                const totalAtomic = BigInt(pricing.rewardAtomic) + BigInt(pricing.commissionAtomic)
+                const totalPepe = (totalAtomic / 100_000_000n).toLocaleString(isRussian ? 'ru-RU' : 'en-US')
+                return (
+                  <button key={duration} type="button" aria-pressed={durationSeconds === duration} onClick={() => onDurationChange(duration)} disabled={submitting || !ready} className={`flex min-h-12 flex-col items-center justify-center rounded-xl border px-3 py-2 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:opacity-50 ${durationSeconds === duration ? 'border-red-200/40 bg-red-300/15 text-red-100' : 'border-white/10 bg-[#111a35] text-slate-300 hover:bg-white/[0.05]'}`}>
+                    <span>{duration} {isRussian ? 'секунд' : 'seconds'}</span>
+                    <span className="mt-0.5 text-[9px] font-medium text-slate-400">{totalPepe} PEPE / {isRussian ? 'просмотр' : 'view'}</span>
+                  </button>
+                )
+              })}
             </div>
           </fieldset>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="youtube-campaign-count" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Количество просмотров' : 'Number of views'}</label>
-            <input id="youtube-campaign-count" type="number" inputMode="numeric" required min={1} max={100_000} step={1} value={taskCount} onChange={(event) => onTaskCountChange(event.target.value)} disabled={submitting || !ready} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 font-mono text-xs text-white outline-none transition focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
-            {!validTaskCount && <p className="text-[9px] text-rose-300">{isRussian ? 'Допустимо от 1 до 100 000 просмотров.' : 'Enter between 1 and 100,000 views.'}</p>}
+            <input id="youtube-campaign-count" type="number" inputMode="numeric" required min={1} max={YOUTUBE_CAMPAIGN_MAX_TASKS} step={1} value={taskCount} onChange={(event) => onTaskCountChange(event.target.value)} disabled={submitting || !ready} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 font-mono text-xs text-white outline-none transition focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
+            {!validTaskCount && <p className="text-[9px] text-rose-300">{isRussian ? `Допустимо от 1 до ${YOUTUBE_CAMPAIGN_MAX_TASKS.toLocaleString('ru-RU')} просмотров.` : `Enter between 1 and ${YOUTUBE_CAMPAIGN_MAX_TASKS.toLocaleString('en-US')} views.`}</p>}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/[0.08] bg-[#111a35] p-3.5">
+        <div className="rounded-2xl border border-red-200/10 bg-gradient-to-br from-[#151c38] to-[#111a35] p-3.5 sm:p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">{isRussian ? 'Бюджет кампании' : 'Campaign budget'}</p>
-              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? `Награда ${perViewReward} PEPE + комиссия платформы 25 PEPE за просмотр` : `${perViewReward} PEPE reward + 25 PEPE platform commission per view`}</p>
-              <p className="mt-1 text-[9px] text-slate-500">{isRussian ? `Котировка PEPE/USD: ${estimatedUsd ?? 'недоступна'}` : `PEPE/USD estimate: ${estimatedUsd ?? 'unavailable'}`}</p>
+              <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">{isRussian ? 'Расчёт за один просмотр' : 'Per-view breakdown'}</p>
+              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? 'Комиссия платформы 40% начисляется сверх награды.' : 'The 40% platform commission is added on top of the reward.'}</p>
             </div>
-            <div className="text-right">
-              <p className="font-mono text-sm font-black text-white">{validTaskCount ? totalCost : '—'} PEPE</p>
-              <p className="text-[9px] text-slate-400">{isRussian ? 'итого к оплате' : 'total charged'}</p>
+            <p className="text-right text-[9px] text-slate-500">{isRussian ? `Примерная стоимость в USD: ${estimatedUsd ?? 'недоступна'}` : `Estimated cost in USD: ${estimatedUsd ?? 'unavailable'}`}</p>
+          </div>
+          <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5">
+              <dt className="text-[9px] text-slate-400">{isRussian ? 'Награда исполнителю' : 'Viewer reward'}</dt>
+              <dd className="mt-1 font-mono text-xs font-bold text-white">{perViewReward} PEPE</dd>
             </div>
+            <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5">
+              <dt className="text-[9px] text-slate-400">{isRussian ? 'Ваша комиссия · 40%' : 'Your fee · 40%'}</dt>
+              <dd className="mt-1 font-mono text-xs font-bold text-rose-200">+{perViewCommission} PEPE</dd>
+            </div>
+            <div className="col-span-2 rounded-xl border border-red-200/15 bg-red-300/[0.06] p-2.5 sm:col-span-1">
+              <dt className="text-[9px] text-red-100/70">{isRussian ? 'Стоимость просмотра' : 'Cost per view'}</dt>
+              <dd className="mt-1 font-mono text-xs font-black text-white">{perViewTotal} PEPE</dd>
+            </div>
+          </dl>
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-2 border-t border-white/[0.08] pt-3">
+            <p className="text-[10px] text-slate-400">{isRussian ? `Всего за ${taskCount || '0'} просмотров` : `Total for ${taskCount || '0'} views`}</p>
+            <p className="font-mono text-lg font-black tracking-tight text-white">{validTaskCount ? totalCost : '—'} PEPE</p>
           </div>
           {ready && validTaskCount && !hasEnoughFunds && <p className="mt-2 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
-          <p className="mt-2 text-[9px] leading-4 text-slate-500">{isRussian ? 'После завершения или отмены неиспользованный бюджет возвращается. Один пользователь может получить награду по этой кампании только один раз.' : 'Unused budget is refunded on cancellation. Each user can earn from this campaign only once.'}</p>
+          <p className="mt-2 text-[9px] leading-4 text-slate-500">{isRussian ? 'При длительности 60 секунд награда и комиссия удваиваются. Неиспользованный бюджет возвращается при отмене.' : 'A 60-second view pays double the reward and adds the same 40% commission. Unused budget is refunded on cancellation.'}</p>
         </div>
 
         <button type="submit" disabled={!ready || submitting || !validTaskCount || !hasEnoughFunds || title.trim().length < 3 || !targetUrl.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 px-4 text-xs font-extrabold text-white shadow-lg shadow-red-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:cursor-not-allowed disabled:opacity-50">
