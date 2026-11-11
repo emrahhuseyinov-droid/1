@@ -623,6 +623,20 @@ dialog.adslab-captcha-dialog[open] {
   background-image: linear-gradient(145deg, rgb(79 103 197 / 0.17), rgb(25 32 68 / 0.95));
 }
 
+.cartoon-wheel-page {
+  width: min(100%, 1840px);
+  min-height: calc(100svh - 3.5rem);
+}
+
+.wheel-stage {
+  width: min(100%, 78svh, 840px);
+  aspect-ratio: 1;
+}
+
+.wheel-pointer-orbit {
+  transform-origin: center;
+}
+
 .wheel-cartoon-card {
   position: relative;
   isolation: isolate;
@@ -732,22 +746,11 @@ dialog.adslab-captcha-dialog[open] {
 }
 
 .wheel-sector-label {
-  font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", ui-rounded, system-ui, sans-serif;
+  font-family: inherit;
   letter-spacing: 0.015em;
   paint-order: stroke fill;
-  -webkit-text-stroke: 1px rgb(10 12 18 / 0.98);
+  -webkit-text-stroke: 0.65px rgb(10 12 18 / 0.98);
   text-shadow: 0 2px 0 rgb(8 9 13 / 0.95), 0 4px 8px rgb(0 0 0 / 0.48);
-}
-
-.wheel-prize-row {
-  border-width: 1.5px;
-  box-shadow: 0 6px 14px rgb(4 9 32 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.07);
-  transition: transform 160ms ease, box-shadow 160ms ease;
-}
-
-.wheel-prize-row:hover {
-  box-shadow: 0 10px 20px rgb(4 9 32 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.1);
-  transform: translateX(3px) rotate(-0.2deg);
 }
 
 .wheel-spin-button {
@@ -763,12 +766,10 @@ dialog.adslab-captcha-dialog[open] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wheel-prize-row,
   .wheel-spin-button {
     transition: none;
   }
 
-  .wheel-prize-row:hover,
   .wheel-spin-button:not(:disabled):hover {
     transform: none;
   }

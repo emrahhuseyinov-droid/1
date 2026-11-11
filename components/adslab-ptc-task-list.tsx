@@ -274,18 +274,9 @@ export function AdsLabPtcTaskList({
       }
       if (!response.ok || !result?.credited) throw new Error(result?.error ?? (isRussian ? 'Не удалось начислить награду.' : 'Could not credit the reward.'))
 
-      const reward = formatTokenAtomic(result.rewardAtomic ?? activeTask.rewardAtomic)
-      const rewardToken = result.tokenSymbol ?? activeTask.tokenSymbol
-      const energyNotice = result.energyGranted
-        ? (isRussian ? ' +0,02 энергии Аркады.' : ' +0.02 Arcade energy.')
-        : result.energy !== undefined && result.dailyEnergyEarned !== undefined && result.dailyEnergyCap !== undefined && result.dailyEnergyEarned >= result.dailyEnergyCap
-          ? (isRussian ? ' Достигнут дневной лимит энергии.' : ' Daily energy limit reached.')
-          : ''
       setAwaitingPostback(false)
       postbackWaitStartedAtRef.current = null
-      setMessage(result.alreadyCredited
-        ? (isRussian ? `+${reward} ${rewardToken} уже зачислено.` : `+${reward} ${rewardToken} was already credited.`)
-        : (isRussian ? `AdsLab подтвердил задание: +${reward} ${rewardToken} зачислено.${energyNotice}` : `AdsLab confirmed the task: +${reward} ${rewardToken} credited.${energyNotice}`))
+      setMessage(null)
       targetWindowRef.current?.close()
       targetWindowRef.current = null
       setActiveTask(null)
@@ -342,10 +333,7 @@ export function AdsLabPtcTaskList({
           setDeferredClaims((current) => current.filter((claim) => !resolvedIds.has(claim.clickId)))
           const credited = resolved.find((result) => result.state === 'credited')
           if (credited) {
-            const reward = credited.rewardAtomic ? formatTokenAtomic(credited.rewardAtomic) : null
-            setMessage(reward
-              ? (isRussian ? `AdsLab подтвердил «${credited.taskTitle}»: +${reward} ${credited.tokenSymbol} зачислено.` : `AdsLab confirmed “${credited.taskTitle}”: +${reward} ${credited.tokenSymbol} credited.`)
-              : (isRussian ? `AdsLab подтвердил задание. Баланс ${credited.tokenSymbol} обновлён.` : `AdsLab confirmed a task. Your ${credited.tokenSymbol} balance is updated.`))
+            setMessage(null)
           } else {
             setMessage(isRussian ? 'Истёкшая сессия задания удалена; другие задания доступны.' : 'An expired task session was cleared; other tasks are available.')
           }

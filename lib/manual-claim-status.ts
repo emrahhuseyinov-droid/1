@@ -9,7 +9,7 @@ export type ManualClaimStatus = {
   claimsLeft: number
 }
 
-export const manualClaimCooldownMs = 35_000
+export const manualClaimCooldownMs = 7_000
 export const manualClaimDailyLimit = 1000
 
 export async function getManualClaimStatus(guestId: string): Promise<ManualClaimStatus> {

@@ -24,6 +24,9 @@ export function AdsLabOfferwallPage({ userId }: { userId: string }) {
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
               The AdsLab offerwall is not available inside the embedded frame. Open it in a new tab to continue.
             </p>
+            <p role="note" className="max-w-md rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm font-bold leading-6 text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/[0.08] dark:text-amber-100">
+              Turn off your VPN or proxy to see available offers.
+            </p>
             <a
               href={offerwallUrl}
               target="_blank"

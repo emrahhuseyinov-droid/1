@@ -2,7 +2,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import { and, asc, eq, like, or } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { ADSLAB_PTC_PLACEMENT_ID, ADSLAB_PTC_TASK_PREFIX, ADSLAB_SHORTLINK_TASK_PREFIX, adsLabPtcRewardMatches, formatHomeroPayoutAtomic, normalizeAdsLabUsd, parseAdsLabGrossRewardAtomic, parseAdsLabRewardAtomic, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
-import { grantArcadeEnergy, grantPtcArcadeEnergy } from '@/lib/arcade-service'
+import { grantPtcArcadeEnergy, grantShortlinkArcadeEnergy } from '@/lib/arcade-service'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, ptcClicks } from '@/lib/db/schema'
 
@@ -537,7 +537,7 @@ export async function GET(request: NextRequest) {
       if (!credit) return 'duplicate' as const
 
       if (earningSource === 'adslab_ptc') await grantPtcArcadeEnergy(transaction, userId, now)
-      else await grantArcadeEnergy(transaction, userId, now)
+      else await grantShortlinkArcadeEnergy(transaction, userId, now)
       return 'credited' as const
     })
 

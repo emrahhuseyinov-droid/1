@@ -164,7 +164,8 @@ export function WheelOfFortunePage() {
       const result = await postJson<SpinResult>('/api/wheel/spin', { captchaSessionId: verifiedCaptchaSessionId })
       setActiveSpin(result)
       const currentMod = ((rotation % 360) + 360) % 360
-      const deltaToSector = (360 - ((result.sectorIndex * 45 + currentMod) % 360)) % 360
+      const targetAngle = result.sectorIndex * 45
+      const deltaToSector = (targetAngle - currentMod + 360) % 360
       const nextRotation = rotation + 360 * 7 + deltaToSector
       const nextSpinDurationMs = 4000 + Math.floor(Math.random() * 3001)
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -251,7 +252,7 @@ export function WheelOfFortunePage() {
       const result = await postJson<{ claimed: boolean; alreadyClaimed: boolean; spin: WheelSpin }>('/api/wheel/claim', { spinId: spin.id })
       setActiveSpin(result.spin)
       setDialogOpen(false)
-      setMessage(result.alreadyClaimed ? 'This reward was already added to your account.' : 'Reward added to your account.')
+      setMessage(null)
       await mutate()
     } catch (claimError) {
       setMessage(claimError instanceof Error ? claimError.message : 'Could not collect this reward.')
@@ -292,18 +293,15 @@ export function WheelOfFortunePage() {
           </button>
         </header>
 
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-          <WheelCard className="wheel-cartoon-card flex min-w-0 flex-col items-center px-4 pb-6 pt-5 sm:p-6">
-            <div className="relative z-10 mx-auto w-full max-w-[520px] px-2 pb-4 pt-14 sm:px-5 sm:pt-16">
-              <div className="wheel-pin-shell pointer-events-none" aria-hidden="true"><span className="wheel-pin-bolt" /></div>
+        <WheelCard className="wheel-cartoon-card flex min-w-0 flex-1 flex-col items-center justify-center px-4 pb-6 pt-5 sm:p-6">
+            <div className="wheel-stage relative z-10 mx-auto">
               <div className="wheel-metal-rim">
                 <div className="wheel-gold-rim">
                   <div
                     role="img"
-                    aria-label="Eight-segment prize wheel. The prize odds are listed below."
-                    onTransitionEnd={handleWheelTransition}
-                    className="wheel-spin-face relative aspect-square rounded-full transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
-                    style={{ background: segmentBackground, transform: `rotate(${rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}
+                    aria-label={`Eight-segment prize wheel with ${wheelSectors.map((sector) => sector.label).join(', ')}. The marker rotates to the server-selected reward.`}
+                    className="wheel-spin-face relative aspect-square rounded-full"
+                    style={{ background: segmentBackground }}
                   >
                     <div className="wheel-center-ring" aria-hidden="true">
                       {Array.from({ length: 8 }, (_, index) => {
@@ -314,7 +312,7 @@ export function WheelOfFortunePage() {
                         }
                         return <span key={`bulb-${index}`} className="wheel-center-bulb absolute size-3 -translate-x-1/2 -translate-y-1/2 sm:size-4" style={bulbStyle} />
                       })}
-                      <div className="wheel-blue-hub flex flex-col items-center justify-center text-center transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${-rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}>
+                      <div className="wheel-blue-hub flex flex-col items-center justify-center text-center">
                         <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65)] sm:text-[11px]">PEPE</span>
                         <span className="mt-0.5 text-[6px] font-extrabold uppercase tracking-[0.12em] text-white/85 [text-shadow:0_1px_3px_rgba(0,0,0,0.75)] sm:text-[8px]">Spin & win</span>
                       </div>
@@ -325,13 +323,20 @@ export function WheelOfFortunePage() {
                       const labelStyle: CSSProperties = {
                         left: `${50 + Math.sin(radians) * 36}%`,
                         top: `${50 - Math.cos(radians) * 36}%`,
-                        transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
-                        transitionDuration: `${spinDurationMs}ms`,
+                        transform: 'translate(-50%, -50%)',
                       }
-                      return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] text-center text-[11px] font-black leading-tight transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none sm:max-w-[104px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
+                      return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] rounded-lg border border-white/15 bg-[#111831]/70 px-2 py-1 text-center text-[11px] font-black leading-tight shadow-lg backdrop-blur-[2px] sm:max-w-[112px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
                     })}
                   </div>
                 </div>
+              </div>
+              <div
+                aria-hidden="true"
+                onTransitionEnd={handleWheelTransition}
+                className="wheel-pointer-orbit pointer-events-none absolute inset-0 z-30 transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
+                style={{ transform: `rotate(${rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}
+              >
+                <div className="wheel-pin-shell"><span className="wheel-pin-bolt" /></div>
               </div>
             </div>
 
@@ -352,29 +357,6 @@ export function WheelOfFortunePage() {
             {message && <p role="status" aria-live="polite" className="relative z-10 mt-4 w-full max-w-sm rounded-2xl border-2 border-white/10 bg-[#131a3a]/80 px-3 py-2.5 text-left text-[10px] font-semibold leading-5 text-white/80">{message}</p>}
           </WheelCard>
 
-          <WheelCard className="cartoon-wheel-card min-w-0">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div><p className="inline-flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.18em] text-cyan-100"><Sparkles size={12} aria-hidden="true" />Published odds</p><h2 className="mt-1 text-base font-black">Every sector, every chance</h2></div>
-              <span className="rounded-full border-2 border-emerald-200/35 bg-emerald-300/15 px-3 py-1.5 text-[9px] font-black text-emerald-100 shadow-[0_4px_12px_rgba(10,30,45,0.2)]">100% total</span>
-            </div>
-            <ol className="flex flex-col gap-2.5">
-              {wheelSectors.map((sector, index) => {
-                const chance = `${(sector.chanceBps / 100).toFixed(1).replace(/\.0$/, '')}%`
-                return (
-                  <li key={sector.key} className="wheel-prize-row grid grid-cols-[20px_minmax(0,1fr)_58px] items-center gap-2.5 rounded-2xl border px-3 py-2.5" style={{ background: `linear-gradient(105deg, ${sector.color}22, rgba(22,29,62,0.94) 55%)`, borderColor: `${sector.color}70` }}>
-                    <span className="size-3.5 rounded-full border-2 border-white/70 shadow-[0_2px_7px_rgba(0,0,0,0.28)]" style={{ backgroundColor: sector.color }} aria-hidden="true" />
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-extrabold text-white">{sector.label}</p>
-                      <p className="mt-0.5 text-[9px] font-semibold text-white/55">Sector {index + 1} of 8</p>
-                    </div>
-                    <span className="rounded-full px-2 py-1 text-right font-mono text-[10px] font-black tabular-nums" style={{ color: sector.color, backgroundColor: `${sector.color}24` }}>{chance}</span>
-                  </li>
-                )
-              })}
-            </ol>
-            <p className="mt-4 rounded-2xl border-2 border-violet-200/20 bg-[#131a3a]/70 px-3 py-2.5 text-[9px] font-medium leading-5 text-white/60">The result and cooldown are saved on the server. A reward can be collected once, even if you refresh the page.</p>
-          </WheelCard>
-        </div>
 
         <AdsLabCaptchaModal
           solveUrl={captchaUrl}

@@ -21,7 +21,7 @@ import {
 import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
 import { getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
-import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
+import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_SHORTLINK_ENERGY_REWARD, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
 
 export const arcadeNoStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 export type ArcadeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -116,6 +116,10 @@ export async function grantArcadeEnergy(transaction: ArcadeTransaction, guestId:
 
 export async function grantPtcArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date()) {
   return grantArcadeEnergy(transaction, guestId, now, ARCADE_PTC_ENERGY_REWARD)
+}
+
+export async function grantShortlinkArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date()) {
+  return grantArcadeEnergy(transaction, guestId, now, ARCADE_SHORTLINK_ENERGY_REWARD)
 }
 
 async function lockArcadeReserve(transaction: ArcadeTransaction) {
