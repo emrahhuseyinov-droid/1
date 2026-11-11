@@ -33,7 +33,6 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
   const router = useRouter()
   const [isClaiming, setIsClaiming] = useState(false)
   const [claim, setClaim] = useState<{ rewardAtomic: number; streak: number } | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const claimedToday = dailyBonus.claimedToday || claim !== null
@@ -49,7 +48,6 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
   async function handleClaim() {
     setIsClaiming(true)
     setError(null)
-    setMessage(null)
 
     try {
       const response = await fetch('/api/referrals/daily-bonus', { method: 'POST' })
@@ -60,13 +58,6 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
       }
 
       setClaim({ rewardAtomic: data.rewardAtomic as number, streak: data.streak as number })
-      setMessage(data.alreadyClaimed
-        ? 'Today\'s Daily Bonus is already in your ledger.'
-        : data.energyGranted
-          ? `Daily Bonus added to your HOMERO ledger. +${data.energyAdded ?? 1} Arcade energy.`
-          : data.energy !== null && data.energy !== undefined && data.energy >= (data.energyCap ?? 15)
-            ? 'Daily Bonus added to your HOMERO ledger. Arcade energy is already full.'
-            : 'Daily Bonus added to your HOMERO ledger.')
       router.refresh()
     } catch (claimError) {
       setError(claimError instanceof Error ? claimError.message : 'Could not claim your Daily Bonus.')
@@ -145,7 +136,7 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
           {isClaiming ? 'Adding bonus…' : claimedToday ? 'Collected today' : 'Claim Daily Bonus'}
           {!claimedToday && !isClaiming && <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
         </button>
-        {error ? <p role="alert" className="mt-2 text-[10px] font-semibold text-rose-300">{error}</p> : message ? <p role="status" className="mt-2 text-center text-[10px] font-semibold text-emerald-300">{message}</p> : null}
+        {error && <p role="alert" className="mt-2 text-[10px] font-semibold text-rose-300">{error}</p>}
         <p className="mt-2 text-center text-[9px] text-slate-500">One claim each UTC day · credited to your internal ledger</p>
       </div>
     </section>

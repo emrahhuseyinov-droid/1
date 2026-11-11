@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { cookies } from 'next/headers'
 import { SiteLanguageProvider } from '@/components/site-language-provider'
+import { RewardNotificationCenter } from '@/components/reward-notification-center'
 import type { SiteLanguage } from '@/lib/site-translations'
 import './globals.css'
 
@@ -39,6 +40,7 @@ export default async function RootLayout({
       <body className="cartoon-site antialiased">
         <SiteLanguageProvider initialLanguage={initialLanguage}>
           {children}
+          <RewardNotificationCenter />
         </SiteLanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

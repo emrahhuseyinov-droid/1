@@ -17,7 +17,7 @@ const rules = [
       'A successful Daily Bonus also adds up to 1 Arcade energy. Energy cannot exceed 10.00, so the amount credited may be lower when you are close to the cap or already full.',
       'Arcade is limited to 7 total Ranked and FREE runs per Baku game day. The reset is at 17:38 Baku time.',
       'Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.',
-      'Verified PTC tasks also add 0.02 Arcade energy when storage and the daily energy allowance are available.',
+      'Verified PTC tasks add 0.20 Arcade energy; verified Shortlinks add 0.35, subject to the storage and daily energy caps.',
       'AdsLab task requirements and PEPE rewards are shown before you start. Rewards are credited only after verification.',
       'Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.',
     ],

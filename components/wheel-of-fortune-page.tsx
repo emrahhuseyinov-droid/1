@@ -251,7 +251,7 @@ export function WheelOfFortunePage() {
       const result = await postJson<{ claimed: boolean; alreadyClaimed: boolean; spin: WheelSpin }>('/api/wheel/claim', { spinId: spin.id })
       setActiveSpin(result.spin)
       setDialogOpen(false)
-      setMessage(result.alreadyClaimed ? 'This reward was already added to your account.' : 'Reward added to your account.')
+      setMessage(null)
       await mutate()
     } catch (claimError) {
       setMessage(claimError instanceof Error ? claimError.message : 'Could not collect this reward.')

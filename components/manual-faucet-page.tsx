@@ -161,7 +161,7 @@ export function ManualFaucetPage() {
     setMessage(null)
     try {
       const result = await postJson<ClaimResponse>('/api/manual-faucet/claim', { stateToken: captchaStateToken })
-      setMessage(result.alreadyClaimed ? 'This CAPTCHA reward has already been added to your account.' : 'PEPE reward added to your wallet.')
+      setMessage(null)
       setCaptchaVerified(false)
       setCaptchaStateToken(null)
       setCaptchaSessionId(null)
@@ -260,7 +260,7 @@ export function ManualFaucetPage() {
 
           <p id="claim-note" className="mt-3 flex items-center justify-center gap-1.5 text-[10px] leading-5 text-slate-500">
             <ShieldCheck aria-hidden="true" size={13} />
-            One claim every 35 seconds. Daily limit resets at 00:00 UTC.
+            One claim every 7 seconds. Daily limit resets at 00:00 UTC.
           </p>
 
           {stateError && (
