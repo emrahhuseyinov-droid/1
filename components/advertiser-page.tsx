@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, type FormEvent } from 'react'
+import Link from 'next/link'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import {
@@ -39,6 +40,7 @@ import {
 } from '@/lib/pepe-amount'
 
 type CampaignStatus = 'active' | 'paused' | 'completed' | 'cancelled'
+export type AdvertiserPageView = 'overview' | 'fund' | 'create' | 'campaigns' | 'activity'
 
 type AdvertiserCampaign = {
   id: string
@@ -169,32 +171,6 @@ function getActivityLabel(source: string, isRussian: boolean) {
   return labels[source]?.[isRussian ? 'ru' : 'en'] ?? (isRussian ? 'Операция кошелька' : 'Advertiser wallet activity')
 }
 
-function BalanceCard({
-  title,
-  amount,
-  detail,
-  symbol,
-  accent,
-}: {
-  title: string
-  amount: string | undefined
-  detail: string
-  symbol: 'PEPE' | 'HOMERO'
-  accent: 'blue' | 'violet'
-}) {
-  return (
-    <article className={`rounded-[26px] border p-5 shadow-lg ${accent === 'blue' ? 'border-cyan-200/20 bg-gradient-to-br from-[#18385a] to-[#171d3d]' : 'border-violet-200/20 bg-gradient-to-br from-[#30244f] to-[#191c3b]'}`}>
-      <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/65">{title}</p>
-      <p className="mt-3 flex items-center gap-2 font-mono text-2xl font-black tracking-tight text-white sm:text-3xl">
-        <TokenLogo symbol={symbol} size={25} />
-        <span className="truncate">{amount ?? '—'}</span>
-        <span className="text-xs font-extrabold text-white/60">{symbol}</span>
-      </p>
-      <p className="mt-2 text-[10px] leading-5 text-white/55">{detail}</p>
-    </article>
-  )
-}
-
 function CampaignCard({
   campaign,
   language,
@@ -272,7 +248,7 @@ function CampaignCard({
   )
 }
 
-export function AdvertiserPage() {
+export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageView }) {
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
   const wallet = useSWR<AdvertiserWalletSnapshot>('/api/advertiser/wallet', getJson, {
@@ -336,6 +312,9 @@ export function AdvertiserPage() {
 
   const hasEnoughYoutubeFunds = youtubeCampaignCostAtomic > 0n && advertiserBalanceAtomic >= youtubeCampaignCostAtomic
   const hasCampaignsData = Boolean(campaigns.data && wallet.data)
+  const pageTitle = isRussian
+    ? { overview: 'Кабинет рекламодателя', fund: 'Пополнение кошелька', create: 'Создать кампанию', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
+    : { overview: 'Advertiser workspace', fund: 'Fund wallet', create: 'Create campaign', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
 
   async function refreshBalances() {
     await Promise.all([wallet.mutate(), campaigns.mutate()])
@@ -502,7 +481,7 @@ export function AdvertiserPage() {
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><Megaphone size={22} /></span>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100/75">{isRussian ? 'рекламные кампании' : 'campaign management'}</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Кабинет рекламодателя' : 'Advertiser workspace'}</h1>
+              <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{pageTitle}</h1>
               <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube: награда 950 PEPE + комиссия 380 PEPE за 30 секунд; 1 900 + 760 PEPE за 60 секунд.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 950 PEPE plus a 380 PEPE commission for 30 seconds, or 1,900 plus 760 PEPE for 60 seconds.`}</p>
             </div>
           </div>
@@ -513,29 +492,24 @@ export function AdvertiserPage() {
           {feedback.type === 'error' ? <CircleAlert size={15} className="mt-0.5 shrink-0" /> : <Check size={15} className="mt-0.5 shrink-0" />}{feedback.message}
         </div>}
 
-        <section id="advertiser-balance" aria-label={isRussian ? 'Баланс рекламодателя' : 'Advertiser balances'} className="grid scroll-mt-20 gap-3 sm:grid-cols-2">
-          <BalanceCard
-            title={isRussian ? 'Баланс Publisher' : 'Publisher balance'}
-            amount={wallet.data ? formatAtomic(wallet.data.publisherBalanceAtomic, language) : undefined}
-            detail={isRussian ? 'PEPE доступно для перевода в рекламный бюджет' : 'PEPE available to move into your campaign budget'}
-            symbol="PEPE"
-            accent="blue"
-          />
-          <BalanceCard
-            title={isRussian ? 'Баланс Advertiser' : 'Advertiser balance'}
-            amount={hasCampaignsData ? formatAtomic(advertiserBalanceAtomic, language) : undefined}
-            detail={isRussian ? 'PEPE для кампаний и необработанных возвратов' : 'PEPE available for campaigns and refunds'}
-            symbol="PEPE"
-            accent="violet"
-          />
-        </section>
+        {view === 'overview' && <section aria-label={isRussian ? 'Разделы рекламодателя' : 'Advertiser sections'} className="grid gap-4 sm:grid-cols-2">
+          {[
+            { href: '/advertiser/fund', title: isRussian ? 'Пополнить кошелёк' : 'Fund wallet', description: isRussian ? 'Перевод PEPE из баланса Publisher.' : 'Transfer PEPE from your Publisher balance.' },
+            { href: '/advertiser/create', title: isRussian ? 'Создать кампанию' : 'Create campaign', description: isRussian ? 'Запустите PTC- или YouTube-кампанию.' : 'Launch a PTC or YouTube campaign.' },
+            { href: '/advertiser/campaigns', title: isRussian ? 'Мои кампании' : 'My campaigns', description: isRussian ? `${campaigns.data?.campaigns.length ?? '—'} кампаний · управление статусом и возвратом.` : `${campaigns.data?.campaigns.length ?? '—'} campaigns · manage status and refunds.` },
+            { href: '/advertiser/activity', title: isRussian ? 'Операции кошелька' : 'Wallet activity', description: isRussian ? 'История переводов, списаний и возвратов.' : 'History of transfers, charges, and refunds.' },
+          ].map((item) => <Link key={item.href} href={item.href} className="group rounded-[24px] border border-white/[0.08] bg-[#0d142c] p-5 transition hover:border-cyan-200/25 hover:bg-[#111a35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+            <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-extrabold text-white">{item.title}</h2><ArrowUpRight size={16} className="text-cyan-200 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></div>
+            <p className="mt-2 text-[10px] leading-5 text-slate-400">{item.description}</p>
+          </Link>)}
+        </section>}
 
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[0.82fr_1.18fr]">
-          <section id="advertiser-fund" aria-labelledby="advertiser-fund-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+        {(view === 'fund' || view === 'create') && <div className="grid min-w-0 gap-4">
+          {view === 'fund' && <section id="advertiser-fund" aria-labelledby="advertiser-fund-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10 text-blue-200"><ArrowDownUp size={18} /></span>
               <div>
-                <h2 id="advertiser-fund-title" className="text-sm font-extrabold text-white">{isRussian ? 'Пополнить рекламный кошелёк' : 'Fund advertiser wallet'}</h2>
+                <h2 id="advertiser-fund-title" className="text-sm font-extrabold text-white">{isRussian ? 'Пополнение рекламного кошелька' : 'Fund advertiser wallet'}</h2>
                 <p className="mt-1 text-[10px] leading-5 text-slate-400">{isRussian ? 'Внутренний перевод PEPE из баланса Publisher без комиссии.' : 'Internal PEPE transfer from Publisher balance with no fee.'}</p>
               </div>
             </div>
@@ -544,7 +518,7 @@ export function AdvertiserPage() {
                 <span className="text-slate-400">{isRussian ? 'Доступно для перевода' : 'Available to transfer'}</span>
                 <span className="font-mono font-bold text-white">{wallet.data ? `${formatAtomic(wallet.data.publisherBalanceAtomic, language)} PEPE` : '—'}</span>
               </div>
-              <label htmlFor="advertiser-transfer-amount" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Сумм�� перевода' : 'Transfer amount'}</label>
+              <label htmlFor="advertiser-transfer-amount" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Сумма перевода' : 'Transfer amount'}</label>
               <div className="flex gap-2">
                 <input
                   id="advertiser-transfer-amount"
@@ -563,13 +537,13 @@ export function AdvertiserPage() {
               </div>
               {transferAmount && parsedTransferAmount === null && <p className="text-[10px] text-rose-300">{isRussian ? 'Введите сумму до 8 знаков после запятой.' : 'Enter an amount with up to 8 decimal places.'}</p>}
               <button type="submit" disabled={!wallet.data || !isTransferAmountAvailable || transferring} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">
-                {transferring ? <LoaderCircle size={15} className="animate-spin" /> : <Wallet size={15} />}{transferring ? isRussian ? 'Переводим…' : 'Transferring…' : isRussian ? 'Перевести средства' : 'Transfer funds'}
+                {transferring ? <LoaderCircle size={15} className="animate-spin" /> : <Wallet size={15} />}{transferring ? isRussian ? 'Пополняем…' : 'Funding…' : isRussian ? 'Пополнить кошелёк' : 'Fund wallet'}
               </button>
               <p className="text-[9px] leading-4 text-slate-500">{isRussian ? 'Баланс рекламодателя отделён от Publisher. Перевод фиксируется безопасно и повторный запрос не спишет средства дважды.' : 'Advertiser funds stay separate from Publisher. Transfers are idempotent, so retrying the same request will not debit twice.'}</p>
             </form>
-          </section>
+          </section>}
 
-          <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="scroll-mt-20 rounded-[26px] border border-cyan-200/10 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+          {view === 'create' && <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="scroll-mt-20 rounded-[26px] border border-cyan-200/10 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><Plus size={18} /></span>
               <div>
@@ -637,10 +611,10 @@ export function AdvertiserPage() {
                 {creatingCampaign ? <LoaderCircle size={15} className="animate-spin" /> : <Megaphone size={15} />}{creatingCampaign ? isRussian ? 'Запускаем…' : 'Launching…' : isRussian ? 'Запустить PTC-кампанию' : 'Launch PTC campaign'}
               </button>
             </form>
-          </section>
-        </div>
+          </section>}
+        </div>}
 
-        <YoutubeCampaignForm
+        {view === 'create' && <YoutubeCampaignForm
           title={youtubeTitle}
           targetUrl={youtubeUrl}
           description={youtubeDescription}
@@ -661,9 +635,9 @@ export function AdvertiserPage() {
           onTaskCountChange={setYoutubeTaskCount}
           onDurationChange={setYoutubeDuration}
           onSubmit={handleCreateYoutubeCampaign}
-        />
+        />}
 
-        <section id="advertiser-campaigns" aria-labelledby="advertiser-campaigns-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+        {view === 'campaigns' && <section id="advertiser-campaigns" aria-labelledby="advertiser-campaigns-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
           <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 id="advertiser-campaigns-title" className="text-sm font-extrabold text-white">{isRussian ? 'Ваши рекламные кампании' : 'Your advertiser campaigns'}</h2>
@@ -680,9 +654,9 @@ export function AdvertiserPage() {
                 <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока нет' : 'No campaigns yet'}</p>
                 <p className="mt-1 max-w-sm text-[10px] leading-5 text-slate-400">{isRussian ? 'Создайте PTC- или YouTube-кампанию, чтобы она появилась в разделе заданий для исполнителей.' : 'Create a PTC or YouTube campaign to make it available to performers.'}</p>
               </div>}
-        </section>
+        </section>}
 
-        <section id="advertiser-activity" aria-labelledby="advertiser-activity-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+        {view === 'activity' && <section id="advertiser-activity" aria-labelledby="advertiser-activity-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
           <header className="mb-3 flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><Coins size={16} /></span>
             <div><h2 id="advertiser-activity-title" className="text-sm font-extrabold text-white">{isRussian ? 'Операции рекламного кошелька' : 'Advertiser wallet activity'}</h2><p className="mt-0.5 text-[10px] text-slate-400">{isRussian ? 'Переводы, списания и возвраты учитываются отдельно.' : 'Transfers, campaign charges, and refunds are tracked separately.'}</p></div>
@@ -697,8 +671,8 @@ export function AdvertiserPage() {
                   <p className={`font-mono text-xs font-extrabold ${isCredit ? 'text-emerald-200' : 'text-rose-200'}`}>{isCredit ? '+' : '−'}{formatAtomic(amount < 0n ? -amount : amount, language)} PEPE</p>
                 </li>
               })}
-            </ul> : <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-slate-400">{isRussian ? 'Переведите PEPE из Publisher, чтобы п��полнить рекламный кошелёк.' : 'Transfer PEPE from Publisher to fund your advertiser wallet.'}</p>}
-        </section>
+            </ul> : <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-slate-400">{isRussian ? 'Переведите PEPE из Publisher, чтобы пополнить рекламный кошелёк.' : 'Transfer PEPE from Publisher to fund your advertiser wallet.'}</p>}
+        </section>}
       </main>
     </LocalizedTree>
   )

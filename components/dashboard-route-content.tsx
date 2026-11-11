@@ -2,6 +2,7 @@ import 'server-only'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { ManualClaimPage } from '@/components/manual-claim-page'
+import type { AdvertiserPageView } from '@/components/advertiser-page'
 import { auth } from '@/lib/auth'
 import { ensureAccountProfile } from '@/lib/account-profile'
 import { getDashboardOverview } from '@/lib/dashboard'
@@ -51,19 +52,23 @@ async function withDashboardStep<T>(
 export async function DashboardRouteContent({
   section,
   referralCode,
+  advertiserView,
 }: {
   section: DashboardSection
   referralCode?: string | null
+  advertiserView?: AdvertiserPageView
 }) {
   const requestHeaders = await withDashboardStep(section, 'request.headers', () => headers())
   const session = await withDashboardStep(section, 'auth.getSession', () =>
     auth.api.getSession({ headers: requestHeaders }),
   )
   const sectionPath = getDashboardSectionPath(section)
-  const nextPath = referralCode
-    ? `${sectionPath}?ref=${encodeURIComponent(referralCode)}`
+  const requestedPath = section === 'Advertiser' && advertiserView && advertiserView !== 'overview'
+    ? `${sectionPath}/${advertiserView}`
     : sectionPath
-
+  const nextPath = referralCode
+    ? `${requestedPath}?ref=${encodeURIComponent(referralCode)}`
+    : requestedPath
   if (!session?.user) redirect(`/sign-in?next=${encodeURIComponent(nextPath)}`)
 
   const cookieStore = await withDashboardStep(section, 'request.cookies', () => cookies())
@@ -88,6 +93,7 @@ export async function DashboardRouteContent({
   return (
     <ManualClaimPage
       initialSection={section}
+      advertiserView={advertiserView}
       guestProfileId={profile.id}
       adslabPlacementId={process.env.ADSLAB_PLACEMENT_ID?.trim() ?? ''}
       email={session.user.email}
