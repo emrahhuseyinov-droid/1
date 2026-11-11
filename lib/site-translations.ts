@@ -402,7 +402,7 @@ const ruPhrases = new Map<string, string>([
   ['Task availability and reward amounts can change. No earnings are guaranteed.', 'Доступность заданий и размер наград могут меняться. Заработок не гарантируется.'],
   ['Protect your account', 'Защитите аккаунт'],
   ['Use your own account and keep its sign-in details private.', 'Используйте только свой аккаунт и не раскрывайте данные для входа.'],
-  ['Do not access another person’s account, share credentials, or create duplicate accounts to bypass limits.', 'Не входите в чужие аккаунты, не передавайте учётные данные и не создавайте дубликаты аккаунтов для обхода ограничений.'],
+  ['Do not access another person’s account, share credentials, or create duplicate accounts to bypass limits.', 'Не вход��те в чужие аккаунты, не передавайте учётные данные и не создавайте дубликаты аккаунтов для обхода ограничений.'],
   ['Do not manipulate referrals, reward claims, account balances, or platform requests.', 'Не манипулируйте рефералами, заявками на награды, балансами аккаунтов и запросами к платформе.'],
   ['Activity that fails verification may not be credited; suspicious activity can be reviewed.', 'Задания, не прошедшие проверку, могут остаться без начисления; подозрительная активность м��жет быть проверена.'],
   ['Play Arcade fairly', 'Играйте в аркаде честно'],
@@ -548,7 +548,7 @@ const ruPhrases = new Map<string, string>([
   ['What happens next', 'Что будет дальше'],
   ['Request received', 'Заявка получена'],
   ['Your PEPE is reserved and the request is added to your payout history.', 'PEPE зарезервированы, заявка добавлена в историю выплат.'],
-  ['Automatic FaucetPay transfer', 'Автоматический перевод через FaucetPay'],
+  ['Automatic FaucetPay transfer', 'Автоматический перевод чер��з FaucetPay'],
   ['The app sends PEPE to the verified FaucetPay email you entered.', 'Приложение отправит PEPE на указанный вами подтверждённый адрес FaucetPay.'],
   ['Status appears in your history', 'Статус появится в истории'],
   ['FaucetPay confirms successful payouts automatically. If it declines a payout, the PEPE returns to your available balance.', 'FaucetPay автоматически подтверждает успешные выплаты. Если выплата отклонена, PEPE возвращаются в доступный баланс.'],
@@ -704,7 +704,7 @@ const ruPhrases = new Map<string, string>([
   ['Updating…', 'Обновляем…'],
   ['Update password', 'Обновить пароль'],
   ['Keep account access', 'Сохраните доступ к аккаунту'],
-  ['Use your email and password on another device to access the same account and its preserved profile records.', 'Войдите с электронной почтой и паролем на другом устройстве, чтобы открыть тот же аккаунт и сохранённые данные профиля.'],
+  ['Use your email and password on another device to access the same account and its preserved profile records.', 'Войдите с электронной почтой и паролем на ��ругом устройстве, чтобы открыть тот же аккаунт и сохранённые данные профиля.'],
   ['FaucetPay payouts', 'Выплаты FaucetPay'],
   ['Enter your FaucetPay email with each request; no payout details are saved in settings.', 'Указывайте электронную почту FaucetPay в каждой заявке; платёжные данные не сохраняются в настройках.'],
   ['Automatic PEPE payouts', 'Автоматические выплаты PEPE'],
@@ -847,9 +847,10 @@ const ruPhrases = new Map<string, string>([
   ['Earn PEPE', 'Зарабатывайте PEPE'],
   ['AdsLab Offerwall', 'Предложения AdsLab'],
   ['Browse available offers and follow the instructions shown by AdsLab. Verified rewards are released after the one-day AdsLab hold.', 'Выбирайте доступные предложения и следуйте инструкциям AdsLab. Подтверждённые награды начисляются после суточной проверки AdsLab.'],
-  ['Open AdsLab offers', 'Открыть предложения AdsLab'],
-  ['The AdsLab offerwall is not available inside the embedded frame. Open it in a new tab to continue.', 'Лента предложений AdsLab не загружается во встроенном окне. Откройте её в новой вкладке, чтобы продолжить.'],
-  ['Turn off your VPN or proxy to see available offers.', 'Отключите VPN или прокси, чтобы увидеть доступные офферы.'],
+  ['Available offers', 'Доступные предложения'],
+  ['Offers are shown below. If they do not load, open AdsLab in a new tab.', 'Предложения загружаются ниже. Если они не отображаются, откройте AdsLab в новой вкладке.'],
+  ['AdsLab offerwall', 'Лента предложений AdsLab'],
+  ['Offerwall is not configured. Please contact support.', 'Лента предложений не настроена. Обратитесь в поддержку.'],
   ['Open AdsLab in a new tab', 'Открыть AdsLab в новой вкладке'],
   ['Ad category', 'Категория рекламы'],
   ['Ad categories', 'Категории рекламы'],
@@ -994,7 +995,7 @@ const ruPhrases = new Map<string, string>([
   ['Campaign budget reserved', 'Бюджет кампании зарезервирован'],
   ['Unused campaign budget returned', 'Неиспользованный бюджет кампании возвращён'],
   ['Funds received from Publisher', 'Средства получены от пользователя'],
-  ['Advertiser wallet activity', 'Операции кошелька рекламодателя'],
+  ['Advertiser wallet activity', 'Операции кошелька реклам��дателя'],
   ['Could not update the campaign.', 'Не удалось обновить кампанию.'],
   ['Please wait for the advertiser balance to load.', 'Дождитесь загрузки баланса рекламодателя.'],
   ['Cancel this campaign and refund unused task budget and remaining Pro time?', 'Отменить кампанию и вернуть неиспользованный бюджет заданий и оставшееся время Pro?'],
@@ -1366,7 +1367,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `День ${match[1]}: ${match[2]} HOMERO${match[3]}`
 
   match = value.match(/^Next video available in (.+)\.$/i)
-  if (match) return `Следующее видео будет доступно через ${match[1]}.`
+  if (match) return `Следующее видео будет доступно чер��з ${match[1]}.`
 
   match = value.match(/^Available in (.+)$/i)
   if (match) return `Доступно через ${match[1]}`
