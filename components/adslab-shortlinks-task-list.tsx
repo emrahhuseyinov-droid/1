@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
-import { ArrowUpRight, Clock3, Coins, ExternalLink, Link2 } from 'lucide-react'
+import { ArrowUpRight, Clock3, Coins, ExternalLink, Link2, Zap } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
+import { ARCADE_SHORTLINK_ENERGY_REWARD } from '@/lib/arcade-gameplay'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 import { getAdsLabTaskCardPalette } from '@/lib/adslab-task-card-theme'
 
@@ -131,6 +132,7 @@ export function AdsLabShortlinksTaskList() {
         const metadataBaseClass = 'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-extrabold shadow-sm'
         const rewardClass = `${metadataBaseClass} ${palette.reward}`
         const cooldownClass = `${metadataBaseClass} ${palette.duration}`
+        const energyClass = `${metadataBaseClass} border-emerald-300/50 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-300/25 dark:text-emerald-300`
 
         return (
           <li key={task.key} className={`group relative isolate flex min-h-[260px] flex-col overflow-hidden rounded-[28px] border-2 p-5 transition duration-300 motion-reduce:transition-none hover:-translate-y-1 ${palette.card}`}>
@@ -150,6 +152,7 @@ export function AdsLabShortlinksTaskList() {
 
             <div className="relative z-10 mt-4 flex flex-wrap items-center justify-between gap-2">
               <span className={rewardClass}><Coins size={12} />+{formatTokenAtomic(task.rewardAtomic)} {task.tokenSymbol}</span>
+              <span className={energyClass} title={isRussian ? 'Может быть уменьшена из-за дневного лимита или лимита запаса энергии.' : 'May be reduced by the daily or storage energy cap.'}><Zap size={12} />{isRussian ? `До +${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии Arcade` : `Up to +${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2)} Arcade energy`}</span>
               {task.cooldownMinutes > 0 && <span className={cooldownClass}><Clock3 size={12} />{isRussian ? `Пауза ${task.cooldownMinutes} мин.` : `${task.cooldownMinutes} min cooldown`}</span>}
             </div>
 
