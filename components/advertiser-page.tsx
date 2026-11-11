@@ -17,7 +17,6 @@ import {
   Megaphone,
   Pause,
   Play,
-  Plus,
   RefreshCw,
   RotateCcw,
   Wallet,
@@ -33,8 +32,8 @@ import {
   CAMPAIGN_PROMOTION_DURATION_HOURS,
   CAMPAIGN_PROMOTION_FEE_ATOMIC,
   CAMPAIGN_PROMOTION_FEE_PEPE,
-  CAMPAIGN_REWARD_HOMERO,
-  CAMPAIGN_REWARD_HOMERO_ATOMIC,
+  CAMPAIGN_REWARD_PEPE,
+  CAMPAIGN_REWARD_PEPE_ATOMIC,
   getYouTubeCampaignPricing,
   YOUTUBE_CAMPAIGN_MAX_TASKS,
   parsePepeAmountToAtomic,
@@ -96,7 +95,7 @@ type CampaignPayload = {
 type CampaignActionPayload = { campaignId: string; status: CampaignStatus }
 
 const atomicUnitsPerPepe = 100_000_000n
-const perTaskCostAtomic = BigInt(CAMPAIGN_REWARD_HOMERO_ATOMIC) + BigInt(CAMPAIGN_COMMISSION_ATOMIC)
+const perTaskCostAtomic = BigInt(CAMPAIGN_REWARD_PEPE_ATOMIC) + BigInt(CAMPAIGN_COMMISSION_ATOMIC)
 
 async function getJson<T>(url: string): Promise<T> {
   const response = await fetch(url, { cache: 'no-store' })
@@ -221,7 +220,7 @@ function CampaignCard({
       <dl className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
         <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
           <dt className="text-[9px] text-slate-400">{isRussian ? 'Награда / просмотр' : 'Reward per view'}</dt>
-          <dd className="mt-1 font-mono text-xs font-extrabold text-white">{formatAtomic(campaign.rewardPerTaskAtomic, language)} {campaign.campaignType === 'youtube' ? 'PEPE' : 'HOMERO'}</dd>
+          <dd className="mt-1 font-mono text-xs font-extrabold text-white">{formatAtomic(campaign.rewardPerTaskAtomic, language)} PEPE</dd>
         </div>
         <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
           <dt className="text-[9px] text-slate-400">{isRussian ? 'Комиссия / просмотр' : 'Commission per view'}</dt>
@@ -476,14 +475,14 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
   return (
     <LocalizedTree>
       <main id="top" className={`dashboard-page-shell flex flex-col gap-5 sm:gap-6 ${view === 'fund' ? 'min-h-[calc(100dvh-62px)]' : ''}`}>
-        {view !== 'fund' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
+        {view !== 'fund' && view !== 'create' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
           <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full border-[24px] border-white/[0.05]" />
           <div className="relative flex items-start gap-4">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><Megaphone size={22} /></span>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100/75">{isRussian ? 'рекламные кампании' : 'campaign management'}</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{pageTitle}</h1>
-              <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube: награда 950 PEPE + комиссия 380 PEPE за 30 секунд; 1 900 + 760 PEPE за 60 секунд.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 950 PEPE plus a 380 PEPE commission for 30 seconds, or 1,900 plus 760 PEPE for 60 seconds.`}</p>
+              <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_PEPE} PEPE. YouTube: награда 950 PEPE + комиссия 380 PEPE за 30 секунд; 1 900 + 760 PEPE за 60 секунд.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_PEPE} PEPE. YouTube rewards are 950 PEPE plus a 380 PEPE commission for 30 seconds, or 1,900 plus 760 PEPE for 60 seconds.`}</p>
             </div>
           </div>
         </header>}
@@ -581,72 +580,93 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
             </div>
           </section>}
 
-          {view === 'create' && <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="scroll-mt-20 rounded-[26px] border border-cyan-200/10 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
-            <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><Plus size={18} /></span>
-              <div>
-                <h2 id="advertiser-create-title" className="text-sm font-extrabold text-white">{isRussian ? 'Создать PTC-кампанию' : 'Create a PTC campaign'}</h2>
-                <p className="mt-1 text-[10px] leading-5 text-slate-400">{isRussian ? 'Задайте URL и количество просмотров. Награда и длительность фиксированы.' : 'Enter a destination URL and the number of views. Reward and duration are fixed.'}</p>
-              </div>
-            </div>
+          {view === 'create' && <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="relative isolate scroll-mt-20 overflow-hidden rounded-[32px] border-2 border-lime-300/55 bg-[radial-gradient(circle_at_6%_0%,rgba(166,230,95,0.18),transparent_32%),radial-gradient(circle_at_100%_8%,rgba(255,209,102,0.15),transparent_26%),linear-gradient(145deg,#122d27_0%,#111a35_54%,#192448_100%)] p-4 shadow-[0_22px_64px_rgba(3,10,24,0.38)] sm:p-6">
+            <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full border-[22px] border-lime-200/[0.06]" />
+            <span aria-hidden="true" className="pointer-events-none absolute -bottom-28 left-[28%] size-64 rounded-full bg-lime-300/[0.07] blur-3xl" />
 
-            <form onSubmit={handleCreateCampaign} className="mt-5 flex flex-col gap-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3">
-                  <p className="text-[9px] font-bold text-slate-400">{isRussian ? 'Формат' : 'Format'}</p>
-                  <p className="mt-1.5 text-xs font-extrabold text-white">PTC · {CAMPAIGN_DURATION_SECONDS}s</p>
-                </div>
-                <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3">
-                  <p className="text-[9px] font-bold text-slate-400">{isRussian ? 'Награда за просмотр' : 'Reward per view'}</p>
-                  <p className="mt-1.5 flex items-center gap-1.5 text-xs font-extrabold text-white"><TokenLogo symbol="HOMERO" size={14} />{CAMPAIGN_REWARD_HOMERO} HOMERO · {CAMPAIGN_DURATION_SECONDS}s</p>
+            <header className="relative flex flex-col gap-4 rounded-[26px] border-2 border-lime-200/20 bg-[#0b1b29]/75 p-4 shadow-inner shadow-black/10 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="flex min-w-0 items-center gap-3.5">
+                <span className="grid size-[4.5rem] shrink-0 place-items-center rounded-[22px] border-2 border-lime-200/35 bg-gradient-to-br from-lime-300/20 to-amber-200/10 shadow-[0_6px_0_rgba(4,18,18,0.28)] sm:size-20">
+                  <Image src="/images/pepe-coin-forward-transparent.png" alt="" aria-hidden="true" width={88} height={88} className="size-[3.75rem] object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.35)] sm:size-[4.5rem]" />
+                </span>
+                <div className="min-w-0">
+                  <p className="inline-flex rounded-full border border-lime-200/25 bg-lime-200/[0.08] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-lime-100">{isRussian ? 'PEPE · рекламная студия' : 'PEPE · campaign studio'}</p>
+                  <h1 id="advertiser-create-title" className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">{isRussian ? 'Создать PTC-кампанию' : 'Create a PTC campaign'}</h1>
+                  <p className="mt-1 max-w-xl text-[10px] leading-5 text-slate-300 sm:text-xs">{isRussian ? 'Добавьте страницу и число просмотров. Исполнители получат награду в PEPE за просмотр длиной 30 секунд.' : 'Choose a destination and view count. Performers earn a PEPE reward for each 30-second view.'}</p>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="advertiser-campaign-title" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Название кампании' : 'Campaign name'}</label>
-                  <input id="advertiser-campaign-title" required minLength={3} maxLength={80} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={isRussian ? 'Название объявления' : 'Campaign name'} disabled={creatingCampaign || !hasCampaignsData} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50" />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="advertiser-campaign-url" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Целевой URL · HTTPS' : 'Destination URL · HTTPS'}</label>
-                  <input id="advertiser-campaign-url" type="url" required maxLength={2048} value={targetUrl} onChange={(event) => setTargetUrl(event.target.value)} placeholder="https://example.com" disabled={creatingCampaign || !hasCampaignsData} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50" />
-                </div>
+              <div className="flex shrink-0 items-center gap-3 rounded-[20px] border-2 border-amber-200/40 bg-gradient-to-br from-amber-200/[0.13] to-lime-200/[0.08] px-4 py-3 shadow-[0_5px_0_rgba(50,47,24,0.2)]">
+                <span className="grid size-10 place-items-center rounded-2xl border border-amber-100/25 bg-amber-100/10"><TokenLogo symbol="PEPE" size={22} /></span>
+                <span><span className="block text-[9px] font-extrabold text-amber-100/80">{isRussian ? 'НАГРАДА ЗА ПРОСМОТР' : 'REWARD PER VIEW'}</span><span className="mt-0.5 block font-mono text-lg font-black leading-none text-white">{CAMPAIGN_REWARD_PEPE} PEPE</span><span className="mt-1 block text-[9px] font-semibold text-slate-300">{CAMPAIGN_DURATION_SECONDS}s</span></span>
               </div>
+            </header>
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="advertiser-campaign-description" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Описание' : 'Description'} <span className="font-normal text-slate-500">({isRussian ? 'необязательно' : 'optional'})</span></label>
-                <textarea id="advertiser-campaign-description" rows={2} maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} placeholder={isRussian ? 'Кратко опишите страницу для исполнителей' : 'Briefly describe what performers will see'} disabled={creatingCampaign || !hasCampaignsData} className="min-h-16 resize-y rounded-xl border border-white/10 bg-[#111a35] px-3 py-2.5 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50" />
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-[0.75fr_1.25fr]">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="advertiser-task-count" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Количество просмотров' : 'Number of views'}</label>
-                  <input id="advertiser-task-count" type="number" inputMode="numeric" required min={1} max={100_000} step={1} value={taskCount} onChange={(event) => setTaskCount(event.target.value)} disabled={creatingCampaign || !hasCampaignsData} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 font-mono text-xs text-white outline-none transition focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50" />
-                  {!isTaskCountValid && <p className="text-[9px] text-rose-300">{isRussian ? 'Допустимо от 1 до 100 000 заданий.' : 'Enter between 1 and 100,000 tasks.'}</p>}
-                </div>
-                <label className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition ${promote ? 'border-amber-300/30 bg-amber-300/[0.07]' : 'border-white/[0.07] bg-white/[0.025]'}`}>
-                  <input type="checkbox" checked={promote} onChange={(event) => setPromote(event.target.checked)} disabled={creatingCampaign || !hasCampaignsData} className="mt-0.5 size-4 accent-amber-400" />
-                  <span className="min-w-0"><span className="block text-[10px] font-extrabold text-white">{isRussian ? 'Приоритетное размещение Pro' : 'Pro priority placement'}</span><span className="mt-1 block text-[9px] leading-4 text-slate-400">{isRussian ? `${CAMPAIGN_PROMOTION_FEE_PEPE.toLocaleString('ru-RU')} PEPE за ${CAMPAIGN_PROMOTION_DURATION_HOURS} часа. Неиспользованное время возвращается при отмене.` : `${CAMPAIGN_PROMOTION_FEE_PEPE.toLocaleString('en-US')} PEPE for ${CAMPAIGN_PROMOTION_DURATION_HOURS} hours. Unused time is refunded on cancellation.`}</span></span>
-                </label>
-              </div>
-
-              <div className="rounded-2xl border border-white/[0.08] bg-[#111a35] p-3.5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">{isRussian ? 'Сводка бюджета' : 'Budget summary'}</p>
-                    <p className="mt-1 text-[10px] text-slate-400">{isRussian ? `${CAMPAIGN_REWARD_HOMERO} HOMERO награда + ${CAMPAIGN_COMMISSION_PEPE} PEPE комиссия за просмотр` : `${CAMPAIGN_REWARD_HOMERO} HOMERO reward + ${CAMPAIGN_COMMISSION_PEPE} PEPE commission per view`}</p>
+            <form onSubmit={handleCreateCampaign} className="relative mt-5 flex flex-col gap-4">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(17rem,0.72fr)]">
+                <div className="flex flex-col gap-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="advertiser-campaign-title" className="text-[10px] font-extrabold text-lime-50">{isRussian ? 'Название кампании' : 'Campaign name'}</label>
+                      <input id="advertiser-campaign-title" required minLength={3} maxLength={80} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={isRussian ? 'Название объявления' : 'Campaign name'} disabled={creatingCampaign || !hasCampaignsData} className="min-h-12 rounded-[17px] border-2 border-white/10 bg-[#101a35]/90 px-4 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-lime-200/70 focus:ring-4 focus:ring-lime-200/10 disabled:opacity-50" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="advertiser-campaign-url" className="text-[10px] font-extrabold text-lime-50">{isRussian ? 'Целевой URL · HTTPS' : 'Destination URL · HTTPS'}</label>
+                      <input id="advertiser-campaign-url" type="url" required maxLength={2048} value={targetUrl} onChange={(event) => setTargetUrl(event.target.value)} placeholder="https://example.com" disabled={creatingCampaign || !hasCampaignsData} className="min-h-12 rounded-[17px] border-2 border-white/10 bg-[#101a35]/90 px-4 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-lime-200/70 focus:ring-4 focus:ring-lime-200/10 disabled:opacity-50" />
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-mono text-sm font-black text-white">{isTaskCountValid ? formatAtomic(campaignCostAtomic, language) : '—'} PEPE</p>
-                    <p className="text-[9px] text-slate-400">{isRussian ? 'итого к оплате' : 'total charged'}</p>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="advertiser-campaign-description" className="text-[10px] font-extrabold text-lime-50">{isRussian ? 'Описание' : 'Description'} <span className="font-medium text-slate-400">({isRussian ? 'необязательно' : 'optional'})</span></label>
+                    <textarea id="advertiser-campaign-description" rows={3} maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} placeholder={isRussian ? 'Кратко опишите страницу для исполнителей' : 'Briefly describe what performers will see'} disabled={creatingCampaign || !hasCampaignsData} className="min-h-24 resize-y rounded-[17px] border-2 border-white/10 bg-[#101a35]/90 px-4 py-3 text-xs leading-5 text-white outline-none transition placeholder:text-slate-500 focus:border-lime-200/70 focus:ring-4 focus:ring-lime-200/10 disabled:opacity-50" />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-[0.72fr_1.28fr]">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="advertiser-task-count" className="text-[10px] font-extrabold text-lime-50">{isRussian ? 'Количество просмотров' : 'Number of views'}</label>
+                      <input id="advertiser-task-count" type="number" inputMode="numeric" required min={1} max={100_000} step={1} value={taskCount} onChange={(event) => setTaskCount(event.target.value)} disabled={creatingCampaign || !hasCampaignsData} aria-invalid={!isTaskCountValid} aria-describedby={isTaskCountValid ? undefined : 'advertiser-task-count-help'} className="min-h-12 rounded-[17px] border-2 border-white/10 bg-[#101a35]/90 px-4 font-mono text-sm font-bold text-white outline-none transition focus:border-lime-200/70 focus:ring-4 focus:ring-lime-200/10 disabled:opacity-50" />
+                      {!isTaskCountValid && <p id="advertiser-task-count-help" className="text-[9px] font-semibold text-rose-300">{isRussian ? 'Допустимо от 1 до 100 000 заданий.' : 'Enter between 1 and 100,000 tasks.'}</p>}
+                    </div>
+                    <label htmlFor="advertiser-promote" className={`flex cursor-pointer items-start gap-3 rounded-[18px] border-2 p-4 transition ${promote ? 'border-amber-200/45 bg-amber-200/[0.08]' : 'border-white/10 bg-[#101a35]/80 hover:border-amber-200/25'}`}>
+                      <input id="advertiser-promote" type="checkbox" checked={promote} onChange={(event) => setPromote(event.target.checked)} disabled={creatingCampaign || !hasCampaignsData} className="mt-0.5 size-4 shrink-0 accent-amber-300" />
+                      <span className="min-w-0"><span className="block text-[10px] font-black text-white">{isRussian ? 'Приоритетное размещение Pro' : 'Pro priority placement'}</span><span className="mt-1 block text-[9px] leading-4 text-slate-400">{isRussian ? `${CAMPAIGN_PROMOTION_FEE_PEPE.toLocaleString('ru-RU')} PEPE за ${CAMPAIGN_PROMOTION_DURATION_HOURS} часа. Неиспользованное время возвращается при отмене.` : `${CAMPAIGN_PROMOTION_FEE_PEPE.toLocaleString('en-US')} PEPE for ${CAMPAIGN_PROMOTION_DURATION_HOURS} hours. Unused time is refunded on cancellation.`}</span></span>
+                    </label>
                   </div>
                 </div>
-                {hasCampaignsData && isTaskCountValid && !hasEnoughCampaignFunds && <p className="mt-2 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
-                <p className="mt-2 text-[9px] leading-4 text-slate-500">{isRussian ? 'Неиспользованный бюджет задания, включая комиссию, возвращается при отмене. Списание производится только после проверки баланса.' : 'Unused task budget, including commission, is refunded on cancellation. Funds are charged only after the balance check.'}</p>
+
+                <aside aria-label={isRussian ? 'Награда и комиссия PEPE' : 'PEPE reward and commission'} className="relative overflow-hidden rounded-[24px] border-2 border-lime-200/25 bg-[#0b1d2c]/85 p-4 shadow-[0_8px_0_rgba(3,12,25,0.2)] sm:p-5">
+                  <span aria-hidden="true" className="pointer-events-none absolute -right-7 -top-8 size-28 rounded-full bg-lime-300/[0.08] blur-2xl" />
+                  <div className="relative flex items-center gap-2.5">
+                    <span className="grid size-9 place-items-center rounded-xl border border-lime-200/20 bg-lime-200/[0.08] text-lime-100"><Coins size={17} /></span>
+                    <div><p className="text-[9px] font-black uppercase tracking-[0.17em] text-lime-100/80">{isRussian ? 'Ставка за просмотр' : 'Per-view breakdown'}</p><p className="mt-0.5 text-[9px] text-slate-400">{isRussian ? 'Фиксировано · 30 секунд' : 'Fixed · 30 seconds'}</p></div>
+                  </div>
+                  <div className="relative mt-4 rounded-[20px] border-2 border-amber-200/30 bg-gradient-to-br from-lime-200/[0.13] via-[#152c30] to-amber-200/[0.09] p-4">
+                    <p className="text-[9px] font-bold text-slate-300">{isRussian ? 'ИСПОЛНИТЕЛЮ' : 'TO THE PERFORMER'}</p>
+                    <p className="mt-1 flex items-center gap-2 font-mono text-3xl font-black tracking-tight text-white"><TokenLogo symbol="PEPE" size={25} />{CAMPAIGN_REWARD_PEPE} PEPE</p>
+                    <p className="mt-1 text-[9px] font-semibold text-lime-100/75">{isRussian ? 'за каждый подтверждённый просмотр' : 'for every verified view'}</p>
+                  </div>
+                  <div className="relative mt-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-3 text-[10px]"><span className="text-slate-300">{isRussian ? 'Награда исполнителю' : 'Performer reward'}</span><span className="font-mono font-extrabold text-lime-100">{CAMPAIGN_REWARD_PEPE} PEPE</span></div>
+                    <div className="flex items-center justify-between gap-3 text-[10px]"><span className="text-slate-300">{isRussian ? 'Комиссия платформы' : 'Platform commission'}</span><span className="font-mono font-extrabold text-amber-100">{CAMPAIGN_COMMISSION_PEPE} PEPE</span></div>
+                    <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-[10px]"><span className="font-extrabold text-white">{isRussian ? 'За один просмотр всего' : 'Total per view'}</span><span className="font-mono text-sm font-black text-white">{CAMPAIGN_REWARD_PEPE + CAMPAIGN_COMMISSION_PEPE} PEPE</span></div>
+                  </div>
+                </aside>
               </div>
 
-              <button type="submit" disabled={!hasCampaignsData || creatingCampaign || !isTaskCountValid || !hasEnoughCampaignFunds || title.trim().length < 3 || !targetUrl.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">
-                {creatingCampaign ? <LoaderCircle size={15} className="animate-spin" /> : <Megaphone size={15} />}{creatingCampaign ? isRussian ? 'Запускаем…' : 'Launching…' : isRussian ? 'Запустить PTC-кампанию' : 'Launch PTC campaign'}
+              <div className="rounded-[22px] border-2 border-lime-200/20 bg-gradient-to-r from-lime-200/[0.08] via-[#101a35]/90 to-amber-200/[0.07] p-4 sm:p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-2xl border border-lime-100/20 bg-lime-100/[0.08] text-lime-100"><BadgeCheck size={17} /></span>
+                    <div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-lime-100/80">{isRussian ? 'Сводка бюджета' : 'Budget summary'}</p><p className="mt-1 text-[10px] leading-5 text-slate-300">{isRussian ? `${CAMPAIGN_REWARD_PEPE} PEPE награда + ${CAMPAIGN_COMMISSION_PEPE} PEPE комиссия за просмотр` : `${CAMPAIGN_REWARD_PEPE} PEPE reward + ${CAMPAIGN_COMMISSION_PEPE} PEPE commission per view`}</p></div>
+                  </div>
+                  <div className="sm:text-right"><p className="font-mono text-xl font-black tracking-tight text-white sm:text-2xl">{isTaskCountValid ? formatAtomic(campaignCostAtomic, language) : '—'} PEPE</p><p className="text-[9px] font-semibold text-slate-400">{isRussian ? 'итого к оплате' : 'total charged'}</p></div>
+                </div>
+                {hasCampaignsData && isTaskCountValid && !hasEnoughCampaignFunds && <p className="mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
+                <p className="mt-2 text-[9px] leading-4 text-slate-400">{isRussian ? 'Неиспользованный бюджет задания, включая комиссию, возвращается при отмене. Списание производится только после проверки баланса.' : 'Unused task budget, including commission, is refunded on cancellation. Funds are charged only after the balance check.'}</p>
+              </div>
+
+              <button type="submit" disabled={!hasCampaignsData || creatingCampaign || !isTaskCountValid || !hasEnoughCampaignFunds || title.trim().length < 3 || !targetUrl.trim()} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[18px] border-2 border-white/35 bg-gradient-to-r from-lime-300 via-[#b8ed77] to-amber-200 px-5 text-sm font-black text-[#17251c] shadow-[0_7px_0_rgba(53,77,43,0.45)] transition hover:-translate-y-0.5 hover:saturate-125 hover:shadow-[0_9px_0_rgba(53,77,43,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-lime-100/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0">
+                {creatingCampaign ? <LoaderCircle size={17} className="animate-spin" /> : <Megaphone size={17} />}{creatingCampaign ? isRussian ? 'Запускаем…' : 'Launching…' : isRussian ? 'Запустить PTC-кампанию' : 'Launch PTC campaign'}
               </button>
             </form>
           </section>}

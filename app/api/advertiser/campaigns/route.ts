@@ -6,7 +6,7 @@ import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { db } from '@/lib/db'
 import { advertiserCampaigns, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE, ADVERTISER_WALLET_EVENT_SOURCES, ADVERTISER_WALLET_PROMOTION_CHARGE_SOURCE } from '@/lib/advertiser-wallet'
-import { CAMPAIGN_COMMISSION_ATOMIC, CAMPAIGN_DURATION_SECONDS, CAMPAIGN_PROMOTION_DURATION_HOURS, CAMPAIGN_PROMOTION_FEE_ATOMIC, CAMPAIGN_REWARD_HOMERO_ATOMIC, getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
+import { CAMPAIGN_COMMISSION_ATOMIC, CAMPAIGN_DURATION_SECONDS, CAMPAIGN_PROMOTION_DURATION_HOURS, CAMPAIGN_PROMOTION_FEE_ATOMIC, CAMPAIGN_REWARD_PEPE_ATOMIC, getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   const youtubePricing = durationSeconds === 30 || durationSeconds === 60 ? getYouTubeCampaignPricing(durationSeconds) : null
   const rewardPerTaskAtomic = campaignType === 'youtube'
     ? youtubePricing?.rewardAtomic ?? 0
-    : CAMPAIGN_REWARD_HOMERO_ATOMIC
+    : CAMPAIGN_REWARD_PEPE_ATOMIC
   const commissionPerTaskAtomic = campaignType === 'youtube'
     ? youtubePricing?.commissionAtomic ?? 0
     : CAMPAIGN_COMMISSION_ATOMIC
