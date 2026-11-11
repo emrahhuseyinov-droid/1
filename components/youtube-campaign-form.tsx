@@ -1,7 +1,7 @@
 'use client'
 
 import type { FormEvent } from 'react'
-import { CircleAlert, LoaderCircle, Megaphone, Play } from 'lucide-react'
+import { LoaderCircle, Megaphone, Play } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
 
@@ -52,16 +52,29 @@ export function YoutubeCampaignForm({
   const isRussian = language === 'ru'
 
   return (
-    <section aria-labelledby="youtube-campaign-create-title" className="rounded-[26px] border border-red-200/15 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
-      <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-400/10 text-red-200"><Play size={18} /></span>
-        <div>
-          <h2 id="youtube-campaign-create-title" className="text-sm font-extrabold text-white">{isRussian ? 'Создать YouTube-кампанию' : 'Create a YouTube campaign'}</h2>
-          <p className="mt-1 text-[10px] leading-5 text-slate-400">{isRussian ? 'Укажите ссылку на видео и число оплачиваемых просмотров. Каждый пользователь может выполнить только одну видеокампанию одного рекламодателя.' : 'Add a video link and the number of paid views. Each user can complete only one video campaign per advertiser.'}</p>
+    <section aria-labelledby="youtube-campaign-create-title" className="relative isolate overflow-hidden rounded-[28px] border border-white/[0.09] bg-[#0b1228] p-4 shadow-[0_24px_60px_rgba(3,8,24,0.34)] sm:p-6 lg:p-7">
+      <span aria-hidden="true" className="pointer-events-none absolute -right-24 -top-28 size-72 rounded-full bg-rose-400/[0.045] blur-3xl" />
+      <header className="relative flex flex-col gap-4 overflow-hidden rounded-[24px] border border-rose-100/[0.12] bg-gradient-to-br from-[#171f3d] via-[#141a32] to-[#24182f] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-20 size-48 rounded-full bg-rose-300/[0.08] blur-3xl" />
+        <div className="relative flex min-w-0 items-center gap-3 sm:gap-4">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-rose-100/15 bg-rose-300/[0.08] text-rose-100 shadow-[0_8px_24px_rgba(244,63,94,0.12)]"><Play size={18} fill="currentColor" aria-hidden="true" /></span>
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-rose-100/85">{isRussian ? 'YouTube · рекламная студия' : 'YouTube · campaign studio'}</p>
+            <h1 id="youtube-campaign-create-title" className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">{isRussian ? 'Создать YouTube-кампанию' : 'Create a YouTube campaign'}</h1>
+          </div>
         </div>
-      </div>
+        <div className="relative flex shrink-0 items-center gap-3 rounded-2xl border border-white/[0.1] bg-[#0b1228]/65 px-4 py-3 shadow-inner shadow-black/10">
+          <span className="grid size-10 place-items-center rounded-xl border border-rose-100/10 bg-rose-300/[0.07] text-rose-100"><Play size={15} fill="currentColor" aria-hidden="true" /></span>
+          <span>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{isRussian ? 'Награда за просмотр' : 'Reward per view'}</span>
+            <span className="mt-0.5 block font-mono text-lg font-black tracking-tight text-white">{perViewReward} <span className="text-sm text-rose-100">PEPE</span></span>
+            <span className="mt-0.5 inline-flex rounded-full bg-white/[0.05] px-2 py-0.5 text-[9px] font-semibold text-slate-300">{durationSeconds} {isRussian ? 'секунд' : 'seconds'}</span>
+          </span>
+        </div>
+      </header>
 
-      <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-3">
+      <form onSubmit={onSubmit} className="relative mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.85fr)]">
+        <div className="flex flex-col gap-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="youtube-campaign-title" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Название кампании' : 'Campaign name'}</label>
@@ -87,7 +100,7 @@ export function YoutubeCampaignForm({
                 const totalAtomic = BigInt(pricing.rewardAtomic) + BigInt(pricing.commissionAtomic)
                 const totalPepe = (totalAtomic / 100_000_000n).toLocaleString(isRussian ? 'ru-RU' : 'en-US')
                 return (
-                  <button key={duration} type="button" aria-pressed={durationSeconds === duration} onClick={() => onDurationChange(duration)} disabled={submitting || !ready} className={`flex min-h-12 flex-col items-center justify-center rounded-xl border px-3 py-2 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:opacity-50 ${durationSeconds === duration ? 'border-red-200/40 bg-red-300/15 text-red-100' : 'border-white/10 bg-[#111a35] text-slate-300 hover:bg-white/[0.05]'}`}>
+                  <button key={duration} type="button" aria-pressed={durationSeconds === duration} onClick={() => onDurationChange(duration)} disabled={submitting || !ready} className={`flex min-h-12 flex-col items-center justify-center rounded-xl border px-3 py-2 text-xs font-extrabold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:opacity-50 ${durationSeconds === duration ? 'border-rose-200/35 bg-rose-300/[0.09] text-rose-100' : 'border-white/10 bg-[#111a35] text-slate-300 hover:border-white/15 hover:bg-white/[0.04]'}`}>
                     <span>{duration} {isRussian ? 'секунд' : 'seconds'}</span>
                     <span className="mt-0.5 text-[9px] font-medium text-slate-400">{totalPepe} PEPE / {isRussian ? 'просмотр' : 'view'}</span>
                   </button>
@@ -102,39 +115,46 @@ export function YoutubeCampaignForm({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-red-200/10 bg-gradient-to-br from-[#151c38] to-[#111a35] p-3.5 sm:p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">{isRussian ? 'Расчёт за один просмотр' : 'Per-view breakdown'}</p>
-              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? 'Комиссия платформы 40% начисляется сверх награды.' : 'The 40% platform commission is added on top of the reward.'}</p>
-            </div>
-            <p className="text-right text-[9px] text-slate-500">{isRussian ? `Примерная стоимость в USD: ${estimatedUsd ?? 'недоступна'}` : `Estimated cost in USD: ${estimatedUsd ?? 'unavailable'}`}</p>
-          </div>
-          <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5">
-              <dt className="text-[9px] text-slate-400">{isRussian ? 'Награда исполнителю' : 'Viewer reward'}</dt>
-              <dd className="mt-1 font-mono text-xs font-bold text-white">{perViewReward} PEPE</dd>
-            </div>
-            <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-2.5">
-              <dt className="text-[9px] text-slate-400">{isRussian ? 'Ваша комиссия · 40%' : 'Your fee · 40%'}</dt>
-              <dd className="mt-1 font-mono text-xs font-bold text-rose-200">+{perViewCommission} PEPE</dd>
-            </div>
-            <div className="col-span-2 rounded-xl border border-red-200/15 bg-red-300/[0.06] p-2.5 sm:col-span-1">
-              <dt className="text-[9px] text-red-100/70">{isRussian ? 'Стоимость просмотра' : 'Cost per view'}</dt>
-              <dd className="mt-1 font-mono text-xs font-black text-white">{perViewTotal} PEPE</dd>
-            </div>
-          </dl>
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-2 border-t border-white/[0.08] pt-3">
-            <p className="text-[10px] text-slate-400">{isRussian ? `Всего за ${taskCount || '0'} просмотров` : `Total for ${taskCount || '0'} views`}</p>
-            <p className="font-mono text-lg font-black tracking-tight text-white">{validTaskCount ? totalCost : '—'} PEPE</p>
-          </div>
-          {ready && validTaskCount && !hasEnoughFunds && <p className="mt-2 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
-          <p className="mt-2 text-[9px] leading-4 text-slate-500">{isRussian ? 'При длительности 60 секунд награда и комиссия удваиваются. Неиспользованный бюджет возвращается при отмене.' : 'A 60-second view pays double the reward and adds the same 40% commission. Unused budget is refunded on cancellation.'}</p>
         </div>
 
-        <button type="submit" disabled={!ready || submitting || !validTaskCount || !hasEnoughFunds || title.trim().length < 3 || !targetUrl.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 px-4 text-xs font-extrabold text-white shadow-lg shadow-red-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:cursor-not-allowed disabled:opacity-50">
-          {submitting ? <LoaderCircle size={15} className="animate-spin" /> : <Megaphone size={15} />}
-          {submitting ? isRussian ? 'Запускаем…' : 'Launching…' : <><Play size={14} />{isRussian ? 'Запустить YouTube-кампанию' : 'Launch YouTube campaign'}</>}
+        <aside aria-label={isRussian ? 'Расчёт бюджета кампании' : 'Campaign budget breakdown'} className="relative flex flex-col overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#10182f] p-4 sm:p-5">
+          <span aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 size-32 rounded-full bg-rose-300/[0.045] blur-2xl" />
+          <div className="relative flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.035] text-rose-100"><Megaphone size={17} aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-300">{isRussian ? 'Расчёт бюджета' : 'Budget breakdown'}</p>
+              <p className="mt-1 text-[10px] leading-4 text-slate-400">{isRussian ? 'Комиссия 40% начисляется сверх награды.' : 'The 40% commission is added on top of the reward.'}</p>
+            </div>
+            <p className="ml-auto text-right text-[9px] text-slate-500">{isRussian ? `USD ≈ ${estimatedUsd ?? 'недоступна'}` : `USD ≈ ${estimatedUsd ?? 'unavailable'}`}</p>
+          </div>
+          <dl className="relative mt-5 flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-[10px] text-slate-300">{isRussian ? 'Награда исполнителю' : 'Viewer reward'}</dt>
+              <dd className="font-mono text-xs font-bold text-white">{perViewReward} PEPE</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-[10px] text-slate-300">{isRussian ? 'Комиссия платформы · 40%' : 'Platform fee · 40%'}</dt>
+              <dd className="font-mono text-xs font-bold text-rose-200">+{perViewCommission} PEPE</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-white/[0.08] pt-3">
+              <dt className="text-[10px] font-extrabold text-white">{isRussian ? 'Стоимость просмотра' : 'Cost per view'}</dt>
+              <dd className="font-mono text-sm font-black text-white">{perViewTotal} PEPE</dd>
+            </div>
+          </dl>
+          <div className="relative mt-5 flex items-end justify-between gap-3 rounded-2xl border border-rose-200/15 bg-rose-300/[0.045] p-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">{isRussian ? 'Итого за просмотры' : 'Campaign total'}</p>
+              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? `${taskCount || '0'} просмотров` : `${taskCount || '0'} views`}</p>
+            </div>
+            <p className="shrink-0 text-right font-mono text-lg font-black tracking-tight text-white">{validTaskCount ? totalCost : '—'} PEPE</p>
+          </div>
+          {ready && validTaskCount && !hasEnoughFunds && <p className="relative mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
+          <p className="relative mt-3 text-[9px] leading-4 text-slate-500">{isRussian ? 'При длительности 60 секунд награда и комиссия удваиваются. Неиспользованный бюджет возвращается при отмене.' : 'A 60-second view pays double the reward and adds the same 40% commission. Unused budget is refunded on cancellation.'}</p>
+        </aside>
+
+        <button type="submit" disabled={!ready || submitting || !validTaskCount || !hasEnoughFunds || title.trim().length < 3 || !targetUrl.trim()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-gradient-to-r from-[#bd435e] to-[#96364f] px-4 text-xs font-extrabold text-white shadow-lg shadow-rose-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200 disabled:cursor-not-allowed disabled:opacity-50 lg:col-span-2">
+          {submitting ? <LoaderCircle size={16} className="animate-spin" /> : <Megaphone size={16} aria-hidden="true" />}
+          {submitting ? isRussian ? 'Запускаем…' : 'Launching…' : isRussian ? 'Запустить YouTube-кампанию' : 'Launch YouTube campaign'}
         </button>
       </form>
     </section>
