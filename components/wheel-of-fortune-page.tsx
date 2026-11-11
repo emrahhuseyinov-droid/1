@@ -299,43 +299,45 @@ export function WheelOfFortunePage() {
                 <div className="wheel-gold-rim">
                   <div
                     role="img"
-                    aria-label={`Eight-segment prize wheel with ${wheelSectors.map((sector) => sector.label).join(', ')}. The marker rotates to the server-selected reward.`}
-                    className="wheel-spin-face relative aspect-square rounded-full"
-                    style={{ background: segmentBackground }}
+                    aria-label={`Eight-segment prize wheel with ${wheelSectors.map((sector) => sector.label).join(', ')}. The wheel rotates to the server-selected reward while the marker stays fixed.`}
+                    className="relative aspect-square rounded-full"
                   >
-                    <div className="wheel-center-ring" aria-hidden="true">
-                      {Array.from({ length: 8 }, (_, index) => {
-                        const radians = index * 45 * Math.PI / 180
-                        const bulbStyle: CSSProperties = {
-                          left: `${50 + Math.sin(radians) * 42}%`,
-                          top: `${50 - Math.cos(radians) * 42}%`,
-                        }
-                        return <span key={`bulb-${index}`} className="wheel-center-bulb absolute size-3 -translate-x-1/2 -translate-y-1/2 sm:size-4" style={bulbStyle} />
-                      })}
-                      <div className="wheel-blue-hub flex flex-col items-center justify-center text-center">
-                        <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65)] sm:text-[11px]">PEPE</span>
-                        <span className="mt-0.5 text-[6px] font-extrabold uppercase tracking-[0.12em] text-white/85 [text-shadow:0_1px_3px_rgba(0,0,0,0.75)] sm:text-[8px]">Spin & win</span>
+                    <div
+                      aria-hidden="true"
+                      onTransitionEnd={handleWheelTransition}
+                      className="wheel-spin-face absolute inset-0 rounded-full transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
+                      style={{ background: segmentBackground, transform: `rotate(${rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}
+                    />
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full">
+                      <div className="wheel-center-ring">
+                        {Array.from({ length: 8 }, (_, index) => {
+                          const radians = index * 45 * Math.PI / 180
+                          const bulbStyle: CSSProperties = {
+                            left: `${50 + Math.sin(radians) * 42}%`,
+                            top: `${50 - Math.cos(radians) * 42}%`,
+                          }
+                          return <span key={`bulb-${index}`} className="wheel-center-bulb absolute size-3 -translate-x-1/2 -translate-y-1/2 sm:size-4" style={bulbStyle} />
+                        })}
+                        <div className="wheel-blue-hub flex flex-col items-center justify-center text-center">
+                          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.65)] sm:text-[11px]">PEPE</span>
+                          <span className="mt-0.5 text-[6px] font-extrabold uppercase tracking-[0.12em] text-white/85 [text-shadow:0_1px_3px_rgba(0,0,0,0.75)] sm:text-[8px]">Spin & win</span>
+                        </div>
                       </div>
+                      {wheelSectors.map((sector, index) => {
+                        const angle = index * 45
+                        const radians = angle * Math.PI / 180
+                        const labelStyle: CSSProperties = {
+                          left: `${50 + Math.sin(radians) * 36}%`,
+                          top: `${50 - Math.cos(radians) * 36}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }
+                        return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] rounded-lg border border-white/15 bg-[#111831]/70 px-2 py-1 text-center text-[11px] font-black leading-tight shadow-lg backdrop-blur-[2px] sm:max-w-[112px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
+                      })}
                     </div>
-                    {wheelSectors.map((sector, index) => {
-                      const angle = index * 45
-                      const radians = angle * Math.PI / 180
-                      const labelStyle: CSSProperties = {
-                        left: `${50 + Math.sin(radians) * 36}%`,
-                        top: `${50 - Math.cos(radians) * 36}%`,
-                        transform: 'translate(-50%, -50%)',
-                      }
-                      return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] rounded-lg border border-white/15 bg-[#111831]/70 px-2 py-1 text-center text-[11px] font-black leading-tight shadow-lg backdrop-blur-[2px] sm:max-w-[112px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
-                    })}
                   </div>
                 </div>
               </div>
-              <div
-                aria-hidden="true"
-                onTransitionEnd={handleWheelTransition}
-                className="wheel-pointer-orbit pointer-events-none absolute inset-0 z-30 transition-transform [transition-timing-function:cubic-bezier(0.08,0.82,0.15,1)] motion-reduce:transition-none"
-                style={{ transform: `rotate(${rotation}deg)`, transitionDuration: `${spinDurationMs}ms` }}
-              >
+              <div aria-hidden="true" className="wheel-pointer-orbit pointer-events-none absolute inset-0 z-30">
                 <div className="wheel-pin-shell"><span className="wheel-pin-bolt" /></div>
               </div>
             </div>
