@@ -571,7 +571,7 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
           {view === 'create' && <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="relative scroll-mt-20 rounded-[26px] border border-cyan-200/20 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
             <header className="relative flex flex-col gap-4 rounded-[22px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="flex min-w-0 items-center gap-3.5">
-                <span className="grid size-[4.5rem] shrink-0 place-items-center rounded-[18px] border border-cyan-100/20 bg-gradient-to-br from-violet-500 via-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-950/30 sm:size-20">
+                <span className="grid size-[4.5rem] shrink-0 place-items-center rounded-full border border-white/20 bg-white/[0.035] text-white/90 shadow-sm sm:size-20">
                   <BarChart3 size={28} strokeWidth={2.25} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
