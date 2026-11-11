@@ -2,10 +2,10 @@
 
 import { LocalizedTree } from '@/components/site-language-provider'
 
-const ADSLAB_OFFERWALL_TASK_ID = 'task-cTL7EAUq5qkF'
-
-export function AdsLabOfferwallPage({ userId }: { userId: string }) {
-  const offerwallUrl = `https://adslab.me/${ADSLAB_OFFERWALL_TASK_ID}/${encodeURIComponent(userId)}`
+export function AdsLabOfferwallPage({ userId, placementId }: { userId: string; placementId: string }) {
+  const offerwallUrl = placementId
+    ? `https://adslab.me/${encodeURIComponent(placementId)}/${encodeURIComponent(userId)}`
+    : null
 
   return (
     <LocalizedTree>
@@ -18,25 +18,38 @@ export function AdsLabOfferwallPage({ userId }: { userId: string }) {
           </p>
         </header>
 
-        <section aria-labelledby="offerwall-open-title" className="rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#111a2b]">
-          <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-14 text-center sm:py-20">
-            <h2 id="offerwall-open-title" className="text-xl font-black tracking-tight">Open AdsLab offers</h2>
-            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-              The AdsLab offerwall is not available inside the embedded frame. Open it in a new tab to continue.
-            </p>
-            <p role="note" className="max-w-md rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm font-bold leading-6 text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/[0.08] dark:text-amber-100">
-              Turn off your VPN or proxy to see available offers.
-            </p>
-            <a
-              href={offerwallUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open AdsLab in a new tab"
-              className="inline-flex min-h-11 items-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-            >
-              Open AdsLab in a new tab
-            </a>
+        <section aria-labelledby="offerwall-open-title" className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#111a2b]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-6">
+            <div>
+              <h2 id="offerwall-open-title" className="text-lg font-black tracking-tight">Available offers</h2>
+              {offerwallUrl && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Offers are shown below. If they do not load, open AdsLab in a new tab.</p>}
+            </div>
+            {offerwallUrl && (
+              <a
+                href={offerwallUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open AdsLab in a new tab"
+                className="inline-flex min-h-10 items-center rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+              >
+                Open AdsLab in a new tab
+              </a>
+            )}
           </div>
+          {offerwallUrl ? (
+            <iframe
+              title="AdsLab offerwall"
+              src={offerwallUrl}
+              loading="eager"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              className="block h-[76vh] min-h-[600px] max-h-[900px] w-full border-0 bg-white"
+            />
+          ) : (
+            <p role="alert" className="px-6 py-10 text-center text-sm font-semibold text-rose-700 dark:text-rose-300">
+              Offerwall is not configured. Please contact support.
+            </p>
+          )}
         </section>
       </main>
     </LocalizedTree>

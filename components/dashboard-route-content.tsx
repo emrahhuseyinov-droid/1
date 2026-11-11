@@ -89,6 +89,7 @@ export async function DashboardRouteContent({
     <ManualClaimPage
       initialSection={section}
       guestProfileId={profile.id}
+      adslabPlacementId={process.env.ADSLAB_PLACEMENT_ID?.trim() ?? ''}
       email={session.user.email}
       name={session.user.name}
       initialAvatarUrl={getProfileAvatar(session.user.image)}
