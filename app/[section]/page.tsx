@@ -33,12 +33,16 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
     : language === 'ru'
     ? section === 'Manual Faucet'
       ? 'Получайте награды PEPE после серверной проверки CAPTCHA.'
-      : section === 'Wheel of Fortune'
+      : section === 'Watch and Earn'
+        ? 'Смотрите рекламные видео YouTube, выполняйте подтверждённые задания и получайте PEPE.'
+        : section === 'Wheel of Fortune'
         ? 'Крутите колесо раз в два часа и получайте серверно подтверждённые награды HOMERO и аркады.'
         : `Откройте раздел «${translateSiteText(section, 'ru')}» в pepe.casa.`
     : section === 'Manual Faucet'
       ? 'Claim PEPE rewards after server-verified CAPTCHA completion.'
-      : section === 'Wheel of Fortune'
+      : section === 'Watch and Earn'
+        ? 'Watch sponsored YouTube videos, complete verified tasks, and earn PEPE.'
+        : section === 'Wheel of Fortune'
         ? 'Spin once every two hours for server-verified HOMERO and Arcade rewards.'
         : `Open your ${section} section on pepe.casa.`
 

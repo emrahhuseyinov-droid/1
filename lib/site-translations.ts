@@ -144,7 +144,7 @@ const ruPhrases = new Map<string, string>([
   ['Eight-segment prize wheel. The prize odds are listed below.', 'Колесо с восемью секторами. Вероятности выигрыша указаны ниже.'],
   ['Wheel result', 'Результат колеса'],
   ['Congratulations!', 'Поздравляем!'],
-  ['You won: ', 'Вы выи��рали: '],
+  ['You won: ', 'Вы выи����рали: '],
   ['Your reward is ready. Collect it to add it to your account.', 'Ваша награда готова. Заберите её, чтобы начислить её на счёт.'],
   ['Reward collected', 'Награда ��олучена'],
   ['Adding reward…', 'Начисляем награду…'],
@@ -189,7 +189,7 @@ const ruPhrases = new Map<string, string>([
   ['Weekly Leaderboard', 'Недельный рейтинг'],
   ['View Ads', 'Просмотр рекламы'],
   ['PTC Ads', 'PTC-реклама'],
-  ['Watch & Earn', 'Смотри и зарабатывай'],
+  ['Watch and Earn', 'Смотри и зарабатывай'],
   ['Swap', 'Обмен'],
   ['Referrals', 'Рефералы'],
   ['Promo Code', 'Промокод'],
@@ -258,7 +258,7 @@ const ruPhrases = new Map<string, string>([
   ['Could not verify your email. Please try again.', 'Не удалось подтвердить почту. Попробуйте ещё раз.'],
   ['Could not send a new code. Please try again later.', 'Не удалось отправить новый код. Попробуйте позже.'],
   ['Unable to update this email. Check the current address and password, then try again.', 'Не удалось изменить адрес. Проверьте текущую почту и пароль и попробуйте снова.'],
-  ['If this account needs verification, a new code has been sent.', 'Если аккаунту требуется подтверждение, новый код отправлен.'],
+  ['If this account needs verification, a new code has been sent.', 'Если аккаунту требуется под��верждение, новый код отправлен.'],
   ['Can\'t receive a code at this address? Change it', 'Не удаётся получить код на этот адрес? Измените его'],
   ['Change email address', 'Изменить адрес электронной почты'],
   ['Use your current password to keep this account and nickname.', 'Введите текущий пароль, чтобы сохранить аккаунт и псевдоним.'],
@@ -308,9 +308,9 @@ const ruPhrases = new Map<string, string>([
   ['Ranked & Casual Arcade', 'Рейтинговая и свободная аркада'],
   ['One place for everything', 'Всё необходимое — под рукой'],
   ['Everything in one account', 'Всё в одном аккаунте'],
-  ['Verified tasks, CAPTCHA claims, Wheel of Fortune spins, Arcade, wallet tools, and PEPE payouts — all in one place.', 'Подтверждённые задания, награды за CAPTCHA, колесо фортуны, аркада, инструменты кошелька и выплаты PEPE — всё в одном месте.'],
+  ['Verified tasks, CAPTCHA claims, Wheel of Fortune spins, Arcade, wallet tools, and PEPE payouts — all in one place.', 'Подтверждённые задания, награды за CAPTCHA, коле��о фортуны, аркада, инструменты кошелька и выплаты PEPE — всё в одном месте.'],
   ['Verified reward tasks', 'Проверенные задания'],
-  ['Choose an offer, check its requirements, and track confirmed rewards in your account.', 'Выбирайте задание, изучайте условия и следите за начисленными наградами в личном кабинете.'],
+  ['Choose an offer, check its requirements, and track confirmed rewards in your account.', 'Выбирайте задание, изучайте условия и сл��дите за начисленными наградами в личном кабинете.'],
   ['Explore View Ads, PTC, Shortlinks, and eligible sponsored campaigns; check the reward and requirements before starting.', 'Выполняйте задания View Ads, PTC, Shortlinks и доступные рекламные кампании; перед началом проверьте условия и награду.'],
   ['CAPTCHA faucet', 'Кран с CAPTCHA'],
   ['Neon Arcade', 'Неоновая аркада'],
@@ -367,7 +367,7 @@ const ruPhrases = new Map<string, string>([
   ['PEPE (external cryptocurrency)', 'PEPE (внешняя криптовалюта)'],
   ['The main currency for withdrawals through FaucetPay. Platform limits apply.', 'Основная валюта для вывода через FaucetPay. Действуют лимиты платформы.'],
   ['HOMERO (in-platform token)', 'HOMERO (внутренний токен платформы)'],
-  ['The in-game balance. Earn HOMERO through platform activity, including daily bonuses and Arcade runs.', 'Игровой баланс. Получайте HOMERO за активность на платформе, включая ежедневные бонусы и аркадные забеги.'],
+  ['The in-game balance. Earn HOMERO through platform activity, including daily bonuses and Arcade runs.', 'Игровой баланс. Получайте HOMERO за активность на платформе, вкл��чая ежедневные бонусы и аркадные забеги.'],
   ['Absolutely. Your time and activity on the platform are always rewarded.', 'Да. Ваше время и активность на платформе всегда вознаграждаются.'],
   ['Rewards are credited for:', 'Награды начисляются за:'],
   ['Viewing ads from verified advertisers.', 'Просмотр рекламы от проверенных рекламодателей.'],
@@ -542,7 +542,7 @@ const ruPhrases = new Map<string, string>([
   ['Rejected', 'Отклонено'],
   ['FaucetPay declined the payout and the PEPE was returned to your balance.', 'FaucetPay отклонил выплату, PEPE возвращены на ваш баланс.'],
   ['Pending', 'В обработке'],
-  ['No final payout confirmation is recorded. Your PEPE remains reserved; do not submit this request again.', 'Окончатель��ое подтверждение выплаты ещё не получено. PEPE остаются в резерве; не отправляйте заявку повторно.'],
+  ['No final payout confirmation is recorded. Your PEPE remains reserved; do not submit this request again.', 'Оконча��ель��ое подтверждение выплаты ещё не получено. PEPE остаются в резерве; не отправляйте заявку повторно.'],
   ['Withdraw PEPE', 'Вывести'],
   ['PEPE is sent automatically through FaucetPay after your request is accepted.', 'После одобрения заявки PEPE автоматически отправляются через FaucetPay.'],
   ['Available PEPE balance', 'Доступный баланс PEPE'],
@@ -820,7 +820,7 @@ const ruPhrases = new Map<string, string>([
   ['Casual', 'Свободный'],
   ['Run paused', 'Забег приос��ановлен'],
   ['Switch back to resume the city run.', 'Вернитесь на вкладку, чтобы продолжить забег.'],
-  ['Saving verified distance…', 'Сохраняем подтверждённу�� дистанцию…'],
+  ['Saving verified distance…', 'Сохраняем подтв��рждённу�� дистанцию…'],
   ['life', 'жизнь'],
   ['lives', 'жизней'],
   ['remaining', 'осталось'],
@@ -832,7 +832,7 @@ const ruPhrases = new Map<string, string>([
   ['Run live. Tap, click, Space, or ↑ to clear the neon hazards.', 'Забег начался. Нажмите экран, кликните мышью, пробел или ↑, чтобы перепрыгнуть препятствия.'],
   ['Arcade guide', 'Подсказки аркады'],
   ['Weekly leaderboard:', 'Недельный рейтинг:'],
-  ['Take part in Ranked runs to climb the leaderboard. Every result is automatically verified before the weekly results are finalized.', 'Участвуйте в рейтинговых забегах, чтобы занять топовые места в лидерборде. Все результаты автоматически проверяются перед подведением итогов недели.'],
+  ['Take part in Ranked runs to climb the leaderboard. Every result is automatically verified before the weekly results are finalized.', 'Участвуйте в рейтинговых забегах, чтобы занять топовые места в лидерборде. Все резуль��аты автоматически проверяются перед подведением итогов недели.'],
   ['Run rewards:', 'Награды за забег:'],
   ['Valuable coins appear along the route in Ranked mode. Collect them while running to add to your HOMERO balance!', 'В рейтинговом режиме на дистанции вам будут попадаться ценные монеты. Собирайте их прямо во время бега, чтобы пополнять свой баланс HOMERO!'],
   ['Energy refill:', 'Восполнение энергии:'],
@@ -975,7 +975,7 @@ const ruPhrases = new Map<string, string>([
   ['Profile settings', 'Настройки профиля'],
   ['Account section', 'Раздел аккаунта'],
   ['This section is being prepared.', 'Этот раздел готовится.'],
-  ['Coming soon', 'Скоро'],
+  ['Coming soon', '��коро'],
   ['This page has its own address and is available only after signing in.', 'Эта страница доступна по отдельному адресу после входа в аккаунт.'],
   ['Close navigation menu', 'Закрыть меню навигации'],
   ['Close menu', 'Закрыть меню'],
@@ -1329,7 +1329,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Собрано ${russianNumber(match[1])} из ${russianNumber(match[2])}`
 
   match = value.match(/^Day (\d+): (.+) HOMERO(?:, (collected|ready))?$/i)
-  if (match) return `День ${russianNumber(match[1])}: ${match[2]} HOMERO${match[3] ? `, ${match[3].toLowerCase() === 'collected' ? 'получено' : 'доступно'}` : ''}`
+  if (match) return `День ${russianNumber(match[1])}: ${match[2]} HOMERO${match[3] ? `, ${match[3].toLowerCase() === 'collected' ? 'получе��о' : 'доступно'}` : ''}`
 
   match = value.match(/^(.+) \| pepe\.casa$/i)
   if (match) {
