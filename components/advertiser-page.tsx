@@ -513,7 +513,7 @@ export function AdvertiserPage() {
           {feedback.type === 'error' ? <CircleAlert size={15} className="mt-0.5 shrink-0" /> : <Check size={15} className="mt-0.5 shrink-0" />}{feedback.message}
         </div>}
 
-        <section aria-label={isRussian ? 'Баланс рекламодателя' : 'Advertiser balances'} className="grid gap-3 sm:grid-cols-2">
+        <section id="advertiser-balance" aria-label={isRussian ? 'Баланс рекламодателя' : 'Advertiser balances'} className="grid scroll-mt-20 gap-3 sm:grid-cols-2">
           <BalanceCard
             title={isRussian ? 'Баланс Publisher' : 'Publisher balance'}
             amount={wallet.data ? formatAtomic(wallet.data.publisherBalanceAtomic, language) : undefined}
@@ -531,7 +531,7 @@ export function AdvertiserPage() {
         </section>
 
         <div className="grid min-w-0 gap-4 xl:grid-cols-[0.82fr_1.18fr]">
-          <section aria-labelledby="advertiser-fund-title" className="rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+          <section id="advertiser-fund" aria-labelledby="advertiser-fund-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10 text-blue-200"><ArrowDownUp size={18} /></span>
               <div>
@@ -544,7 +544,7 @@ export function AdvertiserPage() {
                 <span className="text-slate-400">{isRussian ? 'Доступно для перевода' : 'Available to transfer'}</span>
                 <span className="font-mono font-bold text-white">{wallet.data ? `${formatAtomic(wallet.data.publisherBalanceAtomic, language)} PEPE` : '—'}</span>
               </div>
-              <label htmlFor="advertiser-transfer-amount" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Сумма перевода' : 'Transfer amount'}</label>
+              <label htmlFor="advertiser-transfer-amount" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Сумм�� перевода' : 'Transfer amount'}</label>
               <div className="flex gap-2">
                 <input
                   id="advertiser-transfer-amount"
@@ -569,7 +569,7 @@ export function AdvertiserPage() {
             </form>
           </section>
 
-          <section aria-labelledby="advertiser-create-title" className="rounded-[26px] border border-cyan-200/10 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+          <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="scroll-mt-20 rounded-[26px] border border-cyan-200/10 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><Plus size={18} /></span>
               <div>
@@ -663,7 +663,7 @@ export function AdvertiserPage() {
           onSubmit={handleCreateYoutubeCampaign}
         />
 
-        <section aria-labelledby="advertiser-campaigns-title" className="rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+        <section id="advertiser-campaigns" aria-labelledby="advertiser-campaigns-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
           <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 id="advertiser-campaigns-title" className="text-sm font-extrabold text-white">{isRussian ? 'Ваши рекламные кампании' : 'Your advertiser campaigns'}</h2>
@@ -682,7 +682,7 @@ export function AdvertiserPage() {
               </div>}
         </section>
 
-        <section aria-labelledby="advertiser-activity-title" className="rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+        <section id="advertiser-activity" aria-labelledby="advertiser-activity-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
           <header className="mb-3 flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-xl bg-violet-400/10 text-violet-200"><Coins size={16} /></span>
             <div><h2 id="advertiser-activity-title" className="text-sm font-extrabold text-white">{isRussian ? 'Операции рекламного кошелька' : 'Advertiser wallet activity'}</h2><p className="mt-0.5 text-[10px] text-slate-400">{isRussian ? 'Переводы, списания и возвраты учитываются отдельно.' : 'Transfers, campaign charges, and refunds are tracked separately.'}</p></div>

@@ -126,7 +126,7 @@ export function ReferralsPage({ referralOverview }: Props) {
 
       <aside className="flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5 sm:p-4">
         <ShieldCheck className="mt-0.5 shrink-0 text-emerald-500" size={17} />
-        <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm"><strong className="font-extrabold">Active referral program.</strong> Referral and commission records are stored in Neon and attached to your signed-in profile. Commission balances are tracked off-chain and can be exchanged for PEPE.</p>
+        <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm"><strong className="font-extrabold">Active referral program.</strong></p>
       </aside>
 
       <section className="space-y-3">
