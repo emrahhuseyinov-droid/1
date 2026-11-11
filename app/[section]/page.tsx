@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: SectionPageProps): Promise<Metadata> {
   const [{ section: slug }, cookieStore] = await Promise.all([params, cookies()])
   if (slug === 'homero-mining' || slug === 'miner-shop' || slug === 'manual-claim') {
-    return { title: 'View Ads | pepe.casa', description: 'Earn HOMERO through the Daily Bonus and eligible AdsLab PTC tasks.' }
+    return { title: 'View Ads | pepe.casa', description: 'Earn HOMERO through the Daily Bonus and eligible PTC tasks.' }
   }
 
   const section = getDashboardSectionFromSlug(slug)
@@ -26,12 +26,12 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
   const title = translateSiteText(`${section} | pepe.casa`, language)
   const description = language === 'ru'
     ? section === 'Manual Faucet'
-      ? 'Получайте награды PEPE после серверной проверки CAPTCHA AdsLab.'
+      ? 'Получайте награды PEPE после серверной проверки CAPTCHA.'
       : section === 'Wheel of Fortune'
         ? 'Крутите колесо раз в два часа и получайте серверно подтверждённые награды HOMERO и аркады.'
         : `Откройте раздел «${translateSiteText(section, 'ru')}» в pepe.casa.`
     : section === 'Manual Faucet'
-      ? 'Claim PEPE rewards after server-verified AdsLab CAPTCHA completion.'
+      ? 'Claim PEPE rewards after server-verified CAPTCHA completion.'
       : section === 'Wheel of Fortune'
         ? 'Spin once every two hours for server-verified HOMERO and Arcade rewards.'
         : `Open your ${section} section on pepe.casa.`

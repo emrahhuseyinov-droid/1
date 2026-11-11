@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
   if (!apiKey) {
-    return NextResponse.json({ error: 'AdsLab CAPTCHA is not configured.' }, { status: 503, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'CAPTCHA verification is not configured.' }, { status: 503, headers: noStoreHeaders })
   }
 
   const captchaSessionId = randomUUID()
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const challenge = response.ok ? readCaptchaChallenge(result) : null
     if (!challenge) {
       console.error('[wheel/captcha] AdsLab could not create a challenge.', { status: response.status })
-      return NextResponse.json({ error: 'AdsLab could not start the verification. Please try again.' }, { status: 502, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'Could not start CAPTCHA verification. Please try again.' }, { status: 502, headers: noStoreHeaders })
     }
 
     const now = new Date()
@@ -89,6 +89,6 @@ export async function POST(request: NextRequest) {
     }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[wheel/captcha] AdsLab initialization failed:', error instanceof Error ? error.name : 'unknown error')
-    return NextResponse.json({ error: 'AdsLab verification is temporarily unavailable. Please try again.' }, { status: 503, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'CAPTCHA verification is temporarily unavailable. Please try again.' }, { status: 503, headers: noStoreHeaders })
   }
 }

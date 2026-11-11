@@ -20,9 +20,9 @@ type RewardNotificationEvent = {
 type RewardNotificationsResponse = { events: RewardNotificationEvent[] }
 
 const rewardLabels: Record<string, { en: string; ru: string }> = {
-  adslab_ptc: { en: 'AdsLab PTC task', ru: 'Задание AdsLab PTC' },
-  adslab_shortlink: { en: 'AdsLab Shortlink task', ru: 'Задание AdsLab Shortlink' },
-  adslab_offerwall: { en: 'AdsLab Offerwall task', ru: 'Задание AdsLab Offerwall' },
+  adslab_ptc: { en: 'PTC task', ru: 'Задание PTC' },
+  adslab_shortlink: { en: 'Shortlink task', ru: 'Задание по короткой ссылке' },
+  adslab_offerwall: { en: 'Offerwall task', ru: 'Задание по предложению' },
   advertiser_task: { en: 'Advertiser task', ru: 'Рекламное задание' },
   view_ads: { en: 'View Ads task', ru: 'Задание просмотра рекламы' },
   shortlink: { en: 'Shortlink task', ru: 'Задание Shortlink' },

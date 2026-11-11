@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
-    if (!apiKey) return NextResponse.json({ error: 'AdsLab CAPTCHA is not configured.' }, { status: 503, headers: noStoreHeaders })
+    if (!apiKey) return NextResponse.json({ error: 'CAPTCHA verification is not configured.' }, { status: 503, headers: noStoreHeaders })
 
     const verificationUrl = new URL('/api/v1/captcha/session-info', adsLabApiOrigin)
     verificationUrl.searchParams.set('token', captchaSessionId)
@@ -65,13 +65,13 @@ export async function GET(request: NextRequest) {
     const result: unknown = await response.json().catch(() => null)
     if (!response.ok) {
       console.error('[wheel/captcha] AdsLab session-info request failed.', { status: response.status })
-      return NextResponse.json({ error: 'AdsLab could not verify the CAPTCHA session.' }, { status: 502, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'Could not verify the CAPTCHA session.' }, { status: 502, headers: noStoreHeaders })
     }
 
     const sessionInfo = readSessionInfo(result)
     if (!sessionInfo) {
       console.error('[wheel/captcha] AdsLab returned an invalid session-info response.')
-      return NextResponse.json({ error: 'AdsLab returned an invalid verification response.' }, { status: 502, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'The verification service returned an invalid response.' }, { status: 502, headers: noStoreHeaders })
     }
 
     if (sessionInfo.success && sessionInfo.status === 'solved') {
@@ -107,6 +107,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 'pending' }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[wheel/captcha] Could not verify AdsLab session:', error instanceof Error ? error.name : 'unknown error')
-    return NextResponse.json({ error: 'Could not check AdsLab verification.' }, { status: 503, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'Could not check CAPTCHA verification.' }, { status: 503, headers: noStoreHeaders })
   }
 }

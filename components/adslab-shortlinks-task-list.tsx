@@ -91,8 +91,8 @@ export function AdsLabShortlinksTaskList() {
 
       taskWindow.location.replace(result.directLink)
       setMessage(isRussian
-        ? 'Ссылка открыта. Награда будет начислена автоматически после подтверждения AdsLab.'
-        : 'Shortlink opened. The reward is credited automatically after AdsLab confirms completion.')
+        ? 'Ссылка открыта. Награда будет начислена автоматически после проверки.'
+        : 'Shortlink opened. The reward is credited automatically after verification.')
       await mutate()
     } catch (error) {
       if (!taskWindow.closed) taskWindow.close()
@@ -116,14 +116,14 @@ export function AdsLabShortlinksTaskList() {
   return (
     <>
       {message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.06] px-4 py-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{message}</p></li>}
-      {data?.awaitingConfirmation && !message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs font-semibold text-amber-700 dark:text-amber-300">{isRussian ? 'AdsLab подтверждает предыдущий Short-Link. Дождитесь подтверждения перед запуском следующего.' : 'AdsLab is still confirming a shortlink. Please wait before starting another.'}</p></li>}
+      {data?.awaitingConfirmation && !message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs font-semibold text-amber-700 dark:text-amber-300">{isRussian ? 'Предыдущая короткая ссылка ещё проверяется. Дождитесь завершения проверки перед запуском следующей.' : 'A shortlink is still being verified. Please wait before starting another.'}</p></li>}
       {errorMessage && !data?.awaitingConfirmation && <li className="col-span-full"><p role="alert" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{errorMessage}</p></li>}
 
       {tasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-slate-200/70 px-4 py-10 text-center dark:border-white/[0.06]">
           <span aria-hidden="true" className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.06] text-cyan-600 dark:text-cyan-300"><Link2 size={24} /></span>
           <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">{isRussian ? 'Сейчас нет доступных Shortlinks' : 'No Shortlinks available right now'}</h3>
-          <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">{isRussian ? 'Проверьте позже — список AdsLab обновляется автоматически.' : 'Check back later. AdsLab tasks refresh automatically.'}</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">{isRussian ? 'Проверьте позже — список заданий обновляется автоматически.' : 'Check back later. Tasks refresh automatically.'}</p>
         </li>
       ) : tasks.map((task) => {
         const onCooldown = task.cooldownRemainingSeconds > 0
@@ -159,7 +159,7 @@ export function AdsLabShortlinksTaskList() {
             <div className="relative z-10 mt-auto pt-4">
               <div className="mb-3 h-px bg-gradient-to-r from-white/70 via-slate-300/70 to-transparent dark:from-white/20 dark:via-white/10 dark:to-transparent" />
               {task.awaitingConfirmation ? (
-                <span role="status" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-center text-[10px] font-bold text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/[0.06] dark:text-amber-200"><Clock3 size={13} />{isRussian ? 'Ожидаем подтверждение AdsLab' : 'Waiting for AdsLab confirmation'}</span>
+                <span role="status" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-center text-[10px] font-bold text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/[0.06] dark:text-amber-200"><Clock3 size={13} />{isRussian ? 'Ожидаем подтверждения' : 'Waiting for confirmation'}</span>
               ) : onCooldown ? (
                 <span role="status" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[10px] font-bold text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300"><Clock3 size={13} />{isRussian ? `Доступно через ${formatCountdown(task.cooldownRemainingSeconds)}` : `Available in ${formatCountdown(task.cooldownRemainingSeconds)}`}</span>
               ) : openingKey === task.key ? (

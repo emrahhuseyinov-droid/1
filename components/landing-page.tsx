@@ -38,8 +38,8 @@ const features = [
     tone: 'text-amber-200 bg-amber-300/10 ring-amber-200/15',
   },
   {
-    title: 'AdsLab CAPTCHA faucet',
-    description: 'Complete an AdsLab CAPTCHA to receive 10 PEPE after server-side verification.',
+    title: 'CAPTCHA faucet',
+    description: 'Complete a CAPTCHA to receive 10 PEPE after server-side verification.',
     icon: ShieldCheck,
     tone: 'text-cyan-200 bg-cyan-300/10 ring-cyan-200/15',
   },
@@ -262,10 +262,10 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
               <ShieldCheck size={16} aria-hidden="true" />
             </span>
             <p className="text-[13px] leading-6 text-white/75 sm:text-sm">
-              {'Complete an AdsLab CAPTCHA to receive 10 PEPE after server-side verification.'}
+              {'Complete a CAPTCHA to receive 10 PEPE after server-side verification.'}
             </p>
           </div>
-          <p className="text-[12px] leading-5 text-white/50">{'Open Manual Faucet, complete the challenge, and return to claim after AdsLab confirms it.'}</p>
+          <p className="text-[12px] leading-5 text-white/50">{'Open Manual Faucet, complete the challenge, and return to claim after verification.'}</p>
         </div>
       ) : kind === 'payouts' ? (
         <div className="space-y-4">
@@ -330,7 +330,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-cyan-200/10 text-cyan-100">
                 <MonitorPlay size={17} aria-hidden="true" />
               </span>
-              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Completing verified AdsLab PTC tasks for PEPE rewards.'}</p>
+              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Complete verified PTC tasks for PEPE rewards.'}</p>
             </div>
             <div className="flex items-center gap-3 rounded-2xl border border-amber-200/10 bg-amber-300/[0.035] p-4">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-200/10 text-amber-100">

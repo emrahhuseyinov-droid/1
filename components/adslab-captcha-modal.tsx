@@ -130,7 +130,7 @@ export function AdsLabCaptchaModal({
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>
           <h2 id="adslab-captcha-title" className="text-base font-black">{purpose === 'faucet' ? 'Verify to claim' : 'Verify to spin'}</h2>
-          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'faucet' ? 'AdsLab opens its challenge in a separate window. Return here after solving; the server checks the session before your PEPE reward is credited.' : 'AdsLab opens its challenge in a separate window. Return here after solving; the server checks the session with AdsLab before the wheel spins.'}</p>
+          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'faucet' ? 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before your PEPE reward is credited.' : 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before the wheel spins.'}</p>
         </div>
         <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close verification" className="grid size-9 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
           <X aria-hidden="true" />
@@ -139,10 +139,10 @@ export function AdsLabCaptchaModal({
       <div className="p-4 sm:p-5">
         <button type="button" onClick={openChallenge} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-[11px] font-black text-[#07120d] transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100">
           <ExternalLink aria-hidden="true" />
-          {popupOpened ? 'Reopen AdsLab challenge' : 'Open AdsLab challenge'}
+          {popupOpened ? 'Reopen CAPTCHA challenge' : 'Open CAPTCHA challenge'}
         </button>
         <p role="status" aria-live="polite" className="mt-3 min-h-5 text-center text-[10px] leading-5 text-white/55">
-          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from AdsLab…' : purpose === 'faucet' ? 'Your PEPE reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.'}
+          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from the CAPTCHA…' : purpose === 'faucet' ? 'Your PEPE reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.'}
         </p>
       </div>
     </dialog>

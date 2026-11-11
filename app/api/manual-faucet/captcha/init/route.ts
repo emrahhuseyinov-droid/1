@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse
 
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
-  if (!apiKey) return NextResponse.json({ error: 'AdsLab CAPTCHA is not configured.' }, { status: 503, headers: noStoreHeaders })
+  if (!apiKey) return NextResponse.json({ error: 'CAPTCHA verification is not configured.' }, { status: 503, headers: noStoreHeaders })
 
   const state = await getManualFaucetState(account.profile.id)
   if (state.claimsLeft <= 0) return NextResponse.json({ error: 'You have reached today’s faucet claim limit.' }, { status: 429, headers: noStoreHeaders })
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const challenge = response.ok ? readAdsLabCaptchaChallenge(result) : null
     if (!challenge) {
       console.error('[manual-faucet/captcha] AdsLab could not create a challenge.', { status: response.status })
-      return NextResponse.json({ error: 'AdsLab could not start the CAPTCHA. Please try again.' }, { status: 502, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'Could not start CAPTCHA verification. Please try again.' }, { status: 502, headers: noStoreHeaders })
     }
 
     return NextResponse.json({
@@ -73,6 +73,6 @@ export async function POST(request: NextRequest) {
     }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[manual-faucet/captcha] AdsLab initialization failed:', error instanceof Error ? error.name : 'unknown error')
-    return NextResponse.json({ error: 'AdsLab verification is temporarily unavailable. Please try again.' }, { status: 503, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'CAPTCHA verification is temporarily unavailable. Please try again.' }, { status: 503, headers: noStoreHeaders })
   }
 }

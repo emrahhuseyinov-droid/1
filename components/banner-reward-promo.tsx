@@ -40,26 +40,26 @@ export function BannerRewardPromo() {
   const { language } = useSiteLanguage()
   const copy = language === 'ru'
     ? {
-        label: 'Бонус AdsLab',
+        label: 'Бонус',
         title: 'Заберите 70 PEPE',
         adLabel: 'Рекламный баннер',
         bannerHint: 'Жми сюда!',
         claim: 'Получить 70 PEPE',
         reward: '+70 PEPE сразу',
-        destination: 'AdsLab откроется в новой вкладке',
+        destination: 'Откроется в новой вкладке',
         dismiss: 'Закрыть бонусный баннер',
-        ariaLabel: 'Бонус AdsLab: 70 PEPE за нажатие',
+        ariaLabel: 'Бонус 70 PEPE за нажатие',
       }
     : {
-        label: 'AdsLab bonus',
+        label: 'Bonus',
         title: 'Claim 70 PEPE',
         adLabel: 'Sponsored banner',
         bannerHint: 'Click here!',
         claim: 'Claim 70 PEPE',
         reward: '+70 PEPE instantly',
-        destination: 'AdsLab opens in a new tab',
+        destination: 'Opens in a new tab',
         dismiss: 'Dismiss reward banner',
-        ariaLabel: 'AdsLab bonus: 70 PEPE per click',
+        ariaLabel: '70 PEPE bonus per click',
       }
 
   const { data, mutate } = useSWR<BannerPromoState>('/api/banner-promo', fetchPromoState, {
