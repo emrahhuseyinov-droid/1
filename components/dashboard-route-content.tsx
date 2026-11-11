@@ -63,8 +63,9 @@ export async function DashboardRouteContent({
     auth.api.getSession({ headers: requestHeaders }),
   )
   const sectionPath = getDashboardSectionPath(section)
-  const requestedPath = section === 'Advertiser' && advertiserView && advertiserView !== 'overview'
-    ? `${sectionPath}/${advertiserView}`
+  const advertiserPageSegment = advertiserView === 'youtube' ? 'create-youtube' : advertiserView
+  const requestedPath = section === 'Advertiser' && advertiserPageSegment && advertiserPageSegment !== 'overview'
+    ? `${sectionPath}/${advertiserPageSegment}`
     : sectionPath
   const nextPath = referralCode
     ? `${requestedPath}?ref=${encodeURIComponent(referralCode)}`

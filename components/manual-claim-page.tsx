@@ -136,6 +136,7 @@ const advertiserNavGroups: NavigationGroup[] = [
     links: [
       { label: 'Fund wallet', icon: ArrowLeftRight, section: 'Advertiser', href: '/advertiser/fund' },
       { label: 'Create PTC', icon: Gift, section: 'Advertiser', href: '/advertiser/create' },
+      { label: 'Create YouTube campaign', icon: Play, section: 'Advertiser', href: '/advertiser/create-youtube' },
       { label: 'Advertiser campaigns', icon: BarChart3, section: 'Advertiser', href: '/advertiser/campaigns' },
       { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser/activity' },
       { label: 'Dashboard', icon: House, section: 'Dashboard' },

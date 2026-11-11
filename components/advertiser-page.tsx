@@ -40,7 +40,7 @@ import {
 } from '@/lib/pepe-amount'
 
 type CampaignStatus = 'active' | 'paused' | 'completed' | 'cancelled'
-export type AdvertiserPageView = 'overview' | 'fund' | 'create' | 'campaigns' | 'activity'
+export type AdvertiserPageView = 'overview' | 'fund' | 'create' | 'youtube' | 'campaigns' | 'activity'
 
 type AdvertiserCampaign = {
   id: string
@@ -313,8 +313,8 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
   const hasEnoughYoutubeFunds = youtubeCampaignCostAtomic > 0n && advertiserBalanceAtomic >= youtubeCampaignCostAtomic
   const hasCampaignsData = Boolean(campaigns.data && wallet.data)
   const pageTitle = isRussian
-    ? { overview: 'Кошелёк рекламодателя', fund: 'Пополнение кошелька', create: 'Создать PTC', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
-    : { overview: 'Advertiser wallet', fund: 'Fund wallet', create: 'Create PTC', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
+    ? { overview: 'Кошелёк рекламодателя', fund: 'Перевод PEPE', create: 'Создать PTC', youtube: 'Создать YouTube-компанию', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
+    : { overview: 'Advertiser wallet', fund: 'PEPE transfer', create: 'Create PTC', youtube: 'Create YouTube campaign', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
 
   async function refreshBalances() {
     await Promise.all([wallet.mutate(), campaigns.mutate()])
@@ -481,7 +481,9 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><Megaphone size={22} /></span>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100/75">{isRussian ? 'рекламные кампании' : 'campaign management'}</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{pageTitle}</h1>
+              {view === 'fund'
+                ? <h1 className="sr-only">{isRussian ? 'Перевод PEPE в рекламный кошелёк' : 'Transfer PEPE to advertiser wallet'}</h1>
+                : <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{pageTitle}</h1>}
               <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube: награда 950 PEPE + комиссия 380 PEPE за 30 секунд; 1 900 + 760 PEPE за 60 секунд.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 950 PEPE plus a 380 PEPE commission for 30 seconds, or 1,900 plus 760 PEPE for 60 seconds.`}</p>
             </div>
           </div>
@@ -495,7 +497,8 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
         {view === 'overview' && <section aria-label={isRussian ? 'Разделы рекламодателя' : 'Advertiser sections'} className="grid gap-4 sm:grid-cols-2">
           {[
             { href: '/advertiser/fund', title: isRussian ? 'Пополнить кошелёк' : 'Fund wallet', description: isRussian ? 'Перевод PEPE из баланса Publisher.' : 'Transfer PEPE from your Publisher balance.' },
-            { href: '/advertiser/create', title: isRussian ? 'Создать PTC' : 'Create PTC', description: isRussian ? 'Запустите PTC- или YouTube-кампанию.' : 'Launch a PTC or YouTube campaign.' },
+            { href: '/advertiser/create', title: isRussian ? 'Создать PTC' : 'Create PTC', description: isRussian ? 'Запустите PTC-кампанию.' : 'Launch a PTC campaign.' },
+            { href: '/advertiser/create-youtube', title: isRussian ? 'Создать YouTube-компанию' : 'Create YouTube campaign', description: isRussian ? 'Запустите кампанию с YouTube-видео.' : 'Launch a YouTube video campaign.' },
             { href: '/advertiser/campaigns', title: isRussian ? 'Мои кампании' : 'My campaigns', description: isRussian ? `${campaigns.data?.campaigns.length ?? '—'} кампаний · управление статусом и возвратом.` : `${campaigns.data?.campaigns.length ?? '—'} campaigns · manage status and refunds.` },
             { href: '/advertiser/activity', title: isRussian ? 'Операции кошелька' : 'Wallet activity', description: isRussian ? 'История переводов, списаний и возвратов.' : 'History of transfers, charges, and refunds.' },
           ].map((item) => <Link key={item.href} href={item.href} className="group rounded-[24px] border border-white/[0.08] bg-[#0d142c] p-5 transition hover:border-cyan-200/25 hover:bg-[#111a35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
@@ -505,11 +508,10 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
         </section>}
 
         {(view === 'fund' || view === 'create') && <div className="grid min-w-0 gap-4">
-          {view === 'fund' && <section id="advertiser-fund" aria-labelledby="advertiser-fund-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
+          {view === 'fund' && <section id="advertiser-fund" aria-label={isRussian ? 'Перевод PEPE в рекламный кошелёк' : 'Transfer PEPE to advertiser wallet'} className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10 text-blue-200"><ArrowDownUp size={18} /></span>
               <div>
-                <h2 id="advertiser-fund-title" className="text-sm font-extrabold text-white">{isRussian ? 'Пополнение рекламного кошелька' : 'Fund advertiser wallet'}</h2>
                 <p className="mt-1 text-[10px] leading-5 text-slate-400">{isRussian ? 'Внутренний перевод PEPE из баланса Publisher без комиссии.' : 'Internal PEPE transfer from Publisher balance with no fee.'}</p>
               </div>
             </div>
@@ -614,7 +616,7 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
           </section>}
         </div>}
 
-        {view === 'create' && <YoutubeCampaignForm
+        {view === 'youtube' && <YoutubeCampaignForm
           title={youtubeTitle}
           targetUrl={youtubeUrl}
           description={youtubeDescription}
