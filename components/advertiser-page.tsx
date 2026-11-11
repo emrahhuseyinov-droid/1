@@ -474,20 +474,18 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
 
   return (
     <LocalizedTree>
-      <main id="top" className="dashboard-page-shell flex flex-col gap-5 sm:gap-6">
-        <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
+      <main id="top" className={`dashboard-page-shell flex flex-col gap-5 sm:gap-6 ${view === 'fund' ? 'min-h-[calc(100dvh-62px)]' : ''}`}>
+        {view !== 'fund' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
           <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full border-[24px] border-white/[0.05]" />
           <div className="relative flex items-start gap-4">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><Megaphone size={22} /></span>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100/75">{isRussian ? 'рекламные кампании' : 'campaign management'}</p>
-              {view === 'fund'
-                ? <h1 className="sr-only">{isRussian ? 'Перевод PEPE в рекламный кошелёк' : 'Transfer PEPE to advertiser wallet'}</h1>
-                : <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{pageTitle}</h1>}
+              <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{pageTitle}</h1>
               <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube: награда 950 PEPE + комиссия 380 PEPE за 30 секунд; 1 900 + 760 PEPE за 60 секунд.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 950 PEPE plus a 380 PEPE commission for 30 seconds, or 1,900 plus 760 PEPE for 60 seconds.`}</p>
             </div>
           </div>
-        </header>
+        </header>}
 
         {loadingError && <div role="alert" className="flex items-start gap-2 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] px-4 py-3 text-xs font-semibold text-rose-200"><CircleAlert size={15} className="mt-0.5 shrink-0" />{isRussian ? 'Не удалось загрузить данные рекламодателя. Обновите страницу и попробуйте снова.' : loadingError.message}</div>}
         {feedback && <div role={feedback.type === 'error' ? 'alert' : 'status'} className={`flex items-start gap-2 rounded-2xl border px-4 py-3 text-xs font-semibold ${feedback.type === 'error' ? 'border-rose-400/20 bg-rose-400/[0.06] text-rose-200' : 'border-emerald-400/20 bg-emerald-400/[0.06] text-emerald-200'}`}>
@@ -507,42 +505,78 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
           </Link>)}
         </section>}
 
-        {(view === 'fund' || view === 'create') && <div className="grid min-w-0 gap-4">
-          {view === 'fund' && <section id="advertiser-fund" aria-label={isRussian ? 'Перевод PEPE в рекламный кошелёк' : 'Transfer PEPE to advertiser wallet'} className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
-            <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-400/10 text-blue-200"><ArrowDownUp size={18} /></span>
+        {(view === 'fund' || view === 'create') && <div className={`grid min-w-0 gap-4 ${view === 'fund' ? 'flex-1' : ''}`}>
+          {view === 'fund' && <section id="advertiser-fund" aria-labelledby="advertiser-transfer-title" className="relative isolate flex min-h-[calc(100dvh-10rem)] flex-col justify-center overflow-hidden rounded-[32px] border-2 border-emerald-200/35 bg-[radial-gradient(circle_at_14%_18%,rgba(103,239,207,0.17),transparent_30%),radial-gradient(circle_at_86%_15%,rgba(255,209,102,0.19),transparent_26%),linear-gradient(135deg,#142448_0%,#1a244b_55%,#2a204b_100%)] p-4 shadow-[0_24px_70px_rgba(4,10,34,0.45)] sm:rounded-[38px] sm:p-6 lg:min-h-0 lg:flex-1 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center lg:gap-8 lg:p-8 xl:gap-12 xl:p-10">
+            <span aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full border-[24px] border-white/[0.06]" />
+            <span aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-[38%] size-64 rounded-full bg-emerald-300/[0.07] blur-3xl" />
+
+            <div className="relative z-10 flex min-w-0 flex-col gap-5 sm:gap-6 lg:gap-7">
+              <div className="flex items-center gap-3">
+                <span className="grid size-12 shrink-0 place-items-center rounded-[18px] border-2 border-white/20 bg-white/10 text-emerald-100 shadow-[0_6px_0_rgba(5,15,42,0.24)]"><ArrowDownUp size={22} /></span>
+                <span className="rounded-full border border-emerald-100/25 bg-emerald-200/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-100">{isRussian ? 'Перевод без комиссии' : 'Fee-free transfer'}</span>
+              </div>
+
               <div>
-                <p className="mt-1 text-[10px] leading-5 text-slate-400">{isRussian ? 'Внутренний перевод PEPE из баланса Publisher без комиссии.' : 'Internal PEPE transfer from Publisher balance with no fee.'}</p>
+                <h1 id="advertiser-transfer-title" className="text-3xl font-black tracking-tight text-white sm:text-4xl xl:text-5xl">{isRussian ? 'Перевод PEPE' : 'PEPE transfer'}</h1>
+                <p className="mt-3 max-w-lg text-sm leading-6 text-blue-50/75">{isRussian ? 'Переводите средства с баланса Publisher в рекламный кошелёк. Без комиссии и лишних шагов.' : 'Move funds from your Publisher balance to your advertiser wallet. No fees, no extra steps.'}</p>
+              </div>
+
+              <div className="relative mx-auto grid w-full max-w-[19rem] place-items-center py-2 sm:py-3 lg:my-1">
+                <span aria-hidden="true" className="absolute size-[14.5rem] rounded-full border-2 border-emerald-100/15 bg-emerald-100/[0.035] sm:size-[17rem]" />
+                <span aria-hidden="true" className="absolute size-[11.5rem] rounded-full border-2 border-dashed border-amber-100/35 sm:size-[14rem]" />
+                <div className="relative grid size-40 place-items-center rounded-full border-[7px] border-[#ffe08a] bg-gradient-to-br from-[#fff4b6] via-[#ffd166] to-[#f5a842] shadow-[0_12px_0_rgba(123,76,27,0.48),0_24px_45px_rgba(0,0,0,0.28)] sm:size-48">
+                  <span aria-hidden="true" className="absolute inset-2 rounded-full border-2 border-white/60" />
+                  <span className="relative grid size-28 place-items-center rounded-full border-2 border-white/70 bg-white/45 shadow-inner sm:size-36"><TokenLogo symbol="PEPE" size={92} /></span>
+                </div>
+                <span aria-hidden="true" className="absolute right-1 top-1 grid size-12 place-items-center rounded-[18px] border-2 border-white/35 bg-[#8cebd1] text-[#163b42] shadow-[0_6px_0_rgba(5,15,42,0.24)] sm:right-4"><Coins size={23} /></span>
+                <span className="absolute bottom-0 left-0 inline-flex items-center gap-1.5 rounded-full border-2 border-white/35 bg-[#fff0a6] px-3 py-1.5 text-[9px] font-black text-[#302647] shadow-[0_5px_0_rgba(5,15,42,0.22)]"><BadgeCheck size={13} />{isRussian ? 'Без комиссии' : 'No fee'}</span>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 rounded-[22px] border-2 border-white/15 bg-[#101937]/70 p-4 shadow-inner shadow-black/10 backdrop-blur-sm sm:p-5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-blue-50/65">{isRussian ? 'Баланс Publisher' : 'Publisher balance'}</p>
+                  <p className="mt-1.5 flex min-w-0 items-center gap-2 font-mono text-xl font-black tracking-tight text-white sm:text-2xl"><TokenLogo symbol="PEPE" size={22} /><span className="truncate">{wallet.data ? formatAtomic(wallet.data.publisherBalanceAtomic, language) : '—'}</span><span className="shrink-0 text-[10px] font-extrabold text-emerald-100/75">PEPE</span></p>
+                </div>
+                <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100/20 bg-emerald-200/10 text-emerald-100"><ArrowDownUp size={17} /></span>
               </div>
             </div>
-            <form onSubmit={handleTransfer} className="mt-5 flex flex-col gap-3">
-              <div className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2.5 text-[10px]">
-                <span className="text-slate-400">{isRussian ? 'Доступно для перевода' : 'Available to transfer'}</span>
-                <span className="font-mono font-bold text-white">{wallet.data ? `${formatAtomic(wallet.data.publisherBalanceAtomic, language)} PEPE` : '—'}</span>
+
+            <div className="relative z-10 mt-3 min-w-0 rounded-[28px] border-2 border-white/20 bg-[#0d1531]/85 p-4 shadow-[0_18px_45px_rgba(3,8,28,0.34)] backdrop-blur-md sm:mt-5 sm:rounded-[32px] sm:p-6 lg:mt-0 lg:p-8">
+              <div className="flex items-center gap-3">
+                <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-emerald-100/15 bg-emerald-200/10 text-emerald-100"><Wallet size={19} /></span>
+                <div>
+                  <p className="text-sm font-black text-white">{isRussian ? 'Перевести средства' : 'Move your funds'}</p>
+                  <p className="mt-1 text-[10px] text-slate-400">{isRussian ? 'Внутренний перевод между вашими балансами.' : 'An internal transfer between your balances.'}</p>
+                </div>
               </div>
-              <label htmlFor="advertiser-transfer-amount" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Сумма перевода' : 'Transfer amount'}</label>
-              <div className="flex gap-2">
-                <input
-                  id="advertiser-transfer-amount"
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  required
-                  value={transferAmount}
-                  onChange={(event) => setTransferAmount(event.target.value)}
-                  placeholder="100.00"
-                  disabled={!wallet.data || transferring}
-                  aria-invalid={transferAmount.length > 0 && !isTransferAmountAvailable}
-                  className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-[#111a35] px-3 font-mono text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50"
-                />
-                <span className="inline-flex items-center rounded-xl border border-white/10 bg-[#111a35] px-3 text-xs font-extrabold text-slate-300">PEPE</span>
-              </div>
-              {transferAmount && parsedTransferAmount === null && <p className="text-[10px] text-rose-300">{isRussian ? 'Введите сумму до 8 знаков после запятой.' : 'Enter an amount with up to 8 decimal places.'}</p>}
-              <button type="submit" disabled={!wallet.data || !isTransferAmountAvailable || transferring} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 text-xs font-extrabold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">
-                {transferring ? <LoaderCircle size={15} className="animate-spin" /> : <Wallet size={15} />}{transferring ? isRussian ? 'Пополняем…' : 'Funding…' : isRussian ? 'Пополнить кошелёк' : 'Fund wallet'}
-              </button>
-              <p className="text-[9px] leading-4 text-slate-500">{isRussian ? 'Баланс рекламодателя отделён от Publisher. Перевод фиксируется безопасно и повторный запрос не спишет средства дважды.' : 'Advertiser funds stay separate from Publisher. Transfers are idempotent, so retrying the same request will not debit twice.'}</p>
-            </form>
+
+              <form onSubmit={handleTransfer} className="mt-6 flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="advertiser-transfer-amount" className="text-xs font-extrabold text-slate-100">{isRussian ? 'Сумма перевода' : 'Transfer amount'}</label>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100/15 bg-emerald-100/[0.06] px-2.5 py-1 text-[9px] font-extrabold text-emerald-100"><TokenLogo symbol="PEPE" size={13} />PEPE</span>
+                </div>
+                <div className="relative">
+                  <input
+                    id="advertiser-transfer-amount"
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    required
+                    value={transferAmount}
+                    onChange={(event) => setTransferAmount(event.target.value)}
+                    placeholder="100.00"
+                    disabled={!wallet.data || transferring}
+                    aria-invalid={transferAmount.length > 0 && !isTransferAmountAvailable}
+                    className="min-h-[4.5rem] w-full rounded-[20px] border-2 border-emerald-100/20 bg-[#141e3d] px-4 font-mono text-2xl font-black tracking-tight text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-200/70 focus:ring-4 focus:ring-emerald-200/10 disabled:opacity-50 sm:px-5 sm:text-3xl"
+                  />
+                </div>
+                {transferAmount && parsedTransferAmount === null && <p className="-mt-2 text-[11px] font-semibold text-rose-300">{isRussian ? 'Введите сумму до 8 знаков после запятой.' : 'Enter an amount with up to 8 decimal places.'}</p>}
+                <button type="submit" disabled={!wallet.data || !isTransferAmountAvailable || transferring} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[18px] border-2 border-white/50 bg-gradient-to-r from-[#7ce9cc] via-[#b5f0a1] to-[#ffd166] px-5 text-sm font-black text-[#1a2b3e] shadow-[0_7px_0_rgba(68,99,75,0.45)] transition hover:-translate-y-0.5 hover:saturate-125 hover:shadow-[0_9px_0_rgba(68,99,75,0.38)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-100/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0">
+                  {transferring ? <LoaderCircle size={17} className="animate-spin" /> : <ArrowDownUp size={17} />}{transferring ? isRussian ? 'Переводим…' : 'Transferring…' : isRussian ? 'Перевести PEPE' : 'Transfer PEPE'}
+                </button>
+                <p className="flex items-start gap-2 text-[10px] leading-5 text-slate-400"><BadgeCheck size={14} className="mt-0.5 shrink-0 text-emerald-200" />{isRussian ? 'Баланс рекламодателя отделён от Publisher. Перевод фиксируется безопасно, а повторный запрос не спишет средства дважды.' : 'Advertiser funds stay separate from Publisher. Transfers are idempotent, so retrying the same request will not debit twice.'}</p>
+              </form>
+            </div>
           </section>}
 
           {view === 'create' && <section id="advertiser-create" aria-labelledby="advertiser-create-title" className="scroll-mt-20 rounded-[26px] border border-cyan-200/10 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
