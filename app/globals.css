@@ -385,7 +385,23 @@ dialog.adslab-captcha-dialog[open] {
   will-change: transform;
 }
 
+@keyframes advertiser-transfer-coin-drift {
+  0%,
+  100% {
+    transform: translate3d(0, -12px, 0);
+  }
+  50% {
+    transform: translate3d(0, 12px, 0);
+  }
+}
+
+.advertiser-transfer-coin-float {
+  animation: advertiser-transfer-coin-drift 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .advertiser-transfer-coin-float,
   .homero-coin-float,
   .banner-reward-enter,
   .banner-reward-gift,

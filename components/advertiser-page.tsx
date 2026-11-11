@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import {
@@ -522,14 +523,15 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
               </div>
 
               <div className="relative mx-auto grid w-full max-w-[19rem] place-items-center py-2 sm:py-3 lg:my-1">
-                <span aria-hidden="true" className="absolute size-[14.5rem] rounded-full border-2 border-emerald-100/15 bg-emerald-100/[0.035] sm:size-[17rem]" />
-                <span aria-hidden="true" className="absolute size-[11.5rem] rounded-full border-2 border-dashed border-amber-100/35 sm:size-[14rem]" />
-                <div className="relative grid size-40 place-items-center rounded-full border-[7px] border-[#ffe08a] bg-gradient-to-br from-[#fff4b6] via-[#ffd166] to-[#f5a842] shadow-[0_12px_0_rgba(123,76,27,0.48),0_24px_45px_rgba(0,0,0,0.28)] sm:size-48">
-                  <span aria-hidden="true" className="absolute inset-2 rounded-full border-2 border-white/60" />
-                  <span className="relative grid size-28 place-items-center rounded-full border-2 border-white/70 bg-white/45 shadow-inner sm:size-36"><TokenLogo symbol="PEPE" size={92} /></span>
-                </div>
-                <span aria-hidden="true" className="absolute right-1 top-1 grid size-12 place-items-center rounded-[18px] border-2 border-white/35 bg-[#8cebd1] text-[#163b42] shadow-[0_6px_0_rgba(5,15,42,0.24)] sm:right-4"><Coins size={23} /></span>
-                <span className="absolute bottom-0 left-0 inline-flex items-center gap-1.5 rounded-full border-2 border-white/35 bg-[#fff0a6] px-3 py-1.5 text-[9px] font-black text-[#302647] shadow-[0_5px_0_rgba(5,15,42,0.22)]"><BadgeCheck size={13} />{isRussian ? 'Без комиссии' : 'No fee'}</span>
+                <Image
+                  src="/images/pepe-coin-transparent.png"
+                  alt=""
+                  aria-hidden="true"
+                  width={640}
+                  height={640}
+                  priority
+                  className="advertiser-transfer-coin-float relative z-10 h-auto w-[14.5rem] max-w-[78vw] object-contain drop-shadow-[0_18px_30px_rgba(3,9,28,0.38)] sm:w-[18rem]"
+                />
               </div>
 
               <div className="flex items-center justify-between gap-3 rounded-[22px] border-2 border-white/15 bg-[#101937]/70 p-4 shadow-inner shadow-black/10 backdrop-blur-sm sm:p-5">
