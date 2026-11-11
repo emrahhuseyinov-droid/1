@@ -91,7 +91,7 @@ const ruPhrases = new Map<string, string>([
   ['Up to', 'До'],
   ['successful claims per rolling 24 hours.', 'успешных получений за последние 24 часа.'],
   ['24-hour claim limit', 'Лимит за 24 часа'],
-  ['Received 10 PEPE', 'Получено 10 PEPE'],
+  ['Received 10 PEPE', 'Получен�� 10 PEPE'],
   ['was added to your balance.', 'добавлено на ваш баланс.'],
   ['Verification in progress', 'Проверка выполняется'],
   ['Waiting for a signed server confirmation. This page updates automatically.', 'Ожидаем подписанное подтверждение от сервера. Статус обновится автоматически.'],
@@ -144,7 +144,7 @@ const ruPhrases = new Map<string, string>([
   ['Eight-segment prize wheel. The prize odds are listed below.', 'Колесо с восемью секторами. Вероятности выигрыша указаны ниже.'],
   ['Wheel result', 'Результат колеса'],
   ['Congratulations!', 'Поздравляем!'],
-  ['You won: ', 'Вы в����и������рали: '],
+  ['You won: ', 'Вы в������и������рали: '],
   ['Your reward is ready. Collect it to add it to your account.', 'Ваша награда готова. Заберите её, чтобы начислить её на счёт.'],
   ['Reward collected', 'Награда ��олучена'],
   ['Adding reward…', 'Начисляем награду…'],
@@ -326,7 +326,7 @@ const ruPhrases = new Map<string, string>([
   ['Daily rewards', 'Ежедневные награды'],
   ['Claim your daily HOMERO bonus and follow your streak from your account.', 'Получайте ежедневный бонус HOMERO и следите за своей серией дней в аккаунте.'],
   ['Use a free spin when it is available and collect the HOMERO reward shown in your account.', 'Вращайте колесо, когда доступен бесплатный ход, и получайте награду HOMERO, показанную в аккаунте.'],
-  ['Advertiser campaigns', 'Рекламные кампании'],
+  ['Advertiser tasks', 'Рекламные задания'],
   ['Discover sponsored tasks from pepe.casa advertisers alongside other eligible activities.', 'Выполняйте спонсируемые задания рекламодателей pepe.casa наряду с другими доступными активностями.'],
   ['Clear platform rules', 'Понятные правила платформы'],
   ['Understand verification, fair play, and payout limits before you begin.', 'Разберитесь в проверке заданий, честной игре и лимитах выплат до начала.'],
@@ -406,7 +406,7 @@ const ruPhrases = new Map<string, string>([
   ['Task providers and advertisers set the requirements for each activity. Read them before you begin.', 'Поставщики заданий и рекламодатели у��танавливают условия каждого задания. Прочитайте их перед началом.'],
   ['Daily bonuses and ad tasks', 'Ежедневные бонусы и рекламные задания'],
   ['Earn platform rewards from daily bonuses, View Ads, PTC, Shortlinks, and eligible sponsored tasks.', 'Получайте награды за ежедневные бонусы, View Ads, PTC, Shortlinks и доступные спонсируемые задания.'],
-  ['The Wheel of Fortune shows when a free spin is available and the reward before you collect it.', 'В колесе фортуны видно, когда станет доступно бесплатное вращение и какую награду можно получить.'],
+  ['The Wheel of Fortune shows when a free spin is available and the reward before you collect it.', 'В колесе фортуны видно, когда станет дос��упно бесплатное вращение и какую награду можно получить.'],
   ['Manual CAPTCHA faucet', 'Ручной кран с CAPTCHA'],
   ['Complete a CAPTCHA to unlock a 10 PEPE claim after server-side verification.', 'Пройдите CAPTCHA, чтобы получить 10 PEPE после проверки на сервере.'],
   ['Start the challenge from Manual Faucet, complete it, then return to claim your PEPE.', 'Запустите проверку в разделе «Ручной кран», пройдите её, затем вернитесь и заберите PEPE.'],
@@ -539,7 +539,7 @@ const ruPhrases = new Map<string, string>([
   ['Could not load withdrawal data.', 'Не удалось загрузить данные о выводах.'],
   ['Paid', 'Выплачено'],
   ['FaucetPay confirmed the automatic payout.', 'FaucetPay подтвердил автоматическую выплату.'],
-  ['Rejected', 'Отклонено'],
+  ['Rejected', 'Отклоне��о'],
   ['FaucetPay declined the payout and the PEPE was returned to your balance.', 'FaucetPay отклонил выплату, PEPE возвращены на ваш баланс.'],
   ['Pending', 'В обработке'],
   ['No final payout confirmation is recorded. Your PEPE remains reserved; do not submit this request again.', 'Оконча��ель��ое подтверждение выплаты ещё не получено. PEPE остаются в резерве; не отправляйте заявку повторно.'],
@@ -688,7 +688,7 @@ const ruPhrases = new Map<string, string>([
   ['Account protection', 'Защита аккаунта'],
   ['Make your account harder to compromise.', 'Сделайте аккаунт более защищённым.'],
   ['Protect your account with a password that is unique and hard to guess.', 'Защитите аккаунт уникальным и сложным для угадывания паролем.'],
-  ['A unique, longer password is one of the simplest ways to protect your account. Change it whenever you think it may have been exposed.', 'Уникальный длинный паро��ь — простой способ защи��ить акка��нт. Измените его, если считаете, что он мог стать известен другим.'],
+  ['A unique, longer password is one of the simplest ways to protect your account. Change it whenever you think it may have been exposed.', 'Уни��альный длинный паро��ь — простой способ защи��ить акка��нт. Измените его, если считаете, что он мог стать известен другим.'],
   ['Password protection', 'Защита паролем'],
   ['Change password fields', 'Поля смены пароля'],
   ['Type a password to see strength.', 'Введите пароль, чтобы оценить его надёжность.'],
@@ -991,7 +991,7 @@ const ruPhrases = new Map<string, string>([
   ['Fund wallet', 'Пополнить кошелёк'],
   ['Create campaign', 'Создать кампанию'],
   ['Create PTC', 'Создать PTC'],
-  ['Create YouTube campaign', 'Создать YouTube-компанию'],
+  ['Create YouTube task', 'Создать задание YouTube'],
   ['Loading advertiser data…', 'Загружаем данные рекламодателя…'],
   ['No campaigns yet', 'Кампаний пока нет'],
   ['Create a campaign to make it available as a View Ads task for performers.', 'Создайте кампанию, чтобы исполнители могли увидеть её в заданиях «Просмотр рекламы».'],
@@ -1138,7 +1138,7 @@ const ruPhrases = new Map<string, string>([
   ['Could not load video availability.', 'Не удалось загрузить доступность видео.'],
   ['Could not verify the video reward.', 'Не удалось проверить награду за видео.'],
   ['Could not load today’s video availability. Refresh the page and try again.', 'Не удалось загрузить доступность видео на сегодня. Обновите страницу и попробуйте ещё раз.'],
-  ['You have used all 10 video rewards available today.', 'Вы использовали все 10 видеонаград на сегодня.'],
+  ['You have used all 10 video rewards available today.', 'Вы использовали все 10 видеонаград ��а сегодня.'],
   ['Could not load the weekly leaderboard.', 'Не удалось з��грузить недельный рейтинг.'],
   ['Could not load advertiser balance.', 'Не удалось загрузить баланс рекламодателя.'],
   ['Select language', 'Выбрать язык'],
@@ -1157,7 +1157,7 @@ const ruPhrases = new Map<string, string>([
   ['Enter a valid HTTPS URL.', 'В��едите корректный HTTPS-адрес.'],
   ['Task count must be between 1 and 100,000.', 'Количество заданий должно быть от 1 до 100 000.'],
   ['The total budget is too large.', 'Общи�� бюджет слишком велик.'],
-  ['Could not launch the campaign.', 'Не удалось запустить кампанию.'],
+  ['Could not launch the campaign.', 'Не уда��ось запустить кампанию.'],
   ['Request failed. Please try again.', 'Не удалось выполнить запрос. Попробуйте ещё раз.'],
   ['PEPE/USD quote is unavailable', 'Котировка PEPE/USD недоступна'],
   ['Invalid PEPE/USD quote', 'Некорректная котировка PEPE/USD'],
@@ -1385,7 +1385,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Следующее видео будет доступно через ${match[1]}.`
 
   match = value.match(/^Available in (.+)$/i)
-  if (match) return `Доступно через ${match[1]}`
+  if (match) return `Доступно ��ерез ${match[1]}`
 
   match = value.match(/^Claim (.+) PEPE$/i)
   if (match) return `Получить ${match[1]} PEPE`

@@ -314,8 +314,8 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
   const hasEnoughYoutubeFunds = youtubeCampaignCostAtomic > 0n && advertiserBalanceAtomic >= youtubeCampaignCostAtomic
   const hasCampaignsData = Boolean(campaigns.data && wallet.data)
   const pageTitle = isRussian
-    ? { fund: 'Перевод PEPE', create: 'Создать PTC', youtube: 'Создать YouTube-компанию', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
-    : { fund: 'PEPE transfer', create: 'Create PTC', youtube: 'Create YouTube campaign', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
+    ? { fund: 'Перевод PEPE', create: 'Создать PTC', youtube: 'Создать задание YouTube', campaigns: 'Рекламные задания', activity: 'Операции кошелька' }[view]
+    : { fund: 'PEPE transfer', create: 'Create PTC', youtube: 'Create YouTube task', campaigns: 'Advertiser tasks', activity: 'Wallet activity' }[view]
 
   async function refreshBalances() {
     await Promise.all([wallet.mutate(), campaigns.mutate()])
@@ -646,7 +646,7 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
                   </div>
                   <div className="sm:text-right"><p className="font-mono text-xl font-black tracking-tight text-white sm:text-2xl">{isTaskCountValid ? formatAtomic(campaignCostAtomic, language) : '—'} PEPE</p><p className="text-[9px] font-semibold text-slate-400">{isRussian ? 'итого к оплате' : 'total charged'}</p></div>
                 </div>
-                {hasCampaignsData && isTaskCountValid && !hasEnoughCampaignFunds && <p className="mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
+                {hasCampaignsData && isTaskCountValid && !hasEnoughCampaignFunds && <p className="mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала перевед��те средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
                 <p className="mt-2 text-[9px] leading-4 text-slate-400">{isRussian ? 'Неиспользованный бюджет задания, включая комиссию, возвращается при отмене. Списание производится только после проверки баланса.' : 'Unused task budget, including commission, is refunded on cancellation. Funds are charged only after the balance check.'}</p>
               </div>
 

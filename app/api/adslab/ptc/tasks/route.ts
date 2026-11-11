@@ -1,9 +1,9 @@
-import { and, eq, gte, inArray, like, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, inArray, like, ne, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { ADSLAB_PTC_TASK_PREFIX, AdsLabPtcError, getAdsLabPtcTasks, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
 import { db } from '@/lib/db'
-import { earningEvents, ptcClicks } from '@/lib/db/schema'
+import { advertiserCampaigns, earningEvents, ptcClicks } from '@/lib/db/schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,16 +39,23 @@ async function loadPtcTaskStats(userId: string) {
   const todayStart = new Date()
   todayStart.setUTCHours(0, 0, 0, 0)
 
-  const [clickRows, earningRows] = await Promise.all([
+  const [partnerClickRows, campaignClickRows, earningRows] = await Promise.all([
     db
-      .select({
-        todayClicks: sql<number>`count(*) filter (where ${ptcClicks.updatedAt} >= ${todayStart})::int`,
-      })
+      .select({ todayClicks: sql<number>`count(*) filter (where ${ptcClicks.updatedAt} >= ${todayStart})::int` })
       .from(ptcClicks)
       .where(and(
         eq(ptcClicks.userId, userId),
         eq(ptcClicks.status, 'completed'),
         like(ptcClicks.taskId, `${ADSLAB_PTC_TASK_PREFIX}%`),
+      )),
+    db
+      .select({ todayClicks: sql<number>`count(*) filter (where ${ptcClicks.updatedAt} >= ${todayStart})::int` })
+      .from(ptcClicks)
+      .innerJoin(advertiserCampaigns, sql`${ptcClicks.taskId} = ${advertiserCampaigns.id}::text`)
+      .where(and(
+        eq(ptcClicks.userId, userId),
+        eq(ptcClicks.status, 'completed'),
+        eq(advertiserCampaigns.campaignType, 'ptc'),
       )),
     db
       .select({
@@ -59,7 +66,7 @@ async function loadPtcTaskStats(userId: string) {
       .from(earningEvents)
       .where(and(
         eq(earningEvents.guestId, userId),
-        inArray(earningEvents.source, ['adslab_ptc', 'adslab_ptc_reversal']),
+        inArray(earningEvents.source, ['adslab_ptc', 'adslab_ptc_reversal', 'advertiser_task']),
       ))
       .groupBy(earningEvents.tokenSymbol),
   ])
@@ -74,7 +81,10 @@ async function loadPtcTaskStats(userId: string) {
     stats.totalEarnings[row.tokenSymbol] = row.totalEarningsAtomic
   }
 
-  return { ...stats, todayClicks: clickRows[0]?.todayClicks ?? 0 }
+  return {
+    ...stats,
+    todayClicks: (partnerClickRows[0]?.todayClicks ?? 0) + (campaignClickRows[0]?.todayClicks ?? 0),
+  }
 }
 
 function timestampToMs(value: unknown): number | null {
@@ -93,9 +103,32 @@ export async function GET(request: NextRequest) {
 
   let failureStage = 'provider_feed'
   try {
-    const providerFeed = await getAdsLabPtcTasks(request.headers, account.profile.id)
-    const providerTasks = providerFeed.tasks
-    const taskIds = providerTasks.map((task) => task.key)
+    const [providerResult, campaignRows] = await Promise.all([
+      getAdsLabPtcTasks(request.headers, account.profile.id)
+        .then((feed) => ({ feed, error: null as unknown }))
+        .catch((error: unknown) => ({ feed: null, error })),
+      db.select({
+        key: advertiserCampaigns.id,
+        advertiserId: advertiserCampaigns.advertiserId,
+        title: advertiserCampaigns.title,
+        description: advertiserCampaigns.description,
+        url: advertiserCampaigns.targetUrl,
+        rewardAtomic: advertiserCampaigns.rewardPerTaskAtomic,
+        durationSeconds: advertiserCampaigns.durationSeconds,
+        remainingTasks: advertiserCampaigns.remainingTasks,
+      }).from(advertiserCampaigns).where(and(
+        eq(advertiserCampaigns.campaignType, 'ptc'),
+        eq(advertiserCampaigns.status, 'active'),
+        ne(advertiserCampaigns.advertiserId, account.profile.id),
+        gt(advertiserCampaigns.remainingTasks, 0),
+      )).orderBy(desc(advertiserCampaigns.createdAt)).limit(100),
+    ])
+    const providerFeed = providerResult.feed
+    if (!providerFeed && campaignRows.length === 0) throw providerResult.error
+    if (!providerFeed) console.warn('[adslab-ptc] Partner feed unavailable; serving advertiser tasks only.')
+
+    const providerTasks = providerFeed?.tasks ?? []
+    const taskIds = [...providerTasks.map((task) => task.key), ...campaignRows.map((campaign) => campaign.key)]
     let histories: Awaited<ReturnType<typeof loadPtcTaskHistory>> = []
     try {
       failureStage = 'task_history_query'
@@ -126,7 +159,7 @@ export async function GET(request: NextRequest) {
     const historyByTask = new Map(safeHistories.map((history) => [history.taskId, history]))
     const now = Date.now()
 
-    const tasks = providerTasks.flatMap((task) => {
+    const partnerTasks = providerTasks.flatMap((task) => {
       const history = historyByTask.get(task.key)
       const visitsCompleted = Math.max(0, Number(history?.completedCount ?? 0))
       const visitsRemaining = Math.max(0, task.visitsPerUser - visitsCompleted)
@@ -166,7 +199,39 @@ export async function GET(request: NextRequest) {
       }]
     })
 
-    return NextResponse.json({ tasks, pepeUsdPrice: providerFeed.pepeUsdPrice, stats }, { headers: noStoreHeaders })
+    const advertiserTasks = campaignRows.flatMap((campaign) => {
+      const history = historyByTask.get(campaign.key)
+      if (Number(history?.completedCount ?? 0) > 0) return []
+
+      const pendingStartedAt = timestampToMs(history?.pendingStartedAt)
+      const pendingElapsedSeconds = pendingStartedAt === null ? null : Math.floor((now - pendingStartedAt) / 1000)
+      const pendingIsActive = pendingElapsedSeconds !== null && pendingElapsedSeconds < campaign.durationSeconds
+      const awaitingConfirmation = pendingElapsedSeconds !== null
+        && pendingElapsedSeconds >= campaign.durationSeconds
+        && pendingElapsedSeconds <= campaign.durationSeconds + PENDING_GRACE_MS / 1000
+
+      return [{
+        key: campaign.key,
+        title: campaign.title,
+        description: campaign.description,
+        url: campaign.url,
+        iconUrl: null,
+        rewardAtomic: String(campaign.rewardAtomic),
+        tokenSymbol: 'HOMERO' as const,
+        pepeUsdPrice: providerFeed?.pepeUsdPrice ?? '0',
+        durationSeconds: campaign.durationSeconds,
+        visitsRemaining: 1,
+        cooldownRemainingSeconds: 0,
+        isInProgress: pendingIsActive,
+        awaitingConfirmation,
+        pendingClickId: awaitingConfirmation ? history?.pendingClickId ?? null : null,
+        activeRemainingSeconds: pendingIsActive
+          ? Math.max(0, campaign.durationSeconds - (pendingElapsedSeconds ?? 0))
+          : null,
+      }]
+    })
+
+    return NextResponse.json({ tasks: [...partnerTasks, ...advertiserTasks], pepeUsdPrice: providerFeed?.pepeUsdPrice ?? '0', stats }, { headers: noStoreHeaders })
   } catch (error) {
     if (error instanceof AdsLabPtcError) {
       console.error('[adslab-ptc] task feed failed', {

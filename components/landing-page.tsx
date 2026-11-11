@@ -86,7 +86,7 @@ const features = [
     tone: 'text-fuchsia-200 bg-fuchsia-300/10 ring-fuchsia-200/15',
   },
   {
-    title: 'Advertiser campaigns',
+    title: 'Advertiser tasks',
     description: 'Discover sponsored tasks from pepe.casa advertisers alongside other eligible activities.',
     icon: MonitorPlay,
     tone: 'text-indigo-200 bg-indigo-300/10 ring-indigo-200/15',

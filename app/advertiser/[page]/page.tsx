@@ -18,13 +18,13 @@ const advertiserPages: Record<string, { view: AdvertiserPageView; title: { ru: s
   },
   'create-youtube': {
     view: 'youtube',
-    title: { ru: 'Создать YouTube-компанию', en: 'Create YouTube campaign' },
-    description: { ru: 'Создавайте рекламные кампании с YouTube-видео.', en: 'Create advertiser campaigns with YouTube videos.' },
+    title: { ru: 'Создать задание YouTube', en: 'Create YouTube task' },
+    description: { ru: 'Создавайте рекламные задания с YouTube-видео.', en: 'Create advertiser tasks with YouTube videos.' },
   },
   campaigns: {
     view: 'campaigns',
-    title: { ru: 'Рекламные кампании', en: 'Advertiser campaigns' },
-    description: { ru: 'Управляйте статусом кампаний и возвратом бюджета.', en: 'Manage campaign status and budget refunds.' },
+    title: { ru: 'Рекламные задания', en: 'Advertiser tasks' },
+    description: { ru: 'Управляйте статусом заданий и возвратом бюджета.', en: 'Manage task status and budget refunds.' },
   },
   activity: {
     view: 'activity',
