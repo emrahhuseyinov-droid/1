@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     if (result.status === 'already_completed') return NextResponse.json({ error: 'You have completed all visits for this shortlink.', code: result.status }, { status: 409, headers: noStoreHeaders })
     if (result.status === 'cooldown') return NextResponse.json({ error: 'This shortlink is cooling down.', code: result.status, remainingSeconds: result.remainingSeconds }, { status: 429, headers: noStoreHeaders })
     if (result.status === 'awaiting_confirmation') {
-      return NextResponse.json({ error: 'AdsLab is still confirming a shortlink. Please wait before starting another.', code: result.status }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'A shortlink is still being verified. Please wait before starting another.', code: result.status }, { status: 409, headers: noStoreHeaders })
     }
 
     return NextResponse.json({ clickId, directLink: task.url }, { headers: noStoreHeaders })

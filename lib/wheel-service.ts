@@ -60,7 +60,7 @@ export async function startWheelSpin(guestId: string, captchaSessionId: string, 
       .limit(1)
 
     if (!captchaSession || captchaSession.status !== 'verified' || captchaSession.expiresAt <= now) {
-      throw new WheelServiceError('AdsLab has not confirmed this CAPTCHA yet.', 403, 'captcha_required')
+      throw new WheelServiceError('The CAPTCHA has not been confirmed yet.', 403, 'captcha_required')
     }
 
     const [lockedProfile] = await transaction
@@ -96,7 +96,7 @@ export async function startWheelSpin(guestId: string, captchaSessionId: string, 
       ))
       .returning({ id: wheelCaptchaSessions.id })
 
-    if (!consumedSession) throw new WheelServiceError('AdsLab has not confirmed this CAPTCHA yet.', 403, 'captcha_required')
+    if (!consumedSession) throw new WheelServiceError('The CAPTCHA has not been confirmed yet.', 403, 'captcha_required')
 
     const sectorIndex = chooseWheelSector(randomInt(0, 10_000))
     const sector = wheelSectors[sectorIndex]

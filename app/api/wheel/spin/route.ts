@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   const body: unknown = await request.json().catch(() => null)
   const captchaSessionId = isRecord(body) && typeof body.captchaSessionId === 'string' ? body.captchaSessionId : ''
   if (!uuidPattern.test(captchaSessionId)) {
-    return NextResponse.json({ error: 'Complete the AdsLab verification before spinning.' }, { status: 400, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'Complete CAPTCHA verification before spinning.' }, { status: 400, headers: noStoreHeaders })
   }
 
   try {

@@ -97,7 +97,7 @@ export function readAdsLabCaptchaChallenge(value: unknown): { solveUrl: string; 
 
 export async function fetchAdsLabCaptchaStatus(sessionId: string) {
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
-  if (!apiKey) throw new AdsLabCaptchaError('AdsLab CAPTCHA is not configured.', 503)
+  if (!apiKey) throw new AdsLabCaptchaError('CAPTCHA verification is not configured.', 503)
 
   const statusUrl = new URL('/api/v1/captcha/session-info', adsLabApiOrigin)
   statusUrl.searchParams.set('sub_id', sessionId)
@@ -110,13 +110,13 @@ export async function fetchAdsLabCaptchaStatus(sessionId: string) {
       signal: AbortSignal.timeout(8_000),
     })
   } catch {
-    throw new AdsLabCaptchaError('AdsLab verification is temporarily unavailable.', 503)
+    throw new AdsLabCaptchaError('CAPTCHA verification is temporarily unavailable.', 503)
   }
 
   const result: unknown = await response.json().catch(() => null)
-  if (!response.ok) throw new AdsLabCaptchaError('AdsLab could not verify this CAPTCHA session.', 502)
+  if (!response.ok) throw new AdsLabCaptchaError('Could not verify this CAPTCHA session.', 502)
   if (typeof result !== 'object' || result === null || Array.isArray(result)) {
-    throw new AdsLabCaptchaError('AdsLab returned an invalid verification response.', 502)
+    throw new AdsLabCaptchaError('The verification service returned an invalid response.', 502)
   }
 
   const responseRecord = result as Record<string, unknown>
@@ -124,7 +124,7 @@ export async function fetchAdsLabCaptchaStatus(sessionId: string) {
     ? responseRecord.data as Record<string, unknown>
     : responseRecord
   if (typeof session.status !== 'string') {
-    throw new AdsLabCaptchaError('AdsLab returned an invalid verification response.', 502)
+    throw new AdsLabCaptchaError('The verification service returned an invalid response.', 502)
   }
 
   return {

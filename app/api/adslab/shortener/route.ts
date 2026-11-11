@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
   const apiKey = process.env.ADSLAB_SHORTENER_API_KEY?.trim()
   if (!apiKey) {
-    return NextResponse.json({ error: 'AdsLab Shortener is not configured.', code: 'configuration_missing' }, { status: 503, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'Shortlink service is not configured.', code: 'configuration_missing' }, { status: 503, headers: noStoreHeaders })
   }
 
   const contentLength = Number(request.headers.get('content-length') ?? 0)
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     console.error('[adslab-shortener] Provider request failed.', {
       errorName: error instanceof Error ? error.name.slice(0, 64) : typeof error,
     })
-    return NextResponse.json({ error: 'AdsLab could not shorten this link.', code: 'upstream_unavailable' }, { status: 502, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'The link could not be shortened.', code: 'upstream_unavailable' }, { status: 502, headers: noStoreHeaders })
   }
 
   const result: unknown = await response.json().catch(() => null)
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
   if (!response.ok || !shortenedUrl) {
     console.error('[adslab-shortener] Provider returned an invalid response.', { status: response.status })
-    return NextResponse.json({ error: 'AdsLab could not shorten this link.', code: 'upstream_failed' }, { status: 502, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'The link could not be shortened.', code: 'upstream_failed' }, { status: 502, headers: noStoreHeaders })
   }
 
   return NextResponse.json({ shortenedUrl }, { headers: noStoreHeaders })

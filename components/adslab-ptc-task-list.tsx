@@ -215,8 +215,8 @@ export function AdsLabPtcTaskList({
     claimAttemptedRef.current = false
     postbackWaitStartedAtRef.current = null
     setMessage(isRussian
-      ? `AdsLab ещё подтверждает задание. Можно выполнять другие задания; ${task.tokenSymbol} будет зачислен автоматически после подтверждения.`
-      : `AdsLab is still confirming this task. You can continue with other tasks; ${task.tokenSymbol} will be credited automatically when confirmed.`)
+      ? `Задание ещё проверяется. Можно выполнять другие задания; ${task.tokenSymbol} будет зачислен автоматически после подтверждения.`
+      : `This task is still being verified. You can continue with other tasks; ${task.tokenSymbol} will be credited automatically when confirmed.`)
   }, [isRussian])
 
   const claimTask = useCallback(async () => {
@@ -445,7 +445,7 @@ export function AdsLabPtcTaskList({
         return rewardDifference > 0n ? 1 : rewardDifference < 0n ? -1 : 0
       })
   }, [availableOnly, searchQuery, sortBy, tasks])
-  const loadingLabel = isRussian ? 'Загружаем задания AdsLab…' : 'Loading AdsLab tasks…'
+  const loadingLabel = isRussian ? 'Загружаем задания…' : 'Loading tasks…'
 
   if (isLoading && !data) {
     return <li role="status" className="col-span-full rounded-2xl border border-slate-200/70 px-4 py-8 text-center text-xs text-slate-500 dark:border-white/[0.06] dark:text-slate-400">{loadingLabel}</li>
@@ -463,7 +463,7 @@ export function AdsLabPtcTaskList({
   }
 
   if (error && !data) {
-    return <li className="col-span-full"><p role="alert" className="rounded-2xl border border-rose-500/15 bg-rose-500/[0.06] px-4 py-3 text-xs text-rose-600 dark:text-rose-300">{isRussian ? 'Не удалось загрузить задания AdsLab. Попробуйте позже.' : 'Could not load AdsLab tasks. Please try again later.'}</p></li>
+    return <li className="col-span-full"><p role="alert" className="rounded-2xl border border-rose-500/15 bg-rose-500/[0.06] px-4 py-3 text-xs text-rose-600 dark:text-rose-300">{isRussian ? 'Не удалось загрузить задания. Попробуйте позже.' : 'Could not load tasks. Please try again later.'}</p></li>
   }
 
   return (
@@ -474,7 +474,7 @@ export function AdsLabPtcTaskList({
         <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-10 text-center">
           <span aria-hidden="true" className="mx-auto flex size-12 items-center justify-center rounded-xl bg-dashboard-accent/10 text-dashboard-accent"><Coins size={22} /></span>
           <h3 className="mt-3 text-sm font-bold">{isRussian ? 'Сейчас нет доступных PTC-заданий' : 'No PTC tasks available right now'}</h3>
-          <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-dashboard-muted">{isRussian ? 'Проверьте позже — список AdsLab обновляется автоматически.' : 'Check back later. AdsLab tasks refresh automatically.'}</p>
+          <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-dashboard-muted">{isRussian ? 'Проверьте позже — список заданий обновляется автоматически.' : 'Check back later. Tasks refresh automatically.'}</p>
         </li>
       ) : visibleTasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-8 text-center text-xs text-dashboard-muted">
@@ -489,7 +489,7 @@ export function AdsLabPtcTaskList({
           try {
             return new URL(task.url).hostname.replace(/^www\./, '')
           } catch {
-            return 'AdsLab'
+            return 'Partner'
           }
         })()
 
@@ -505,7 +505,7 @@ export function AdsLabPtcTaskList({
                 <h3 className="truncate text-sm font-extrabold tracking-tight">{task.title}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
                   <span className="inline-flex items-center gap-1"><Globe2 size={11} />{domain}</span>
-                  <span className="inline-flex items-center gap-1 text-dashboard-accent"><BadgeCheck size={11} />AdsLab</span>
+                  <span className="inline-flex items-center gap-1 text-dashboard-accent"><BadgeCheck size={11} />Partner</span>
                 </div>
                 {task.description && <p className="mt-1.5 line-clamp-1 text-[10px] leading-4 text-dashboard-muted">{task.description}</p>}
               </div>
@@ -525,7 +525,7 @@ export function AdsLabPtcTaskList({
                   {claiming
                     ? (isRussian ? 'Начисляем подтверждённую награду…' : 'Crediting your confirmed reward…')
                     : awaitingPostback
-                      ? (isRussian ? 'Ожидаем подтверждение AdsLab…' : 'Waiting for AdsLab confirmation…')
+                      ? (isRussian ? 'Ожидаем подтверждения…' : 'Waiting for confirmation…')
                       : secondsRemaining > 0
                         ? (isRussian ? `Автопроверка через ${secondsRemaining} сек.` : `Automatic check in ${secondsRemaining}s`)
                         : (isRussian ? 'Автоматически проверяем выполнение…' : 'Automatically verifying completion…')}
@@ -535,7 +535,7 @@ export function AdsLabPtcTaskList({
                   <Clock3 size={13} />{isRussian ? `Доступно через ${formatCountdown(task.cooldownRemainingSeconds)}` : `Available in ${formatCountdown(task.cooldownRemainingSeconds)}`}
                 </span>
               ) : task.awaitingConfirmation ? (
-                <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-gold/30 bg-dashboard-gold/10 px-3 py-2 text-center text-[10px] font-bold text-dashboard-gold">{isRussian ? 'Ожидаем подтверждение AdsLab для этой награды' : 'Waiting for AdsLab to confirm this reward'}</span>
+                <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-gold/30 bg-dashboard-gold/10 px-3 py-2 text-center text-[10px] font-bold text-dashboard-gold">{isRussian ? 'Ожидаем подтверждения этой награды' : 'Waiting for confirmation of this reward'}</span>
               ) : isStarting ? (
                 <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-outline bg-dashboard-surface-raised px-3 py-2 text-[10px] font-bold text-dashboard-muted">{isRussian ? 'Открываем задание…' : 'Opening task…'}</span>
               ) : task.isInProgress ? (

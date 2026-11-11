@@ -17,16 +17,16 @@ export async function GET(request: NextRequest) {
   const copy = language === 'ru'
     ? {
         title: 'Проверка CAPTCHA завершена',
-        waiting: 'AdsLab вернул сессию CAPTCHA. Проверяем её статус на сервере…',
-        invalid: 'AdsLab не вернул действительную сессию. Вернитесь к ручному крану и попробуйте снова.',
-        returned: 'AdsLab вернул сессию. Ручной кран проверяет её сейчас.',
+        waiting: 'Сессия CAPTCHA получена. Проверяем её статус на сервере…',
+        invalid: 'Не удалось получить действительную сессию. Вернитесь к ручному крану и попробуйте снова.',
+        returned: 'Сессия получена. Ручной кран проверяет её сейчас.',
         fallback: 'Вернитесь на страницу ручного крана, чтобы продолжить проверку.',
       }
     : {
         title: 'CAPTCHA verification returned',
-        waiting: 'AdsLab returned your CAPTCHA session. Checking its status with the server…',
-        invalid: 'AdsLab did not return a valid session. Return to Manual Faucet and try again.',
-        returned: 'AdsLab returned your session. Manual Faucet is verifying it now.',
+        waiting: 'Your CAPTCHA session is ready. Checking its status with the server…',
+        invalid: 'A valid session was not received. Return to Manual Faucet and try again.',
+        returned: 'Your session is ready. Manual Faucet is verifying it now.',
         fallback: 'Return to the Manual Faucet page to continue verification.',
       }
   const stateValues = request.nextUrl.searchParams.getAll('state')

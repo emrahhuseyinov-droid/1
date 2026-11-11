@@ -26,12 +26,12 @@ export async function GET(request: NextRequest) {
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Verification submitted</title></head>
 <body>
-  <p id="status">AdsLab returned your CAPTCHA session. Checking its status with the server…</p>
+  <p id="status">Your CAPTCHA session is ready. Checking its status with the server…</p>
   <script>
     const sessionId = ${serializedSessionId};
     const status = document.getElementById('status');
     if (!sessionId) {
-      status.textContent = 'AdsLab did not return a recognizable session ID. Return to the wheel and try again.';
+      status.textContent = 'A recognizable session ID was not received. Return to the wheel and try again.';
     } else {
       const message = { type: 'adslab-captcha-return', captchaSessionId: sessionId };
       let notified = false;
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         }
       } catch {}
       status.textContent = notified
-        ? 'AdsLab returned your session. The wheel page is verifying it now.'
+        ? 'Your session is ready. The wheel page is verifying it now.'
         : 'Return to the wheel page to continue verification.';
       history.replaceState(null, '', window.location.pathname);
       if (notified) window.close();

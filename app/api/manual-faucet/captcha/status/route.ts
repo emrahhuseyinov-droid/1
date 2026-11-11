@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 'pending' }, { headers: noStoreHeaders })
   } catch (error) {
     const status = error instanceof AdsLabCaptchaError ? error.status : 503
-    const message = error instanceof AdsLabCaptchaError ? error.message : 'Could not check AdsLab verification.'
+    const message = error instanceof AdsLabCaptchaError ? error.message : 'Could not check CAPTCHA verification.'
     return NextResponse.json({ error: message }, { status, headers: noStoreHeaders })
   }
 }

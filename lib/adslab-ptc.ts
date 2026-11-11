@@ -268,7 +268,7 @@ type AdsLabTaskPayload = { tasks: unknown[]; pepeUsdPrice: string; ipAddress: st
 
 async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category: AdsLabTaskCategory): Promise<AdsLabTaskPayload> {
   if (!ADSLAB_PTC_PLACEMENT_ID) {
-    throw new AdsLabPtcError('AdsLab placement ID is not configured.', 503, { stage: 'configuration_missing' })
+    throw new AdsLabPtcError('Task provider placement is not configured.', 503, { stage: 'configuration_missing' })
   }
 
   const apiKey = category === 'shortlinks'
@@ -276,8 +276,8 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     : process.env.ADSLAB_PUBLISHER_API_KEY_2?.trim() || process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
   if (!apiKey) {
     const message = category === 'shortlinks'
-      ? 'AdsLab Shortlinks API key is not configured.'
-      : 'AdsLab publisher API key is not configured.'
+      ? 'Shortlinks service is not configured.'
+      : 'Task provider is not configured.'
     throw new AdsLabPtcError(message, 503, { stage: 'configuration_missing' })
   }
 
@@ -304,7 +304,7 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     })
   } catch (error) {
     const failureType = error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'network_error'
-    throw new AdsLabPtcError('AdsLab is temporarily unavailable.', 502, {
+    throw new AdsLabPtcError('The task provider is temporarily unavailable.', 502, {
       stage: 'upstream_fetch',
       failureType,
     })
@@ -315,7 +315,7 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     console.error('[adslab-ptc] AdsLab returned a non-200 response.', {
       status: response.status,
     })
-    throw new AdsLabPtcError('AdsLab is temporarily unavailable.', 502, {
+    throw new AdsLabPtcError('The task provider is temporarily unavailable.', 502, {
       stage: 'upstream_http',
       providerStatus: response.status,
     })
@@ -328,7 +328,7 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     console.error('[adslab-ptc] AdsLab returned invalid JSON.', {
       status: response.status,
     })
-    throw new AdsLabPtcError('AdsLab returned an invalid response.', 502, {
+    throw new AdsLabPtcError('The task provider returned an invalid response.', 502, {
       stage: 'invalid_json',
       providerStatus: response.status,
     })
@@ -340,7 +340,7 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
       console.error('[adslab-ptc] AdsLab rejected the request.', {
         status: response.status,
       })
-      throw new AdsLabPtcError('AdsLab rejected the task request.', 502, {
+      throw new AdsLabPtcError('The task provider rejected the request.', 502, {
         stage: 'provider_rejected',
         providerStatus: response.status,
       })
@@ -348,7 +348,7 @@ async function fetchAdsLabTaskPayload(headers: Headers, userId: string, category
     taskPayload = payload.tasks
   }
   if (!Array.isArray(taskPayload)) {
-    throw new AdsLabPtcError('AdsLab returned an invalid response.', 502, {
+    throw new AdsLabPtcError('The task provider returned an invalid response.', 502, {
       stage: 'invalid_payload',
       providerStatus: response.status,
     })

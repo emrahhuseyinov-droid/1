@@ -17,19 +17,19 @@ const rules = [
       'A successful Daily Bonus also adds up to 1 Pepe Runner energy. Energy cannot exceed 20.00, so the amount credited may be lower when you are close to the cap or already full.',
       'Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.',
       'Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.',
-      'AdsLab task requirements and PEPE rewards are shown before you start. Rewards are credited only after verification.',
+      'Partner task requirements and PEPE rewards are shown before you start. Rewards are credited only after verification.',
       'The Wheel of Fortune shows when a free spin is available and the reward before you collect it.',
       'Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.',
     ],
   },
   {
     title: 'Manual CAPTCHA faucet',
-    description: 'Complete an AdsLab CAPTCHA to unlock a 10 PEPE claim after server-side verification.',
+    description: 'Complete a CAPTCHA to unlock a 10 PEPE claim after server-side verification.',
     icon: ShieldCheck,
     tone: 'text-cyan-200 bg-cyan-300/10 ring-cyan-200/15',
     points: [
-      'Start the challenge from Manual Faucet, complete it on AdsLab, then return to claim your PEPE.',
-      'Each claim requires a unique CAPTCHA session and is credited only after AdsLab confirms the result.',
+      'Start the challenge from Manual Faucet, complete it, then return to claim your PEPE.',
+      'Each claim requires a unique CAPTCHA session and is credited only after server-side verification.',
     ],
   },
   {
@@ -105,7 +105,7 @@ export function RulesPage() {
           </p>
           <h1 className="mt-5 max-w-3xl text-balance text-4xl font-black leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-6xl">Daily rewards. Ad tasks. Clear rules.</h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-            Learn how CAPTCHA rewards, daily HOMERO bonuses, AdsLab tasks, the Wheel of Fortune, Arcade, and PEPE withdrawals work. Check the terms before you claim or withdraw.
+            Learn how CAPTCHA rewards, daily HOMERO bonuses, partner tasks, the Wheel of Fortune, Arcade, and PEPE withdrawals work. Check the terms before you claim or withdraw.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">

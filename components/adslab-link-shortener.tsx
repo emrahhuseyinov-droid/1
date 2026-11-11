@@ -26,9 +26,9 @@ export function AdsLabLinkShortener() {
   function getRequestError(status: number, code?: string) {
     if (status === 401) return isRussian ? 'Войдите в аккаунт, чтобы сокращать ссылки.' : 'Sign in to shorten links.'
     if (status === 429) return isRussian ? 'Слишком много запросов. Попробуйте позже.' : 'Too many requests. Please try again later.'
-    if (code === 'configuration_missing') return isRussian ? 'AdsLab Shortener ещё не настроен.' : 'AdsLab Shortener is not configured yet.'
+    if (code === 'configuration_missing') return isRussian ? 'Сервис сокращения ссылок ещё не настроен.' : 'The link shortener is not configured yet.'
     if (status === 400) return isRussian ? 'Проверьте HTTPS-ссылку и псевдоним.' : 'Check the HTTPS URL and alias.'
-    return isRussian ? 'AdsLab не смог сократить ссылку. Попробуйте позже.' : 'AdsLab could not shorten this link. Please try again later.'
+    return isRussian ? 'Не удалось сократить ссылку. Попробуйте позже.' : 'Could not shorten this link. Please try again later.'
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -81,7 +81,7 @@ export function AdsLabLinkShortener() {
     <section aria-labelledby="adslab-shortener-title" className="cartoon-panel overflow-hidden rounded-[32px] border-2 border-dashboard-outline bg-[#171f40] shadow-xl shadow-indigo-950/30">
       <header className="border-b-2 border-white/10 bg-gradient-to-r from-[#252f5b] to-[#20294e] px-4 py-4 sm:px-5">
         <h2 id="adslab-shortener-title" className="flex items-center gap-2 text-sm font-extrabold text-white"><Link2 aria-hidden="true" />{isRussian ? 'Сократить ссылку' : 'Shorten a link'}</h2>
-        <p className="mt-1 text-[10px] leading-5 text-dashboard-muted">{isRussian ? 'Создайте короткую ссылку AdsLab. Ключ API хранится только на сервере.' : 'Create an AdsLab short link. The API key stays on the server.'}</p>
+        <p className="mt-1 text-[10px] leading-5 text-dashboard-muted">{isRussian ? 'Создайте короткую ссылку. Ключ API хранится только на сервере.' : 'Create a short link. The API key stays on the server.'}</p>
       </header>
       <div className="p-4 sm:p-5">
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>

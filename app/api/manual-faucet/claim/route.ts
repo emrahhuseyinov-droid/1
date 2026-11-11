@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const captcha = await fetchAdsLabCaptchaStatus(state.sessionId)
     if (!captcha.success || captcha.status !== 'solved') {
-      return NextResponse.json({ error: 'AdsLab has not confirmed the CAPTCHA yet.' }, { status: 403, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'The CAPTCHA has not been confirmed yet.' }, { status: 403, headers: noStoreHeaders })
     }
 
     const result = await claimManualFaucet(account.profile.id, state.sessionId)

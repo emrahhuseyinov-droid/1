@@ -148,7 +148,7 @@ export function WheelOfFortunePage() {
       setCaptchaChallengeToken(result.challengeToken)
       setCaptchaUrl(result.solveUrl)
     } catch (captchaError) {
-      setMessage(captchaError instanceof Error ? captchaError.message : 'Could not start the AdsLab verification.')
+      setMessage(captchaError instanceof Error ? captchaError.message : 'Could not start CAPTCHA verification.')
     } finally {
       setBusy(false)
     }
@@ -198,13 +198,13 @@ export function WheelOfFortunePage() {
     if (captchaPollRef.current === verifiedCaptchaSessionId) return
     captchaPollRef.current = verifiedCaptchaSessionId
     setCaptchaWaiting(true)
-    setMessage('Checking the completed AdsLab session…')
+    setMessage('Checking the completed CAPTCHA session…')
 
     try {
       for (let attempt = 0; attempt < 10; attempt += 1) {
         const response = await fetch(`/api/wheel/captcha/status?state=${encodeURIComponent(verifiedCaptchaSessionId)}`, { cache: 'no-store' })
         const result = await response.json().catch(() => null) as { status?: string; error?: string } | null
-        if (!response.ok) throw new Error(result?.error ?? 'Could not check AdsLab verification.')
+        if (!response.ok) throw new Error(result?.error ?? 'Could not check CAPTCHA verification.')
 
         if (result?.status === 'verified') {
           setMessage(null)
@@ -212,7 +212,7 @@ export function WheelOfFortunePage() {
           return
         }
         if (result?.status === 'failed' || result?.status === 'expired') {
-          setMessage('AdsLab did not confirm the CAPTCHA. Please try again.')
+          setMessage('The CAPTCHA was not confirmed. Please try again.')
           return
         }
         if (result?.status === 'consumed') {
@@ -224,9 +224,9 @@ export function WheelOfFortunePage() {
         await new Promise((resolve) => window.setTimeout(resolve, 1500))
       }
 
-      setMessage('AdsLab has not confirmed the CAPTCHA yet. Please try again.')
+      setMessage('The CAPTCHA is still being verified. Please try again in a moment.')
     } catch (captchaError) {
-      setMessage(captchaError instanceof Error ? captchaError.message : 'Could not check AdsLab verification.')
+      setMessage(captchaError instanceof Error ? captchaError.message : 'Could not check CAPTCHA verification.')
     } finally {
       setCaptchaWaiting(false)
       setCaptchaUrl(null)
@@ -238,7 +238,7 @@ export function WheelOfFortunePage() {
 
   function handleCaptchaReturn(returnedSessionId: string) {
     if (!captchaSessionId || returnedSessionId !== captchaSessionId) {
-      setMessage('AdsLab returned an unexpected session. Please start the verification again.')
+      setMessage('Verification returned an unexpected session. Please start again.')
       return
     }
     setCaptchaUrl(null)
@@ -342,7 +342,7 @@ export function WheelOfFortunePage() {
 
             <div className="relative z-10 mt-1 w-full max-w-sm px-1 text-center">
               <button type="button" onClick={() => void openCaptcha()} disabled={!canSpin || isLoading} className="wheel-spin-button inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-black text-[#2f2242] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-55">
-                {spinning ? 'Spinning…' : captchaWaiting ? 'Waiting for AdsLab…' : busy ? 'Please wait…' : cooldownRemainingMs > 0 ? <>Next free spin in <span className="font-mono tabular-nums">{formatRemaining(cooldownRemainingMs)}</span></> : 'SPIN THE WHEEL · FREE'}
+                {spinning ? 'Spinning…' : captchaWaiting ? 'Waiting for verification…' : busy ? 'Please wait…' : cooldownRemainingMs > 0 ? <>Next free spin in <span className="font-mono tabular-nums">{formatRemaining(cooldownRemainingMs)}</span></> : 'SPIN THE WHEEL · FREE'}
               </button>
               <p className="mt-3 inline-flex items-center justify-center gap-1.5 text-[10px] font-semibold text-white/60"><Clock3 size={12} aria-hidden="true" /> One spin every 2 hours</p>
             </div>

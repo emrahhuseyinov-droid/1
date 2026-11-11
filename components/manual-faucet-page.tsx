@@ -99,7 +99,7 @@ export function ManualFaucetPage() {
       setCaptchaUrl(result.solveUrl)
       setCaptchaVerified(false)
     } catch (captchaError) {
-      setActionError(captchaError instanceof Error ? captchaError.message : 'Could not start AdsLab CAPTCHA.')
+      setActionError(captchaError instanceof Error ? captchaError.message : 'Could not start CAPTCHA.')
     } finally {
       setBusy(false)
     }
@@ -110,14 +110,14 @@ export function ManualFaucetPage() {
     captchaPollRef.current = stateToken
     setCheckingCaptcha(true)
     setActionError(null)
-    setMessage('Checking the completed AdsLab CAPTCHA…')
+    setMessage('Checking the completed CAPTCHA…')
 
     try {
       for (let attempt = 0; attempt < 15; attempt += 1) {
         const query = new URLSearchParams({ state: stateToken })
         const response = await fetch(`/api/manual-faucet/captcha/status?${query.toString()}`, { cache: 'no-store' })
         const result = await response.json().catch(() => null) as { status?: string; error?: string } | null
-        if (!response.ok) throw new Error(result?.error ?? 'Could not check AdsLab verification.')
+        if (!response.ok) throw new Error(result?.error ?? 'Could not check CAPTCHA verification.')
 
         if (result?.status === 'verified') {
           setCaptchaVerified(true)
@@ -127,16 +127,16 @@ export function ManualFaucetPage() {
         if (result?.status === 'failed' || result?.status === 'expired') {
           setCaptchaStateToken(null)
           setCaptchaSessionId(null)
-          setActionError('AdsLab did not confirm the CAPTCHA. Start a new verification to try again.')
+          setActionError('CAPTCHA was not confirmed. Start a new verification to try again.')
           return
         }
 
         await new Promise((resolve) => window.setTimeout(resolve, 1500))
       }
 
-      setMessage('AdsLab has not confirmed the CAPTCHA yet. You can check again in a moment.')
+      setMessage('The CAPTCHA is still being verified. You can check again in a moment.')
     } catch (captchaError) {
-      setActionError(captchaError instanceof Error ? captchaError.message : 'Could not check AdsLab verification.')
+      setActionError(captchaError instanceof Error ? captchaError.message : 'Could not check CAPTCHA verification.')
     } finally {
       setCheckingCaptcha(false)
       if (captchaPollRef.current === stateToken) captchaPollRef.current = null
@@ -145,7 +145,7 @@ export function ManualFaucetPage() {
 
   function handleCaptchaReturn(returnedSessionId: string) {
     if (!captchaSessionId || returnedSessionId !== captchaSessionId || !captchaStateToken) {
-      setActionError('AdsLab returned an unexpected session. Start the verification again.')
+      setActionError('Verification returned an unexpected session. Start again.')
       return
     }
 
@@ -192,7 +192,7 @@ export function ManualFaucetPage() {
       <header className="space-y-1">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-cyan-300">Earning features</p>
         <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">Manual Faucet</h1>
-        <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim free PEPE after completing AdsLab&apos;s secure, monetized CAPTCHA.</p>
+        <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim free PEPE after completing a secure CAPTCHA.</p>
       </header>
 
       <section aria-label="Faucet reward and claim limit" className="grid gap-4 md:grid-cols-2">
@@ -219,20 +219,20 @@ export function ManualFaucetPage() {
         <div className="mx-auto flex max-w-xl flex-col items-center text-center">
           <span className="grid size-14 place-items-center rounded-2xl bg-violet-400/10 text-violet-200"><ShieldCheck aria-hidden="true" /></span>
           <h2 id="faucet-captcha-title" className="mt-4 text-lg font-black sm:text-xl">Secure human verification</h2>
-          <p className="mt-2 max-w-lg text-xs leading-5 text-slate-400 sm:text-sm">Start the AdsLab challenge in a separate window, solve it, then return here. The claim stays locked until AdsLab confirms your result.</p>
+          <p className="mt-2 max-w-lg text-xs leading-5 text-slate-400 sm:text-sm">Start the CAPTCHA challenge in a separate window, solve it, then return here. The claim stays locked until verification is complete.</p>
 
           <button
             type="button"
             onClick={startVerification}
             disabled={!canClaim || busy || checkingCaptcha || captchaVerified || isLoading}
-            aria-label={captchaVerified ? 'CAPTCHA verified' : 'Start AdsLab CAPTCHA verification'}
+            aria-label={captchaVerified ? 'CAPTCHA verified' : 'Start CAPTCHA verification'}
             className="mt-6 flex min-h-16 w-full max-w-md items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-left transition hover:border-cyan-200/40 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 disabled:cursor-not-allowed disabled:opacity-55"
           >
             <span aria-hidden="true" className={`grid size-6 shrink-0 place-items-center rounded-md border ${captchaVerified ? 'border-emerald-300 bg-emerald-300 text-[#09130e]' : 'border-cyan-300/80 bg-transparent text-transparent'}`}>
               {captchaVerified && <Check size={15} strokeWidth={3} />}
             </span>
             <span className="flex-1 text-xs font-extrabold sm:text-sm">{busy ? 'Starting verification…' : captchaVerified ? 'CAPTCHA verified' : 'I am human'}</span>
-            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-cyan-200">AdsLab</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-cyan-200">CAPTCHA</span>
           </button>
 
           {captchaStateToken && !captchaVerified && (
@@ -243,7 +243,7 @@ export function ManualFaucetPage() {
               className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 text-[11px] font-bold text-cyan-200 transition hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 disabled:cursor-wait disabled:opacity-60"
             >
               {checkingCaptcha ? <LoaderCircle aria-hidden="true" className="animate-spin" size={14} /> : <RefreshCw aria-hidden="true" size={14} />}
-              {checkingCaptcha ? 'Checking with AdsLab…' : 'Check CAPTCHA status'}
+              {checkingCaptcha ? 'Checking verification…' : 'Check CAPTCHA status'}
             </button>
           )}
 
@@ -276,7 +276,7 @@ export function ManualFaucetPage() {
 
       <div className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-center text-[10px] leading-5 text-slate-500">
         <ShieldCheck aria-hidden="true" size={14} className="shrink-0" />
-        <p>CAPTCHA results are checked directly with AdsLab before any PEPE is credited.</p>
+        <p>CAPTCHA results are verified by the server before any PEPE is credited.</p>
       </div>
 
       <AdsLabCaptchaModal

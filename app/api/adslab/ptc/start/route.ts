@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
     if (result.status === 'cooldown') return NextResponse.json({ error: 'This task is cooling down.', code: result.status, remainingSeconds: result.remainingSeconds }, { status: 429, headers: noStoreHeaders })
     if (result.status === 'busy') return NextResponse.json({ error: 'Finish or resume your current partner task first.', code: 'task_in_progress', remainingSeconds: result.remainingSeconds }, { status: 409, headers: noStoreHeaders })
     if (result.status === 'awaiting_confirmation') {
-      return NextResponse.json({ error: 'AdsLab is still confirming this task. You can continue with other tasks.', code: result.status }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'This task is still being verified. You can continue with other tasks.', code: result.status }, { status: 409, headers: noStoreHeaders })
     }
 
     return NextResponse.json({
