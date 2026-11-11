@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { dashboardSectionPaths, getDashboardSectionFromPath, type DashboardSection } from '@/lib/dashboard-sections'
@@ -9,7 +10,7 @@ import { HomeroTokenLogo } from '@/components/homero-token-logo'
 import { PepeCasaAvatar } from '@/components/pepecasa-avatar'
 import { PepeCasaLogo } from '@/components/pepe-casa-logo'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { LocalizedTree } from '@/components/site-language-provider'
+import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { TokenLogo } from '@/components/token-logo'
 import { SwapPage } from '@/components/swap-page'
 import { DashboardPage } from '@/components/dashboard-page'
@@ -18,7 +19,7 @@ import { PromoCodePage } from '@/components/promo-code-page'
 import { ReferralsPage } from '@/components/referrals-page'
 import { ViewAdsPage } from '@/components/view-ads-page'
 import { YoutubeAdsPage } from '@/components/youtube-ads-page'
-import { AdvertiserPage } from '@/components/advertiser-page'
+import { AdvertiserPage, type AdvertiserPageView } from '@/components/advertiser-page'
 import { ShortlinksPage } from '@/components/shortlinks-page'
 import { AdsLabOfferwallPage } from '@/components/adslab-offerwall-page'
 import { ArcadePage } from '@/components/arcade-page'
@@ -59,7 +60,30 @@ import {
 
 const atomicUnitsPerToken = 100_000_000
 
+type AdvertiserWalletHeaderSnapshot = { advertiserBalanceAtomic: string }
 type NavigationLink = { label: string; icon: LucideIcon; badge?: string; section?: DashboardSection; href?: string }
+
+async function getAdvertiserWalletHeader(url: string): Promise<AdvertiserWalletHeaderSnapshot> {
+  const response = await fetch(url, { cache: 'no-store' })
+  const payload = await response.json().catch(() => null) as (AdvertiserWalletHeaderSnapshot & { error?: string }) | null
+  if (!response.ok || typeof payload?.advertiserBalanceAtomic !== 'string') {
+    throw new Error(payload?.error ?? 'Could not load advertiser balance.')
+  }
+  return { advertiserBalanceAtomic: payload.advertiserBalanceAtomic }
+}
+
+function formatAtomicBalance(value: string | undefined, language: 'en' | 'ru') {
+  if (value === undefined) return '—'
+  try {
+    const atomic = BigInt(value)
+    const absolute = atomic < 0n ? -atomic : atomic
+    const whole = new Intl.NumberFormat(language === 'ru' ? 'ru-RU' : 'en-US').format(absolute / BigInt(atomicUnitsPerToken))
+    const fraction = (absolute % BigInt(atomicUnitsPerToken)).toString().padStart(8, '0').replace(/0+$/, '')
+    return `${atomic < 0n ? '−' : ''}${whole}${fraction ? `${language === 'ru' ? ',' : '.'}${fraction}` : ''}`
+  } catch {
+    return '—'
+  }
+}
 type NavigationGroup = { title: string; links: NavigationLink[] }
 
 const publisherNavGroups: NavigationGroup[] = [
@@ -111,10 +135,10 @@ const advertiserNavGroups: NavigationGroup[] = [
     title: 'Advertiser',
     links: [
       { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser' },
-      { label: 'Fund wallet', icon: Wallet, section: 'Advertiser', href: '/advertiser#advertiser-fund' },
-      { label: 'Create campaign', icon: Gift, section: 'Advertiser', href: '/advertiser#advertiser-create' },
-      { label: 'Advertiser campaigns', icon: BarChart3, section: 'Advertiser', href: '/advertiser#advertiser-campaigns' },
-      { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser#advertiser-activity' },
+      { label: 'Fund wallet', icon: ArrowLeftRight, section: 'Advertiser', href: '/advertiser/fund' },
+      { label: 'Create campaign', icon: Gift, section: 'Advertiser', href: '/advertiser/create' },
+      { label: 'Advertiser campaigns', icon: BarChart3, section: 'Advertiser', href: '/advertiser/campaigns' },
+      { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser/activity' },
       { label: 'Dashboard', icon: House, section: 'Dashboard' },
     ],
   },
@@ -123,16 +147,23 @@ const advertiserNavGroups: NavigationGroup[] = [
 const navItemClassName = 'group relative isolate flex w-full items-center overflow-hidden rounded-2xl border border-transparent px-3 py-2.5 text-left text-xs font-bold transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-cyan-200/30 hover:bg-white/[0.07] hover:shadow-lg hover:shadow-indigo-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 motion-reduce:transition-none motion-reduce:hover:transform-none'
 const navEdgeClassName = 'pointer-events-none absolute inset-y-2 w-1 rounded-full bg-gradient-to-b from-cyan-200 to-yellow-200 opacity-0 shadow-[0_0_12px_rgba(99,216,255,0.75)] transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none'
 
-export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacementId, email, name, initialAvatarUrl, referralOverview, promoClaims, promoActivity, dashboardOverview }: { initialSection: DashboardSection; guestProfileId: string; adslabPlacementId: string; email: string; name: string; initialAvatarUrl: ProfileAvatarSrc; referralOverview: ReferralOverview; promoClaims: PromoClaim[]; promoActivity: PromoActivityEligibility; dashboardOverview: DashboardOverview }) {
+export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacementId, email, name, initialAvatarUrl, referralOverview, promoClaims, promoActivity, dashboardOverview, advertiserView }: { initialSection: DashboardSection; guestProfileId: string; adslabPlacementId: string; email: string; name: string; initialAvatarUrl: ProfileAvatarSrc; referralOverview: ReferralOverview; promoClaims: PromoClaim[]; promoActivity: PromoActivityEligibility; dashboardOverview: DashboardOverview; advertiserView?: AdvertiserPageView }) {
   const router = useRouter()
   const pathname = usePathname()
   const activeSection = getDashboardSectionFromPath(pathname) ?? initialSection
   const isAdvertiserMode = activeSection === 'Advertiser'
+  const { language } = useSiteLanguage()
+  const isRussian = language === 'ru'
+  const advertiserWallet = useSWR<AdvertiserWalletHeaderSnapshot>(
+    isAdvertiserMode ? '/api/advertiser/wallet' : null,
+    getAdvertiserWalletHeader,
+    { revalidateOnFocus: true, refreshInterval: 30_000 },
+  )
   const navGroups = isAdvertiserMode ? advertiserNavGroups : publisherNavGroups
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [coinMenuOpen, setCoinMenuOpen] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || DEFAULT_PROFILE_AVATAR)
-  const [activeCoin, setActiveCoin] = useState<WalletCoinSymbol>('HOMERO')
+  const [activeCoin, setActiveCoin] = useState<WalletCoinSymbol>('PEPE')
   const balancesAtomic = dashboardOverview.balancesAtomic
   const walletBalances: Record<WalletCoinSymbol, number> = {
     HOMERO: balancesAtomic.HOMERO / atomicUnitsPerToken,
@@ -204,7 +235,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
                   const { label, icon: Icon } = link
                   const badge = link.badge
                   const sectionKey = link.section ?? label as DashboardSection
-                  const active = !link.href && activeSection === sectionKey
+                  const active = link.href ? pathname === link.href : activeSection === sectionKey && (sectionKey !== 'Advertiser' || pathname === dashboardSectionPaths.Advertiser)
                   return <Link
                     key={label}
                     href={link.href ?? dashboardSectionPaths[sectionKey as DashboardSection]}
@@ -245,6 +276,17 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
           {isAdvertiserMode && <p className="hidden text-xs font-extrabold text-slate-500 dark:text-slate-300 sm:block">Advertiser workspace</p>}
         </div>
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          {isAdvertiserMode && <Link
+            href="/advertiser/fund"
+            aria-label={isRussian ? 'Баланс рекламодателя PEPE — пополнить кошелёк' : 'Advertiser PEPE balance — open wallet top-up'}
+            title={isRussian ? 'Пополнить рекламный кошелёк PEPE' : 'Fund advertiser wallet with PEPE'}
+            className="inline-flex min-w-0 max-w-[42vw] items-center gap-1.5 rounded-2xl border-2 border-emerald-300/30 bg-emerald-400/10 px-2.5 py-2 font-mono text-[10px] font-extrabold text-white shadow-sm shadow-emerald-950/10 transition hover:bg-emerald-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 sm:max-w-56 sm:gap-2 sm:text-xs"
+          >
+            <TokenLogo symbol="PEPE" size={20} />
+            <span className="sr-only">{isRussian ? 'Баланс рекламодателя' : 'Advertiser balance'}</span>
+            <span className="min-w-0 truncate">{formatAtomicBalance(advertiserWallet.data?.advertiserBalanceAtomic, language)}</span>
+            <span className="shrink-0 text-[9px] font-black text-emerald-100/75">PEPE</span>
+          </Link>}
           {!isAdvertiserMode && <div className="relative">
             <button type="button" onClick={() => setCoinMenuOpen((open) => !open)} aria-label="Select active coin" aria-expanded={coinMenuOpen} className="flex w-[clamp(7rem,35vw,14rem)] min-w-0 items-center justify-between gap-2 rounded-2xl border-2 border-violet-200 bg-white px-2.5 py-2 shadow-sm shadow-violet-950/5 dark:border-violet-300/25 dark:bg-[#222d58] sm:w-56">
               <span className="flex min-w-0 items-center gap-2">
@@ -267,7 +309,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} placementId={adslabPlacementId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} placementId={adslabPlacementId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>
