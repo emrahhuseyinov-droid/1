@@ -234,7 +234,7 @@ export function AdsLabPtcTaskList({
     setErrorMessage(null)
 
     try {
-      const response = await fetch('/api/adslab/ptc/claim', {
+      const response = await fetch(getClaimEndpoint(activeTask.key), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clickId }),
@@ -320,7 +320,7 @@ export function AdsLabPtcTaskList({
         try {
           const results = await Promise.all(deferredClaims.map(async (claim) => {
             try {
-              const response = await fetch('/api/adslab/ptc/claim', {
+              const response = await fetch(getClaimEndpoint(claim.taskKey), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ clickId: claim.clickId }),
