@@ -59,7 +59,7 @@ import {
 
 const atomicUnitsPerToken = 100_000_000
 
-type NavigationLink = { label: string; icon: LucideIcon; badge?: string; section?: DashboardSection }
+type NavigationLink = { label: string; icon: LucideIcon; badge?: string; section?: DashboardSection; href?: string }
 type NavigationGroup = { title: string; links: NavigationLink[] }
 
 const publisherNavGroups: NavigationGroup[] = [
@@ -106,6 +106,20 @@ const publisherNavGroups: NavigationGroup[] = [
   },
 ]
 
+const advertiserNavGroups: NavigationGroup[] = [
+  {
+    title: 'Advertiser',
+    links: [
+      { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser' },
+      { label: 'Fund wallet', icon: Wallet, section: 'Advertiser', href: '/advertiser#advertiser-fund' },
+      { label: 'Create campaign', icon: Gift, section: 'Advertiser', href: '/advertiser#advertiser-create' },
+      { label: 'Advertiser campaigns', icon: BarChart3, section: 'Advertiser', href: '/advertiser#advertiser-campaigns' },
+      { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser#advertiser-activity' },
+      { label: 'Dashboard', icon: House, section: 'Dashboard' },
+    ],
+  },
+]
+
 const navItemClassName = 'group relative isolate flex w-full items-center overflow-hidden rounded-2xl border border-transparent px-3 py-2.5 text-left text-xs font-bold transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-cyan-200/30 hover:bg-white/[0.07] hover:shadow-lg hover:shadow-indigo-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 motion-reduce:transition-none motion-reduce:hover:transform-none'
 const navEdgeClassName = 'pointer-events-none absolute inset-y-2 w-1 rounded-full bg-gradient-to-b from-cyan-200 to-yellow-200 opacity-0 shadow-[0_0_12px_rgba(99,216,255,0.75)] transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none'
 
@@ -113,7 +127,8 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
   const router = useRouter()
   const pathname = usePathname()
   const activeSection = getDashboardSectionFromPath(pathname) ?? initialSection
-  const navGroups = publisherNavGroups
+  const isAdvertiserMode = activeSection === 'Advertiser'
+  const navGroups = isAdvertiserMode ? advertiserNavGroups : publisherNavGroups
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [coinMenuOpen, setCoinMenuOpen] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || DEFAULT_PROFILE_AVATAR)
@@ -170,7 +185,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
       )}
 
       <aside
-        aria-label="Main navigation"
+        aria-label={isAdvertiserMode ? 'Advertiser navigation' : 'Main navigation'}
         className={`fixed inset-y-0 left-0 z-50 flex w-[286px] flex-col border-r-2 border-violet-200/70 bg-[#fffaf0] shadow-[8px_0_35px_rgba(36,28,94,0.08)] transition-transform duration-300 dark:border-violet-300/20 dark:bg-[#151b3b] dark:shadow-[8px_0_35px_rgba(3,8,30,0.24)] ${drawerOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
         <div className="flex items-center justify-between border-b border-violet-200/70 px-5 py-4 dark:border-violet-300/15">
@@ -189,10 +204,10 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
                   const { label, icon: Icon } = link
                   const badge = link.badge
                   const sectionKey = link.section ?? label as DashboardSection
-                  const active = activeSection === sectionKey
+                  const active = !link.href && activeSection === sectionKey
                   return <Link
                     key={label}
-                    href={dashboardSectionPaths[sectionKey as DashboardSection]}
+                    href={link.href ?? dashboardSectionPaths[sectionKey as DashboardSection]}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => { setDrawerOpen(false); setCoinMenuOpen(false) }}
                     className={`${navItemClassName} justify-between ${active ? 'border-cyan-100/40 bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500 font-black text-white shadow-lg shadow-indigo-950/30' : 'text-slate-600 hover:text-violet-700 dark:text-slate-300 dark:hover:text-white'}`}
@@ -206,14 +221,14 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
               </div>
             </section>
           ))}
-          <section>
+          {!isAdvertiserMode && <section>
             <h2 className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.14em] text-violet-600 dark:text-cyan-300">Support</h2>
             <Link href={dashboardSectionPaths['Contact support']} aria-current={activeSection === 'Contact support' ? 'page' : undefined} onClick={() => setDrawerOpen(false)} className={`${navItemClassName} justify-start gap-3 ${activeSection === 'Contact support' ? 'border-l-[3px] border-blue-500 bg-blue-50 font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400'}`}>
               <span aria-hidden="true" className={`${navEdgeClassName} left-0.5`} />
               <span aria-hidden="true" className={`${navEdgeClassName} right-0.5`} />
               <span className="relative flex items-center gap-3"><CircleHelp size={15} />Contact support</span>
             </Link>
-          </section>
+          </section>}
         </nav>
 
         <div className="flex items-center gap-3 border-t-2 border-violet-200/70 bg-[#fff3d9] px-4 py-4 dark:border-violet-300/15 dark:bg-[#111833]">
@@ -227,9 +242,10 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
       <header className="sticky top-0 z-30 flex h-[62px] min-w-0 items-center justify-between border-b-2 border-violet-200/70 bg-[#fffaf0]/90 px-4 backdrop-blur-xl dark:border-violet-300/15 dark:bg-[#141b3b]/90 sm:px-6">
         <div className="flex shrink-0 items-center gap-3">
           <button type="button" aria-label="Open navigation menu" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"><Menu size={19} /></button>
+          {isAdvertiserMode && <p className="hidden text-xs font-extrabold text-slate-500 dark:text-slate-300 sm:block">Advertiser workspace</p>}
         </div>
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <div className="relative">
+          {!isAdvertiserMode && <div className="relative">
             <button type="button" onClick={() => setCoinMenuOpen((open) => !open)} aria-label="Select active coin" aria-expanded={coinMenuOpen} className="flex w-[clamp(7rem,35vw,14rem)] min-w-0 items-center justify-between gap-2 rounded-2xl border-2 border-violet-200 bg-white px-2.5 py-2 shadow-sm shadow-violet-950/5 dark:border-violet-300/25 dark:bg-[#222d58] sm:w-56">
               <span className="flex min-w-0 items-center gap-2">
                 <TokenLogo symbol={activeCoin} size={20} />
@@ -244,7 +260,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
                 <span className="font-mono text-[9px] font-bold">{walletBalances[asset.symbol].toFixed(8)}</span>
               </button>)}
             </div>}
-          </div>
+          </div>}
           <LanguageSwitcher />
           <button type="button" aria-label="Open account settings" onClick={() => navigateTo('Security & Wallets')} className="inline-flex rounded-full transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"><PepeCasaAvatar size={40} src={avatarUrl} /></button>
         </div>
