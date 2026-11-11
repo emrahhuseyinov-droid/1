@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { ArrowUpRight, BadgeCheck, Clock3, Coins, Eye, Globe2, Timer, Zap } from 'lucide-react'
+import { ArrowUpRight, BadgeCheck, BatteryCharging, Clock3, Coins, Eye, Globe2, Timer } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { ARCADE_PTC_ENERGY_REWARD } from '@/lib/arcade-gameplay'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -513,7 +513,7 @@ export function AdsLabPtcTaskList({
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-dashboard-outline pt-3 text-[10px] font-bold">
               <span className="inline-flex items-center gap-1.5 text-dashboard-gold"><Coins size={13} />{formatTokenAtomic(task.rewardAtomic)} {task.tokenSymbol}</span>
-              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300" title={isRussian ? 'Может быть уменьшена из-за дневного лимита или лимита запаса энергии.' : 'May be reduced by the daily or storage energy cap.'}><Zap size={12} />{isRussian ? `До +${ARCADE_PTC_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии Arcade` : `Up to +${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} Arcade energy`}</span>
+              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300" title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={12} aria-hidden="true" />{isRussian ? `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии для бегуна Pepe` : `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span>
               <span className="inline-flex items-center gap-1.5 text-dashboard-muted"><Clock3 size={12} />{task.durationSeconds} {isRussian ? 'сек.' : 'sec'}</span>
               <span className="text-dashboard-muted">{isRussian ? `Осталось: ${task.visitsRemaining}` : `Visits left: ${task.visitsRemaining}`}</span>
             </div>

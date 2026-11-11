@@ -4,7 +4,6 @@ import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react
 import {
   ARCADE_RUNNER_FRAME_MS,
   ARCADE_HOMERO_COIN_INTERVAL_M,
-  ARCADE_HOMERO_COIN_MAX_REWARDS,
   ARCADE_HOMERO_COIN_REWARD,
   ARCADE_TRAIN_INTERVAL_SECONDS,
   ARCADE_TRAIN_PASS_SECONDS,
@@ -480,7 +479,7 @@ export function PepeRunner({
       width={ARCADE_RUNNER_WIDTH}
       height={ARCADE_RUNNER_HEIGHT}
       role="img"
-      aria-label={runId ? homeroCoinsEnabled ? `Pepe running through the nighttime pixel-art city. Jump to collect ${ARCADE_HOMERO_COIN_REWARD} HOMERO every ${ARCADE_HOMERO_COIN_INTERVAL_M} meters, with ${homeroCoinsRemaining} rewards remaining before the ${ARCADE_HOMERO_COIN_MAX_REWARDS} HOMERO limit.` : 'Pepe running through the nighttime pixel-art city. Tap or click to jump over obstacles.' : 'Pepe standing at the nighttime pixel-art city starting line.'}
+      aria-label={runId ? homeroCoinsEnabled ? `Pepe running through the nighttime pixel-art city. Jump to collect ${ARCADE_HOMERO_COIN_REWARD} HOMERO every ${ARCADE_HOMERO_COIN_INTERVAL_M} meters.` : 'Pepe running through the nighttime pixel-art city. Tap or click to jump over obstacles.' : 'Pepe standing at the nighttime pixel-art city starting line.'}
       onPointerDown={handlePointerDown}
       className="block h-full w-full touch-manipulation [image-rendering:pixelated]"
     />

@@ -286,7 +286,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-200/10 text-amber-100">
                 <Gift size={17} aria-hidden="true" />
               </span>
-              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Claiming the daily HOMERO bonus also adds up to 1 Arcade energy, subject to the energy cap.'}</p>
+              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Claiming the daily HOMERO bonus also adds up to 1 Pepe Runner energy, subject to the energy cap.'}</p>
             </div>
           </div>
         </div>
