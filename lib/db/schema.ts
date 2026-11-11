@@ -231,6 +231,23 @@ export const ptcClicks = pgTable('ptc_clicks', {
 export type AdvertiserCampaignType = 'ptc' | 'youtube'
 export type AdvertiserCampaignStatus = 'active' | 'paused' | 'completed' | 'cancelled'
 
+export type YoutubeAdViewStatus = 'pending' | 'completed'
+
+export const youtubeAdViews = pgTable('earnpepe_youtube_ad_views', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  guestId: uuid('guest_id').notNull(),
+  campaignId: uuid('campaign_id').notNull(),
+  status: text('status').$type<YoutubeAdViewStatus>().notNull().default('pending'),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+}, (table) => [
+  unique('earnpepe_youtube_ad_views_guest_campaign_unique').on(table.guestId, table.campaignId),
+  index('earnpepe_youtube_ad_views_guest_status_expiry_idx').on(table.guestId, table.status, table.expiresAt),
+  check('earnpepe_youtube_ad_views_state_check', sql`(${table.status} = 'pending' and ${table.completedAt} is null) or (${table.status} = 'completed' and ${table.completedAt} is not null)`),
+  check('earnpepe_youtube_ad_views_expiry_check', sql`${table.expiresAt} > ${table.startedAt}`),
+])
+
 export const advertiserCampaigns = pgTable('earnpepe_advertiser_campaigns', {
   id: uuid('id').primaryKey().defaultRandom(),
   advertiserId: uuid('advertiser_id').notNull(),

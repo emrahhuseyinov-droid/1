@@ -17,6 +17,7 @@ import { WalletPage } from '@/components/wallet-page'
 import { PromoCodePage } from '@/components/promo-code-page'
 import { ReferralsPage } from '@/components/referrals-page'
 import { ViewAdsPage } from '@/components/view-ads-page'
+import { AdvertiserPage } from '@/components/advertiser-page'
 import { ShortlinksPage } from '@/components/shortlinks-page'
 import { AdsLabOfferwallPage } from '@/components/adslab-offerwall-page'
 import { ArcadePage } from '@/components/arcade-page'
@@ -25,6 +26,7 @@ import { ArcadeWeeklyLeaderboardPage } from '@/components/arcade-weekly-leaderbo
 import { WithdrawPage } from '@/components/withdraw-page'
 import { ManualFaucetPage } from '@/components/manual-faucet-page'
 import { authClient } from '@/lib/auth-client'
+import { RewardNotificationCenter } from '@/components/reward-notification-center'
 import type { DashboardOverview } from '@/lib/dashboard-types'
 import { walletAssets, type WalletCoinSymbol } from '@/lib/wallet-assets'
 import type { PromoActivityEligibility, PromoClaim } from '@/lib/promo-types'
@@ -35,6 +37,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   Link2,
+  Megaphone,
   ChevronDown,
   CircleHelp,
   Dices,
@@ -77,6 +80,12 @@ const publisherNavGroups: NavigationGroup[] = [
       { label: 'PTC Ads', icon: BarChart3, section: 'View Ads' },
       { label: 'Shortlinks', icon: Link2 },
       { label: 'Offerwall', icon: Gift },
+    ],
+  },
+  {
+    title: 'Advertiser',
+    links: [
+      { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser' },
     ],
   },
   {
@@ -239,7 +248,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} placementId={adslabPlacementId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} placementId={adslabPlacementId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>
@@ -253,6 +262,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
         </div>
       </div>
 
+      <RewardNotificationCenter />
       {notice && <div role="status" className="fixed bottom-5 left-1/2 z-[70] -translate-x-1/2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-xs font-semibold text-white shadow-xl"><span className="inline-flex items-center gap-1.5">{notice.includes('HOMERO') && <HomeroTokenLogo size={14} />}{notice}</span></div>}
 
 

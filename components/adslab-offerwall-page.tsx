@@ -14,7 +14,7 @@ export function AdsLabOfferwallPage({ userId, placementId }: { userId: string; p
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Earn PEPE</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">Offerwall</h1>
           <p className="mt-2 max-w-2xl text-xs leading-6 text-slate-500 dark:text-slate-400 sm:text-sm">
-            Browse available offers and follow the instructions shown. Verified rewards are released after a one-day review period.
+            Browse available offers and follow the instructions shown. Rewards are added to your balance after AdsLab confirms completion.
           </p>
         </header>
 

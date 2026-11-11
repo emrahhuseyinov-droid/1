@@ -14,7 +14,6 @@ const transactionIdPattern = /^[A-Za-z0-9._:-]{1,128}$/
 const signaturePattern = /^[a-f0-9]{64}$/i
 const maxSafeAtomic = BigInt(Number.MAX_SAFE_INTEGER)
 const atomicUnitsPerPepe = 100_000_000n
-const ADSLAB_HOLD_MS = 24 * 60 * 60 * 1000
 
 function response(body: string, status = 200) {
   return new NextResponse(body, {
@@ -25,6 +24,13 @@ function response(body: string, status = 200) {
 
 function readSingleParam(params: URLSearchParams, name: string, maxLength: number) {
   const values = params.getAll(name)
+  if (values.length !== 1) return null
+  const value = values[0].trim()
+  return value.length > 0 && value.length <= maxLength ? value : null
+}
+
+function readSingleAliasParam(params: URLSearchParams, names: readonly string[], maxLength: number) {
+  const values = names.flatMap((name) => params.getAll(name))
   if (values.length !== 1) return null
   const value = values[0].trim()
   return value.length > 0 && value.length <= maxLength ? value : null
@@ -53,28 +59,36 @@ function fingerprint(value: string) {
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
   const uid = readSingleParam(params, 'uid', 128) ?? ''
-  const action = readSingleParam(params, 'type', 32)?.toLowerCase() ?? ''
-  const txid = readSingleParam(params, 'txid', 128) ?? ''
+  const type = readSingleParam(params, 'type', 32)?.toLowerCase() ?? ''
+  const statusValues = params.getAll('status')
+  const status = statusValues.length === 0 ? '' : readSingleParam(params, 'status', 32)?.toLowerCase() ?? ''
+  const action = status || type
+  const txid = readSingleAliasParam(params, ['txid', 'trans_id'], 128) ?? ''
   const reward = readSingleParam(params, 'reward', 64) ?? ''
   const signature = readSingleParam(params, 'signature', 128) ?? ''
-  const secret = process.env.API_KEY_2?.trim() ?? ''
+  const secret = process.env.ADSLAB_POSTBACK_SECRET?.trim() ?? ''
+  const isChargeback = ['chargeback', 'reversed', 'reverse', 'reversal', '2'].includes(action)
+  const isCredit = !isChargeback && (status === '' || ['credit', 'completed', 'complete', 'success', 'approved', '1'].includes(status))
 
   if (!secret) return response('postback unavailable', 503)
-  if (!uid || !action || !txid || !reward || !signature
+  if (!uid || (!type && !status) || !txid || !signature
     || params.getAll('uid').length !== 1
-    || params.getAll('type').length !== 1
-    || params.getAll('txid').length !== 1
-    || params.getAll('reward').length !== 1
-    || params.getAll('signature').length !== 1
+    || params.getAll('type').length > 1
+    || (params.getAll('type').length === 1 && !type)
+    || statusValues.length > 1
+    || (statusValues.length === 1 && !status)
+    || params.getAll('txid').length + params.getAll('trans_id').length !== 1
+    || params.getAll('reward').length > 1
+    || (isCredit && (!reward || params.getAll('reward').length !== 1))
     || !transactionIdPattern.test(txid)) {
     return response('Missing or invalid parameters', 400)
   }
 
   if (!matchesSignature(txid, signature, secret)) return response('ERROR: Signature does not match', 401)
+  if (!isCredit && !isChargeback) return response('OK')
 
-  const isChargeback = action === 'chargeback' || action === '2'
-  const rewardAtomic = isChargeback ? 0 : parsePepeRewardAtomic(reward)
-  if (!isChargeback && rewardAtomic === null) return response('Invalid reward', 400)
+  const rewardAtomic = isCredit ? parsePepeRewardAtomic(reward) : 0
+  if (isCredit && rewardAtomic === null) return response('Invalid reward', 400)
 
   try {
     const result = await db.transaction(async (transaction) => {
@@ -114,29 +128,54 @@ export async function GET(request: NextRequest) {
             guestId: profile.id,
             status: isChargeback ? 'reversed' : 'credited',
             rewardAtomic: isChargeback ? 0 : rewardAtomic!,
-            releaseAt: isChargeback ? null : new Date(now.getTime() + ADSLAB_HOLD_MS),
+            releaseAt: isChargeback ? null : now,
             rewardReleased: false,
             createdAt: now,
             reversedAt: isChargeback ? now : null,
           })
           .onConflictDoNothing({ target: adslabOfferwallTransactions.providerTransactionId })
-          .returning({ id: adslabOfferwallTransactions.id })
+          .returning()
 
-        if (inserted) return isChargeback ? 'reversed_before_credit' as const : 'held' as const
-
-        ;[record] = await transaction
+        record = inserted ?? (await transaction
           .select()
           .from(adslabOfferwallTransactions)
           .where(eq(adslabOfferwallTransactions.providerTransactionId, txid))
           .for('update')
-          .limit(1)
+          .limit(1))[0]
       }
 
       if (!record) throw new Error('AdsLab transaction could not be read after insert.')
       if (record.guestId !== profile.id) return 'user_mismatch' as const
-      if (!isChargeback || record.status === 'reversed') return 'duplicate' as const
+      if (record.status === 'reversed') return 'duplicate' as const
 
       const now = new Date()
+      if (!isChargeback) {
+        if (record.rewardReleased) return 'duplicate' as const
+
+        const [credit] = await transaction
+          .insert(earningEvents)
+          .values({
+            id: randomUUID(),
+            guestId: profile.id,
+            source: 'adslab_offerwall',
+            sourceKey: txid,
+            itemId: txid,
+            tokenSymbol: 'PEPE',
+            rewardAtomic: record.rewardAtomic,
+            createdAt: now,
+          })
+          .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+          .returning({ id: earningEvents.id })
+
+        await transaction
+          .update(adslabOfferwallTransactions)
+          .set({ rewardReleased: true, releaseAt: now })
+          .where(eq(adslabOfferwallTransactions.id, record.id))
+
+        if (credit) await grantArcadeEnergy(transaction, profile.id, now)
+        return credit ? 'credited' as const : 'duplicate' as const
+      }
+
       let reversalRecorded = false
       if (record.rewardReleased) {
         const [debit] = await transaction

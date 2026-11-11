@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { AdsLabBanner } from '@/components/adslab-banner'
 import { AdsLabPtcTaskList, type PtcTaskSummary } from '@/components/adslab-ptc-task-list'
+import { YoutubeAdsPage } from '@/components/youtube-ads-page'
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 
@@ -93,6 +94,8 @@ export function ViewAdsPage() {
             />
           </div>
         </header>
+
+        <YoutubeAdsPage />
 
         <section aria-label={isRussian ? 'Статистика PTC-рекламы' : 'PTC Ads overview'} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard

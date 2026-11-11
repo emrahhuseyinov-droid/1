@@ -18,6 +18,17 @@ export const CAMPAIGN_PROMOTION_FEE_ATOMIC = 100_000_000_000
 export const CAMPAIGN_PROMOTION_FEE_PEPE = 1_000
 export const CAMPAIGN_PROMOTION_DURATION_HOURS = 24
 
+export const YOUTUBE_REWARD_PER_30S_ATOMIC = 95_000_000_000
+export const YOUTUBE_COMMISSION_RATE_BPS = 4_000
+export const YOUTUBE_CAMPAIGN_MAX_TASKS = 30_000
+
+export function getYouTubeCampaignPricing(durationSeconds: 30 | 60) {
+  const durationMultiplier = BigInt(durationSeconds / CAMPAIGN_DURATION_SECONDS)
+  const rewardAtomic = BigInt(YOUTUBE_REWARD_PER_30S_ATOMIC) * durationMultiplier
+  const commissionAtomic = (rewardAtomic * BigInt(YOUTUBE_COMMISSION_RATE_BPS)) / 10_000n
+  return { rewardAtomic: Number(rewardAtomic), commissionAtomic: Number(commissionAtomic) }
+}
+
 export function parsePepeAmountToAtomic(value: unknown): number | null {
   if (typeof value !== 'string' && typeof value !== 'number') return null
 

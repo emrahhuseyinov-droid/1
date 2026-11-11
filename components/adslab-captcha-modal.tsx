@@ -22,7 +22,7 @@ export function AdsLabCaptchaModal({
   captchaSessionId: string | null
   onReturned: (sessionId: string) => void
   onClose: () => void
-  purpose?: 'wheel' | 'faucet'
+  purpose?: 'wheel' | 'faucet' | 'youtube'
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const popupRef = useRef<Window | null>(null)
@@ -129,8 +129,8 @@ export function AdsLabCaptchaModal({
     >
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>
-          <h2 id="adslab-captcha-title" className="text-base font-black">{purpose === 'faucet' ? 'Verify to claim' : 'Verify to spin'}</h2>
-          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'faucet' ? 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before your PEPE reward is credited.' : 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before the wheel spins.'}</p>
+          <h2 id="adslab-captcha-title" className="text-base font-black">{purpose === 'faucet' ? 'Verify to claim' : purpose === 'youtube' ? 'Verify to claim your video reward' : 'Verify to spin'}</h2>
+          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'faucet' || purpose === 'youtube' ? 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before your reward is credited.' : 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before the wheel spins.'}</p>
         </div>
         <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close verification" className="grid size-9 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
           <X aria-hidden="true" />
@@ -142,7 +142,7 @@ export function AdsLabCaptchaModal({
           {popupOpened ? 'Reopen CAPTCHA challenge' : 'Open CAPTCHA challenge'}
         </button>
         <p role="status" aria-live="polite" className="mt-3 min-h-5 text-center text-[10px] leading-5 text-white/55">
-          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from the CAPTCHA…' : purpose === 'faucet' ? 'Your PEPE reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.'}
+          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from the CAPTCHA…' : purpose === 'faucet' || purpose === 'youtube' ? 'Your reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.'}
         </p>
       </div>
     </dialog>
