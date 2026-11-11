@@ -31,7 +31,13 @@ type PtcTaskStats = { todayClicks: number; todayEarnings: TokenEarnings; totalEa
 export type PtcTaskSummary = PtcTaskStats & { availableAds: number }
 type TaskListResponse = { tasks: AdsLabTask[]; pepeUsdPrice: string; stats: PtcTaskStats }
 type TaskFetchError = Error & { status?: number }
-type DeferredClaim = { clickId: string; taskTitle: string; tokenSymbol: AdsLabTask['tokenSymbol'] }
+type DeferredClaim = { clickId: string; taskKey: string; taskTitle: string; tokenSymbol: AdsLabTask['tokenSymbol'] }
+
+const advertiserTaskKeyPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function getClaimEndpoint(taskKey: string) {
+  return advertiserTaskKeyPattern.test(taskKey) ? '/api/view-ads/claim' : '/api/adslab/ptc/claim'
+}
 type TaskSort = 'reward' | 'duration'
 
 type StartResponse = {
@@ -166,7 +172,7 @@ export function AdsLabPtcTaskList({
       const knownClickIds = new Set(current.map((claim) => claim.clickId))
       const recoveredClaims = pendingTasks
         .filter((task) => task.pendingClickId && !knownClickIds.has(task.pendingClickId))
-        .map((task) => ({ clickId: task.pendingClickId as string, taskTitle: task.title, tokenSymbol: task.tokenSymbol }))
+        .map((task) => ({ clickId: task.pendingClickId as string, taskKey: task.key, taskTitle: task.title, tokenSymbol: task.tokenSymbol }))
       return recoveredClaims.length > 0 ? [...current, ...recoveredClaims] : current
     })
   }, [clickId, data])
@@ -205,7 +211,7 @@ export function AdsLabPtcTaskList({
   const deferCurrentClaim = useCallback((task: AdsLabTask, pendingClickId: string) => {
     setDeferredClaims((current) => current.some((claim) => claim.clickId === pendingClickId)
       ? current
-      : [...current, { clickId: pendingClickId, taskTitle: task.title, tokenSymbol: task.tokenSymbol }])
+      : [...current, { clickId: pendingClickId, taskKey: task.key, taskTitle: task.title, tokenSymbol: task.tokenSymbol }])
     targetWindowRef.current?.close()
     targetWindowRef.current = null
     setActiveTask(null)

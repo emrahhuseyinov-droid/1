@@ -314,8 +314,8 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
   const hasEnoughYoutubeFunds = youtubeCampaignCostAtomic > 0n && advertiserBalanceAtomic >= youtubeCampaignCostAtomic
   const hasCampaignsData = Boolean(campaigns.data && wallet.data)
   const pageTitle = isRussian
-    ? { fund: 'Перевод PEPE', create: 'Создать PTC', youtube: 'Создать YouTube-компанию', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
-    : { fund: 'PEPE transfer', create: 'Create PTC', youtube: 'Create YouTube campaign', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
+    ? { fund: 'Перевод PEPE', create: 'Создать PTC', youtube: 'Создать задание YouTube', campaigns: 'Рекламные задания', activity: 'Операции кошелька' }[view]
+    : { fund: 'PEPE transfer', create: 'Create PTC', youtube: 'Create YouTube task', campaigns: 'Advertiser tasks', activity: 'Wallet activity' }[view]
 
   async function refreshBalances() {
     await Promise.all([wallet.mutate(), campaigns.mutate()])
@@ -476,7 +476,7 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
   return (
     <LocalizedTree>
       <main id="top" className={`dashboard-page-shell flex flex-col gap-5 sm:gap-6 ${view === 'fund' ? 'min-h-[calc(100dvh-62px)]' : ''}`}>
-        {view !== 'fund' && view !== 'create' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
+        {view !== 'fund' && view !== 'create' && view !== 'youtube' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
           <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full border-[24px] border-white/[0.05]" />
           <div className="relative flex items-start gap-4">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><Megaphone size={22} /></span>
@@ -646,7 +646,7 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
                   </div>
                   <div className="sm:text-right"><p className="font-mono text-xl font-black tracking-tight text-white sm:text-2xl">{isTaskCountValid ? formatAtomic(campaignCostAtomic, language) : '—'} PEPE</p><p className="text-[9px] font-semibold text-slate-400">{isRussian ? 'итого к оплате' : 'total charged'}</p></div>
                 </div>
-                {hasCampaignsData && isTaskCountValid && !hasEnoughCampaignFunds && <p className="mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
+                {hasCampaignsData && isTaskCountValid && !hasEnoughCampaignFunds && <p className="mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала перевед��те средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
                 <p className="mt-2 text-[9px] leading-4 text-slate-400">{isRussian ? 'Неиспользованный бюджет задания, включая комиссию, возвращается при отмене. Списание производится только после проверки баланса.' : 'Unused task budget, including commission, is refunded on cancellation. Funds are charged only after the balance check.'}</p>
               </div>
 

@@ -10,7 +10,7 @@ import {
   parseHomeroPayoutAtomic,
 } from '@/lib/adslab-ptc'
 import { db } from '@/lib/db'
-import { guestProfiles, ptcClicks } from '@/lib/db/schema'
+import { advertiserCampaigns, earningEvents, guestProfiles, ptcClicks } from '@/lib/db/schema'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 
 export const runtime = 'nodejs'
@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 const taskKeyPattern = /^adslab:[0-9a-f]{64}$/i
+const campaignKeyPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const clickIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const PENDING_GRACE_MS = 24 * 60 * 60 * 1000
 
@@ -28,7 +29,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function readTaskKey(request: NextRequest) {
   try {
     const body: unknown = await request.json()
-    if (!isRecord(body) || typeof body.taskKey !== 'string' || !taskKeyPattern.test(body.taskKey)) return null
+    if (!isRecord(body) || typeof body.taskKey !== 'string') return null
+    if (!taskKeyPattern.test(body.taskKey) && !campaignKeyPattern.test(body.taskKey)) return null
     return { taskKey: body.taskKey.toLowerCase() }
   } catch {
     return null
@@ -43,6 +45,104 @@ async function readClickId(request: NextRequest) {
   } catch {
     return null
   }
+}
+
+async function startAdvertiserPtcTask(userId: string, campaignId: string) {
+  return db.transaction(async (transaction) => {
+    const [lockedProfile] = await transaction
+      .select({ id: guestProfiles.id })
+      .from(guestProfiles)
+      .where(eq(guestProfiles.id, userId))
+      .for('update')
+      .limit(1)
+    if (!lockedProfile) return { status: 'profile_missing' as const }
+
+    const [campaign] = await transaction
+      .select()
+      .from(advertiserCampaigns)
+      .where(eq(advertiserCampaigns.id, campaignId))
+      .for('update')
+      .limit(1)
+    if (!campaign || campaign.campaignType !== 'ptc' || campaign.advertiserId === userId || campaign.remainingTasks < 1 || campaign.status === 'cancelled' || campaign.status === 'completed') {
+      return { status: 'unavailable' as const }
+    }
+
+    const now = new Date()
+    const pendingClicks = await transaction
+      .select({ clickId: ptcClicks.clickId, taskId: ptcClicks.taskId, createdAt: ptcClicks.createdAt, durationSeconds: ptcClicks.durationSeconds })
+      .from(ptcClicks)
+      .where(and(eq(ptcClicks.userId, userId), eq(ptcClicks.status, 'pending')))
+      .orderBy(desc(ptcClicks.createdAt))
+      .for('update')
+
+    for (const pending of pendingClicks) {
+      const durationSeconds = Math.max(0, pending.durationSeconds)
+      const elapsedMs = now.getTime() - pending.createdAt.getTime()
+      if (elapsedMs > durationSeconds * 1000 + PENDING_GRACE_MS) {
+        await transaction
+          .update(ptcClicks)
+          .set({ status: 'rejected', updatedAt: now })
+          .where(and(eq(ptcClicks.clickId, pending.clickId), eq(ptcClicks.userId, userId), eq(ptcClicks.status, 'pending')))
+        continue
+      }
+
+      if (pending.taskId === campaign.id) {
+        const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000))
+        return {
+          status: 'started' as const,
+          clickId: pending.clickId,
+          directLink: campaign.targetUrl,
+          timerSeconds: Math.max(0, durationSeconds - elapsedSeconds),
+          rewardAtomic: String(campaign.rewardPerTaskAtomic),
+          tokenSymbol: 'HOMERO' as const,
+          pepeUsdPrice: '0',
+        }
+      }
+
+      if (elapsedMs < durationSeconds * 1000) {
+        return { status: 'busy' as const, remainingSeconds: Math.max(1, Math.ceil((durationSeconds * 1000 - elapsedMs) / 1000)) }
+      }
+    }
+
+    if (campaign.status !== 'active') return { status: 'unavailable' as const }
+
+    const [completedClick] = await transaction
+      .select({ clickId: ptcClicks.clickId })
+      .from(ptcClicks)
+      .where(and(eq(ptcClicks.userId, userId), eq(ptcClicks.taskId, campaign.id), eq(ptcClicks.status, 'completed')))
+      .limit(1)
+    const [existingCredit] = await transaction
+      .select({ id: earningEvents.id })
+      .from(earningEvents)
+      .where(and(eq(earningEvents.guestId, userId), eq(earningEvents.source, 'advertiser_task'), eq(earningEvents.itemId, campaign.id)))
+      .limit(1)
+    if (completedClick || existingCredit) return { status: 'already_completed' as const }
+
+    const clickId = randomUUID()
+    await transaction.insert(ptcClicks).values({
+      userId,
+      clickId,
+      taskId: campaign.id,
+      status: 'pending',
+      payout: formatPepePayoutAtomic(campaign.rewardPerTaskAtomic),
+      payoutTokenSymbol: 'HOMERO',
+      durationSeconds: campaign.durationSeconds,
+      visitsPerUser: 1,
+      cooldownMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    return {
+      status: 'started' as const,
+      clickId,
+      directLink: campaign.targetUrl,
+      timerSeconds: campaign.durationSeconds,
+      rewardAtomic: String(campaign.rewardPerTaskAtomic),
+      tokenSymbol: 'HOMERO' as const,
+      pepeUsdPrice: '0',
+    }
+  })
 }
 
 function providerErrorResponse(error: unknown) {
@@ -61,6 +161,27 @@ export async function POST(request: NextRequest) {
 
   const taskInput = await readTaskKey(request)
   if (!taskInput) return NextResponse.json({ error: 'This task is not available.' }, { status: 400, headers: noStoreHeaders })
+
+  if (campaignKeyPattern.test(taskInput.taskKey)) {
+    try {
+      const result = await startAdvertiserPtcTask(account.profile.id, taskInput.taskKey)
+      if (result.status === 'profile_missing') return NextResponse.json({ error: 'Account profile not found.' }, { status: 404, headers: noStoreHeaders })
+      if (result.status === 'unavailable') return NextResponse.json({ error: 'This advertiser task is no longer available.' }, { status: 409, headers: noStoreHeaders })
+      if (result.status === 'already_completed') return NextResponse.json({ error: 'You have already completed this advertiser task.', code: result.status }, { status: 409, headers: noStoreHeaders })
+      if (result.status === 'busy') return NextResponse.json({ error: 'Finish or resume your current task first.', code: 'task_in_progress', remainingSeconds: result.remainingSeconds }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({
+        clickId: result.clickId,
+        directLink: result.directLink,
+        timerSeconds: result.timerSeconds,
+        rewardAtomic: result.rewardAtomic,
+        tokenSymbol: result.tokenSymbol,
+        pepeUsdPrice: result.pepeUsdPrice,
+      }, { headers: noStoreHeaders })
+    } catch (error) {
+      console.error('[advertiser-ptc] Could not start advertiser task:', error)
+      return NextResponse.json({ error: 'Could not start this advertiser task.' }, { status: 500, headers: noStoreHeaders })
+    }
+  }
 
   try {
     const clickId = randomUUID()
