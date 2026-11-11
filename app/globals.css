@@ -177,6 +177,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
   html,
   body {
     width: 100%;
@@ -556,10 +565,10 @@ dialog.adslab-captcha-dialog[open] {
   background-size: 34px 34px, auto, auto, auto;
 }
 
-.cartoon-landing > header {
-  border-color: rgb(178 160 255 / 0.18);
-  background-color: rgb(20 25 57 / 0.88);
-}
+  .cartoon-landing > header {
+    border-color: transparent;
+    background-color: rgb(10 15 43 / 0.68);
+  }
 
 .cartoon-arcade-frame {
   border-color: rgb(178 160 255 / 0.35);

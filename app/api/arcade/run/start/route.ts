@@ -2,8 +2,8 @@ import { randomInt, randomUUID } from 'node:crypto'
 import { and, eq, gte, lt, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { arcadeEntitlements, arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
-import { ARCADE_DAILY_RUN_LIMIT, ARCADE_HEARTBEAT_GRACE_MS, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, getArcadeHomeroCoinsRemaining, type ArcadeBoostCode } from '@/lib/arcade-gameplay'
+import { arcadeEntitlements, arcadeInventory, arcadeProfiles, arcadeSessions } from '@/lib/db/schema'
+import { ARCADE_DAILY_RUN_LIMIT, ARCADE_HEARTBEAT_GRACE_MS, getArcadeHomeroCoinsRemaining, type ArcadeBoostCode } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, isRecord, lockArcadeProfile, readJsonBody } from '@/lib/arcade-service'
 import { getArcadeDayWindow } from '@/lib/arcade-time'
 
@@ -30,12 +30,9 @@ export async function POST(request: NextRequest) {
   try {
     const result = await db.transaction(async (transaction) => {
       const profile = await lockArcadeProfile(transaction, access.guestId)
-      const [coinEarnings] = await transaction
-        .select({ rewardAtomic: sql<number>`least(coalesce(sum(${earningEvents.rewardAtomic}), 0), ${ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC})::double precision` })
-        .from(earningEvents)
-        .where(and(eq(earningEvents.guestId, access.guestId), eq(earningEvents.source, 'arcade_homero_coin')))
-      const homeroCoinsRemaining = getArcadeHomeroCoinsRemaining(coinEarnings?.rewardAtomic ?? 0)
       const now = new Date()
+      const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
+      const homeroCoinsRemaining = getArcadeHomeroCoinsRemaining(0)
       const [entitlement] = await transaction
         .select({ unlimitedRanked: arcadeEntitlements.unlimitedRanked, unlimitedEnergy: arcadeEntitlements.unlimitedEnergy })
         .from(arcadeEntitlements)
@@ -148,7 +145,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (result.status === 'already_running') return NextResponse.json({ error: 'Finish or close your active run first.' }, { status: 409, headers: arcadeNoStoreHeaders })
-    if (result.status === 'daily_limit') return NextResponse.json({ error: 'You have reached the daily limit of 5 ranked arcade runs. Resets at 17:38 Baku time.' }, { status: 409, headers: arcadeNoStoreHeaders })
+    if (result.status === 'daily_limit') return NextResponse.json({ error: 'Ranked runs are temporarily unavailable.' }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'no_energy') return NextResponse.json({ error: 'You need 1 energy to start a run.', energy: result.energy }, { status: 409, headers: arcadeNoStoreHeaders })
     if (result.status === 'missing_boost') return NextResponse.json({ error: `You do not have a ${result.boostCode} boost.` }, { status: 409, headers: arcadeNoStoreHeaders })
 

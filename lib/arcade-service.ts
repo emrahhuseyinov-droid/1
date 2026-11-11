@@ -1,6 +1,6 @@
 import 'server-only'
 import { randomUUID } from 'node:crypto'
-import { getArcadeDayKey, getArcadeDayWindow, getArcadeWeekWindow } from '@/lib/arcade-time'
+import { getArcadeDayKey, getArcadeWeekWindow } from '@/lib/arcade-time'
 import { and, asc, desc, eq, gte, inArray, lt, notInArray, sql } from 'drizzle-orm'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
@@ -21,7 +21,7 @@ import {
 import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
 import { getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
-import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_DAILY_RUN_LIMIT, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_SHORTLINK_ENERGY_REWARD, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
+import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_SHORTLINK_ENERGY_REWARD, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
 
 export const arcadeNoStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 export type ArcadeTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -540,8 +540,7 @@ export async function settlePreviousWeekAwards(now = new Date()) {
 export async function getArcadeState(guestId: string) {
   const now = new Date()
   const today = getArcadeDayKey(now)
-  const { start: dayStart, end: nextDayStart } = getArcadeDayWindow(now)
-  const [profile, inventory, claims, balance, reserve, dailyRuns, entitlements] = await Promise.all([
+  const [profile, inventory, claims, balance, reserve, entitlements] = await Promise.all([
     db.select().from(arcadeProfiles).where(eq(arcadeProfiles.guestId, guestId)).limit(1),
     db.select().from(arcadeInventory).where(eq(arcadeInventory.guestId, guestId)),
     db.select().from(arcadeRewardClaims).where(eq(arcadeRewardClaims.guestId, guestId)).orderBy(asc(arcadeRewardClaims.createdAt)),
@@ -553,32 +552,19 @@ export async function getArcadeState(guestId: string) {
         notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
       )),
     db.select({ balanceAtomic: arcadeReserve.balanceAtomic }).from(arcadeReserve).where(eq(arcadeReserve.id, 1)).limit(1),
-    db.select({ count: sql<number>`count(*)::int` })
-      .from(arcadeSessions)
-      .where(and(
-        eq(arcadeSessions.guestId, guestId),
-        eq(arcadeSessions.mode, 'ranked'),
-        gte(arcadeSessions.startedAt, dayStart),
-        lt(arcadeSessions.startedAt, nextDayStart),
-      )),
-    db.select({ unlimitedRanked: arcadeEntitlements.unlimitedRanked, unlimitedEnergy: arcadeEntitlements.unlimitedEnergy })
+    db.select({ unlimitedEnergy: arcadeEntitlements.unlimitedEnergy })
       .from(arcadeEntitlements)
       .where(eq(arcadeEntitlements.guestId, guestId))
       .limit(1),
   ])
-  const unlimitedRanked = entitlements[0]?.unlimitedRanked ?? false
   const unlimitedEnergy = entitlements[0]?.unlimitedEnergy ?? false
 
   return {
     energy: profile[0]?.energy ?? 0,
     energyCap: ARCADE_ENERGY_CAP,
     unlimitedEnergy,
-    unlimitedRanked,
     dailyEnergyEarned: profile[0]?.dailyEnergyDay === today ? profile[0].dailyEnergyEarned : 0,
     dailyEnergyCap: ARCADE_DAILY_ENERGY_EARNED_CAP,
-    dailyRunsToday: dailyRuns[0]?.count ?? 0,
-    dailyRunLimit: ARCADE_DAILY_RUN_LIMIT,
-    dailyRunsAvailable: unlimitedRanked || (dailyRuns[0]?.count ?? 0) < ARCADE_DAILY_RUN_LIMIT,
     bestDistanceM: profile[0]?.bestDistanceM ?? 0,
     totalRuns: profile[0]?.totalRuns ?? 0,
     pepeBalanceAtomic: balance[0]?.amount ?? '0',

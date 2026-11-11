@@ -1,7 +1,7 @@
 export type ArcadeBoostCode = 'jetpack' | 'shield'
 export type ArcadeObstacleKind = 'candle' | 'cactus'
 
-export const ARCADE_ENERGY_CAP = 10
+export const ARCADE_ENERGY_CAP = 20
 export const ARCADE_DAILY_ENERGY_EARNED_CAP = 20
 export const ARCADE_DAILY_RUN_LIMIT = 5
 export const ARCADE_PTC_ENERGY_REWARD = 0.2
@@ -13,7 +13,7 @@ export const ARCADE_ATOMIC_PER_PEPE = 100_000_000
 export const ARCADE_HOMERO_COIN_INTERVAL_M = 100
 export const ARCADE_HOMERO_COIN_REWARD = 1
 export const ARCADE_HOMERO_COIN_REWARD_ATOMIC = ARCADE_HOMERO_COIN_REWARD * ARCADE_ATOMIC_PER_PEPE
-export const ARCADE_HOMERO_COIN_MAX_REWARDS = 200
+export const ARCADE_HOMERO_COIN_MAX_REWARDS = 100
 export const ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC = ARCADE_HOMERO_COIN_MAX_REWARDS * ARCADE_HOMERO_COIN_REWARD_ATOMIC
 
 export function getArcadeHomeroCoinsRemaining(earnedRewardAtomic: number) {

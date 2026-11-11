@@ -101,7 +101,7 @@ function RewardToastCard({
   const rewardValue = event.kind === 'token'
     ? `+${formatTokenAtomic(event.amountAtomic ?? '0')} ${event.tokenSymbol ?? ''}`
     : event.kind === 'energy'
-      ? `+${Number(event.quantity ?? 0).toFixed(2).replace(/\.?0+$/, '')} ${isRussian ? 'энергии Arcade' : 'Arcade energy'}`
+      ? `+${Number(event.quantity ?? 0).toFixed(2).replace(/\.?0+$/, '')} ${isRussian ? 'энергии для бегуна Pepe' : 'Pepe Runner energy'}`
       : `+${Number(event.quantity ?? 0).toFixed(2).replace(/\.?0+$/, '')} ${isRussian ? 'доп. жизни' : 'extra life'}`
 
   return (

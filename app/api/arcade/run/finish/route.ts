@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { and, eq, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { arcadeInventory, arcadeProfiles, arcadeSessions, earningEvents } from '@/lib/db/schema'
-import { ARCADE_HEARTBEAT_GRACE_MS, getArcadeMaximumDistanceM, ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC, ARCADE_HOMERO_COIN_REWARD_ATOMIC, ARCADE_MAX_JUMPS, getArcadeHomeroCoinsRemaining, simulateArcadeRun } from '@/lib/arcade-gameplay'
+import { arcadeInventory, arcadeProfiles, arcadeSessions } from '@/lib/db/schema'
+import { ARCADE_HEARTBEAT_GRACE_MS, getArcadeMaximumDistanceM, ARCADE_HOMERO_COIN_REWARD_ATOMIC, ARCADE_MAX_JUMPS, getArcadeHomeroCoinsRemaining, simulateArcadeRun } from '@/lib/arcade-gameplay'
 import { arcadeNoStoreHeaders, authorizeArcadeRequest, createMilestoneClaims, isRecord, isUuid, lockArcadeProfile, readJsonBody, settlePendingArcadeRewards } from '@/lib/arcade-service'
 import { getHomeroTreasuryAdminProfile, getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 
@@ -57,13 +57,7 @@ export async function POST(request: NextRequest) {
       }
 
       const canEarnHomeroCoins = session.mode === 'ranked' && session.boostCodes.length === 0 && treasuryReady
-      const [coinEarnings] = canEarnHomeroCoins
-        ? await transaction
-          .select({ rewardAtomic: sql<number>`least(coalesce(sum(${earningEvents.rewardAtomic}), 0), ${ARCADE_HOMERO_COIN_MAX_REWARD_ATOMIC})::double precision` })
-          .from(earningEvents)
-          .where(and(eq(earningEvents.guestId, access.guestId), eq(earningEvents.source, 'arcade_homero_coin')))
-        : [undefined]
-      const playerCoinLimit = getArcadeHomeroCoinsRemaining(coinEarnings?.rewardAtomic ?? 0)
+      const playerCoinLimit = getArcadeHomeroCoinsRemaining(0)
       const treasuryCoinLimit = Number(treasuryBalanceAtomic / BigInt(ARCADE_HOMERO_COIN_REWARD_ATOMIC))
       const supplyCoinLimit = Number((HOMERO_TREASURY_CAP_ATOMIC - treasuryDistributedAtomic) / BigInt(ARCADE_HOMERO_COIN_REWARD_ATOMIC))
       const homeroCoinsRemaining = canEarnHomeroCoins ? Math.min(playerCoinLimit, treasuryCoinLimit, supplyCoinLimit) : 0

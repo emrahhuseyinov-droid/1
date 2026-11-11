@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import useSWR from 'swr'
-import { ArrowUpRight, Clock3, Coins, ExternalLink, Link2, Zap } from 'lucide-react'
+import { ArrowUpRight, BatteryCharging, Clock3, Coins, ExternalLink, Link2 } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { ARCADE_SHORTLINK_ENERGY_REWARD } from '@/lib/arcade-gameplay'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -152,7 +152,7 @@ export function AdsLabShortlinksTaskList() {
 
             <div className="relative z-10 mt-4 flex flex-wrap items-center justify-between gap-2">
               <span className={rewardClass}><Coins size={12} />+{formatTokenAtomic(task.rewardAtomic)} {task.tokenSymbol}</span>
-              <span className={energyClass} title={isRussian ? 'Может быть уменьшена из-за дневного лимита или лимита запаса энергии.' : 'May be reduced by the daily or storage energy cap.'}><Zap size={12} />{isRussian ? `До +${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии Arcade` : `Up to +${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2)} Arcade energy`}</span>
+              <span className={energyClass} title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={12} aria-hidden="true" />{isRussian ? `+${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии для бегуна Pepe` : `+${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span>
               {task.cooldownMinutes > 0 && <span className={cooldownClass}><Clock3 size={12} />{isRussian ? `Пауза ${task.cooldownMinutes} мин.` : `${task.cooldownMinutes} min cooldown`}</span>}
             </div>
 

@@ -16,12 +16,8 @@ type ArcadeState = {
   energy: number
   energyCap: number
   unlimitedEnergy: boolean
-  unlimitedRanked: boolean
   dailyEnergyEarned: number
   dailyEnergyCap: number
-  dailyRunsToday: number
-  dailyRunLimit: number
-  dailyRunsAvailable: boolean
   bestDistanceM: number
   totalRuns: number
   reserveBalanceAtomic: string
@@ -276,9 +272,7 @@ export function ArcadePage() {
   const energyBalanceLabel = state ? formatEnergy(energyValue) : isLoading ? '—' : '0'
   const missingEnergy = Math.max(0, 1 - energyValue)
   const missingEnergyLabel = missingEnergy === 1 ? 'Need 1 energy' : `Need ${formatEnergy(missingEnergy)} more energy`
-  const rankedDailyLimitReached = mode === 'ranked' && state?.dailyRunsAvailable === false
-  const rankedRunsRemaining = Math.max(0, (state?.dailyRunLimit ?? 0) - (state?.dailyRunsToday ?? 0))
-  const startRunLabel = rankedDailyLimitReached ? 'Daily limit reached' : mode === 'casual' ? 'Start free run' : state?.unlimitedEnergy ? 'Start ranked run · unlimited energy' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
+  const startRunLabel = mode === 'casual' ? 'Start free run' : state?.unlimitedEnergy ? 'Start ranked run · unlimited energy' : energyValue < 1 ? missingEnergyLabel : 'Start run · 1 energy'
   const showLives = mode === 'ranked'
   const lifeCount = run ? runLives : state?.inventory.life ?? 0
 
@@ -382,7 +376,7 @@ export function ArcadePage() {
                 {run ? (
                   <button type="button" onPointerDown={(event) => { if (event.button === 0) requestJump() }} onClick={(event) => { if (event.detail === 0) requestJump() }} disabled={busy || isPaused} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] touch-manipulation transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-wait disabled:opacity-60"><Zap size={15} />{busy ? 'Saving run…' : isPaused ? 'Paused' : 'JUMP'}</button>
                 ) : (
-                  <button type="button" onClick={() => void startRun()} disabled={busy || rankedDailyLimitReached || (mode === 'ranked' && !state?.unlimitedEnergy && energyValue < 1) || isLoading} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"><Gamepad2 size={15} />{busy ? 'Starting…' : startRunLabel}</button>
+                  <button type="button" onClick={() => void startRun()} disabled={busy || (mode === 'ranked' && !state?.unlimitedEnergy && energyValue < 1) || isLoading} className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-3 text-xs font-black text-[#111] shadow-[0_8px_28px_rgba(250,204,21,0.2)] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 disabled:cursor-not-allowed disabled:opacity-50"><Gamepad2 size={15} />{busy ? 'Starting…' : startRunLabel}</button>
                 )}
               </div>
               {pendingFinish && <button type="button" onClick={() => void finishRun(pendingFinish.activeRun, pendingFinish.jumpTimes)} disabled={busy || isPaused} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-amber-300/25 bg-amber-300/[0.07] px-4 py-2 text-[10px] font-extrabold text-amber-100 transition hover:bg-amber-300/[0.12] disabled:cursor-not-allowed disabled:opacity-50">Retry verified run save</button>}
@@ -408,14 +402,6 @@ export function ArcadePage() {
                   <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-amber-100/75">Pepe Runner Energy</p><span className="grid size-7 place-items-center rounded-xl border border-amber-100/25 bg-amber-200/10 text-amber-100 shadow-inner"><BatteryCharging size={13} /></span></div>
                   <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(253,224,71,0.35)]">{state?.unlimitedEnergy ? 'Unlimited' : energyBalanceLabel}{!state?.unlimitedEnergy && <span className="ml-1 text-[10px] font-extrabold text-amber-100/65">/ {formatEnergy(energyCap)}</span>}</p>
                   {!state?.unlimitedEnergy && <div role="progressbar" aria-label="Pepe Runner Energy" aria-valuemin={0} aria-valuemax={energyCap} aria-valuenow={energyValue} aria-valuetext={`${energyBalanceLabel} of ${formatEnergy(energyCap)}`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 shadow-[0_0_10px_rgba(253,224,71,0.55)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (energyValue / energyCap) * 100)}%` }} /></div>}
-                </div>
-              </div>
-              <div className="relative overflow-hidden rounded-[22px] border-2 border-emerald-200/30 bg-gradient-to-br from-[#123831] via-[#122b2c] to-[#10172e] p-3 shadow-[0_4px_0_rgba(16,185,129,0.16),0_12px_24px_rgba(0,0,0,0.3)]">
-                <div aria-hidden="true" className="pointer-events-none absolute -right-5 -top-6 size-24 rounded-full bg-emerald-100/10 blur-xl" />
-                <div className="relative">
-                  <div className="flex items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-emerald-100/75">Ranked runs left</p><span className="grid size-7 place-items-center rounded-xl border border-emerald-100/25 bg-emerald-200/10 text-emerald-100 shadow-inner"><Gamepad2 size={13} /></span></div>
-                  <p className="mt-3 font-mono text-2xl font-black tabular-nums text-white drop-shadow-[0_2px_8px_rgba(110,231,183,0.35)]">{state ? state.unlimitedRanked ? 'Unlimited' : rankedRunsRemaining : '—'}{state && !state.unlimitedRanked && <span className="ml-1 text-[10px] font-extrabold text-emerald-100/65">/ {state.dailyRunLimit}</span>}</p>
-                  {state && !state.unlimitedRanked && <div role="progressbar" aria-label="Ranked runs remaining" aria-valuemin={0} aria-valuemax={Math.max(1, state.dailyRunLimit)} aria-valuenow={rankedRunsRemaining} aria-valuetext={`${rankedRunsRemaining} of ${state.dailyRunLimit} ranked runs remaining`} className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 shadow-[0_0_10px_rgba(110,231,183,0.45)] transition-[width] motion-reduce:transition-none" style={{ width: `${Math.min(100, (rankedRunsRemaining / Math.max(1, state.dailyRunLimit)) * 100)}%` }} /></div>}
                 </div>
               </div>
             </div>

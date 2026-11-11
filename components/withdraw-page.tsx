@@ -71,7 +71,7 @@ export function WithdrawPage({ balance }: Props) {
     setSuccessMessage(null)
 
     if (!canSubmitAmount) {
-      setErrorMessage('Check the 1,000 PEPE minimum, your available balance, and the remaining daily limit.')
+      setErrorMessage('Check the 500 PEPE minimum, your available balance, and the remaining daily limit.')
       return
     }
 
@@ -192,7 +192,7 @@ export function WithdrawPage({ balance }: Props) {
                   required
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
-                  placeholder="1,000 or more"
+                  placeholder="500 or more"
                   disabled={submitting || !data}
                   className="withdraw-amount-input min-w-0 flex-1 appearance-none bg-transparent px-1 py-1 font-mono text-sm font-bold outline-none placeholder:font-sans placeholder:text-slate-400 disabled:cursor-not-allowed"
                 />

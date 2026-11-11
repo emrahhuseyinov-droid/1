@@ -110,7 +110,7 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
                                 ? 'PEPE transfer to advertiser wallet'
                                 : row.source === 'swap'
                                   ? `Token exchange ${row.itemId ?? 'tokens'}`
-                                  : 'Demo reward',
+                                  : `${row.tokenSymbol} reward`,
       createdAt: row.createdAt.toISOString(),
       amountAtomic: row.amountAtomic,
       tokenSymbol: row.tokenSymbol,
