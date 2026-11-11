@@ -13,7 +13,7 @@ const advertiserPages: Record<string, { view: AdvertiserPageView; title: { ru: s
   },
   create: {
     view: 'create',
-    title: { ru: 'Создать рекламную кампанию', en: 'Create an advertiser campaign' },
+    title: { ru: 'Создать PTC', en: 'Create PTC' },
     description: { ru: 'Создавайте PTC- и YouTube-кампании в pepe.casa.', en: 'Create PTC and YouTube campaigns on pepe.casa.' },
   },
   campaigns: {

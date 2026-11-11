@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
 
   const language = cookieStore.get('pepecasa_language')?.value === 'en' ? 'en' : 'ru'
   const title = section === 'Advertiser'
-    ? language === 'ru' ? 'Кабинет рекламодателя | pepe.casa' : 'Advertiser workspace | pepe.casa'
+    ? language === 'ru' ? 'Кошелёк рекламодателя | pepe.casa' : 'Advertiser wallet | pepe.casa'
     : translateSiteText(`${section} | pepe.casa`, language)
   const description = section === 'Advertiser'
     ? language === 'ru'

@@ -313,8 +313,8 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
   const hasEnoughYoutubeFunds = youtubeCampaignCostAtomic > 0n && advertiserBalanceAtomic >= youtubeCampaignCostAtomic
   const hasCampaignsData = Boolean(campaigns.data && wallet.data)
   const pageTitle = isRussian
-    ? { overview: 'Кабинет рекламодателя', fund: 'Пополнение кошелька', create: 'Создать кампанию', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
-    : { overview: 'Advertiser workspace', fund: 'Fund wallet', create: 'Create campaign', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
+    ? { overview: 'Кошелёк рекламодателя', fund: 'Пополнение кошелька', create: 'Создать PTC', campaigns: 'Рекламные кампании', activity: 'Операции кошелька' }[view]
+    : { overview: 'Advertiser wallet', fund: 'Fund wallet', create: 'Create PTC', campaigns: 'Advertiser campaigns', activity: 'Wallet activity' }[view]
 
   async function refreshBalances() {
     await Promise.all([wallet.mutate(), campaigns.mutate()])
@@ -495,7 +495,7 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
         {view === 'overview' && <section aria-label={isRussian ? 'Разделы рекламодателя' : 'Advertiser sections'} className="grid gap-4 sm:grid-cols-2">
           {[
             { href: '/advertiser/fund', title: isRussian ? 'Пополнить кошелёк' : 'Fund wallet', description: isRussian ? 'Перевод PEPE из баланса Publisher.' : 'Transfer PEPE from your Publisher balance.' },
-            { href: '/advertiser/create', title: isRussian ? 'Создать кампанию' : 'Create campaign', description: isRussian ? 'Запустите PTC- или YouTube-кампанию.' : 'Launch a PTC or YouTube campaign.' },
+            { href: '/advertiser/create', title: isRussian ? 'Создать PTC' : 'Create PTC', description: isRussian ? 'Запустите PTC- или YouTube-кампанию.' : 'Launch a PTC or YouTube campaign.' },
             { href: '/advertiser/campaigns', title: isRussian ? 'Мои кампании' : 'My campaigns', description: isRussian ? `${campaigns.data?.campaigns.length ?? '—'} кампаний · управление статусом и возвратом.` : `${campaigns.data?.campaigns.length ?? '—'} campaigns · manage status and refunds.` },
             { href: '/advertiser/activity', title: isRussian ? 'Операции кошелька' : 'Wallet activity', description: isRussian ? 'История переводов, списаний и возвратов.' : 'History of transfers, charges, and refunds.' },
           ].map((item) => <Link key={item.href} href={item.href} className="group rounded-[24px] border border-white/[0.08] bg-[#0d142c] p-5 transition hover:border-cyan-200/25 hover:bg-[#111a35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
@@ -651,7 +651,7 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
             </div>
               : <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-5 text-center">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-200"><Megaphone size={18} /></span>
-                <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока нет' : 'No campaigns yet'}</p>
+                <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока ��ет' : 'No campaigns yet'}</p>
                 <p className="mt-1 max-w-sm text-[10px] leading-5 text-slate-400">{isRussian ? 'Создайте PTC- или YouTube-кампанию, чтобы она появилась в разделе заданий для исполнителей.' : 'Create a PTC or YouTube campaign to make it available to performers.'}</p>
               </div>}
         </section>}
