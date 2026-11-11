@@ -64,7 +64,7 @@ export async function DashboardRouteContent({
   )
   const sectionPath = getDashboardSectionPath(section)
   const advertiserPageSegment = advertiserView === 'youtube' ? 'create-youtube' : advertiserView
-  const requestedPath = section === 'Advertiser' && advertiserPageSegment && advertiserPageSegment !== 'overview'
+  const requestedPath = section === 'Advertiser' && advertiserPageSegment
     ? `${sectionPath}/${advertiserPageSegment}`
     : sectionPath
   const nextPath = referralCode

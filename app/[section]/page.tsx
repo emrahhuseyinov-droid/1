@@ -59,5 +59,12 @@ export default async function Page({ params, searchParams }: SectionPageProps) {
   const rawReferralCode = Array.isArray(query.ref) ? query.ref[0] : query.ref
   const referralCode = normalizeReferralCode(rawReferralCode)
 
+  if (section === 'Advertiser') {
+    const transferPath = referralCode
+      ? `/advertiser/fund?ref=${encodeURIComponent(referralCode)}`
+      : '/advertiser/fund'
+    redirect(transferPath)
+  }
+
   return <DashboardRouteContent section={section} referralCode={referralCode} />
 }

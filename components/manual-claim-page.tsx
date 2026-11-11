@@ -112,7 +112,7 @@ const publisherNavGroups: NavigationGroup[] = [
   {
     title: 'Advertiser',
     links: [
-      { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser' },
+      { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser', href: '/advertiser/fund' },
     ],
   },
   {
@@ -135,7 +135,7 @@ const advertiserNavGroups: NavigationGroup[] = [
     title: 'Advertiser',
     links: [
       { label: 'Transfers', icon: ArrowLeftRight, section: 'Advertiser', href: '/advertiser/fund' },
-      { label: 'Create PTC', icon: Gift, section: 'Advertiser', href: '/advertiser/create' },
+      { label: 'Create PTC', icon: BarChart3, section: 'Advertiser', href: '/advertiser/create' },
       { label: 'Create YouTube campaign', icon: Play, section: 'Advertiser', href: '/advertiser/create-youtube' },
       { label: 'Advertiser campaigns', icon: BarChart3, section: 'Advertiser', href: '/advertiser/campaigns' },
       { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser/activity' },
