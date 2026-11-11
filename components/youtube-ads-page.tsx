@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { BadgeCheck, CircleAlert, Clock3, LoaderCircle, Play, RefreshCw, ShieldCheck } from 'lucide-react'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
@@ -47,6 +48,7 @@ function formatTimer(seconds: number) {
 }
 
 export function YoutubeAdsPage() {
+  const router = useRouter()
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
   const { data, error, isLoading, isValidating, mutate } = useSWR('/api/youtube-ads/tasks', getTasks, { refreshInterval: 30_000, revalidateOnFocus: true })
@@ -56,6 +58,7 @@ export function YoutubeAdsPage() {
   const [now, setNow] = useState(() => Date.now())
   const [startingCampaignId, setStartingCampaignId] = useState<string | null>(null)
   const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallenge | null>(null)
+  const [captchaModalOpen, setCaptchaModalOpen] = useState(false)
   const [captchaVerified, setCaptchaVerified] = useState(false)
   const [captchaChecking, setCaptchaChecking] = useState(false)
   const [claiming, setClaiming] = useState(false)
@@ -87,6 +90,7 @@ export function YoutubeAdsPage() {
       setActiveViewId(result.viewId)
       setDeadline(Date.now() + result.timerRemainingSeconds * 1000)
       setCaptchaChallenge(null)
+      setCaptchaModalOpen(false)
       setCaptchaVerified(false)
       void mutate()
     } catch (startError) {
@@ -104,6 +108,7 @@ export function YoutubeAdsPage() {
     try {
       const challenge = await postJson<CaptchaChallenge>('/api/wheel/captcha/init', {})
       setCaptchaChallenge(challenge)
+      setCaptchaModalOpen(true)
     } catch (captchaError) {
       setErrorMessage(captchaError instanceof Error ? captchaError.message : 'Could not start CAPTCHA verification.')
     }
@@ -118,6 +123,7 @@ export function YoutubeAdsPage() {
       if (!response.ok) throw new Error(result?.error ?? 'Could not verify the CAPTCHA.')
       if (result?.status === 'verified') {
         setCaptchaVerified(true)
+        setCaptchaModalOpen(false)
         setMessage(isRussian ? 'CAPTCHA подтверждена. Теперь заберите награду.' : 'CAPTCHA verified. You can now claim the reward.')
       } else {
         setCaptchaVerified(false)
@@ -146,8 +152,10 @@ export function YoutubeAdsPage() {
       setActiveViewId(null)
       setDeadline(null)
       setCaptchaChallenge(null)
+      setCaptchaModalOpen(false)
       setCaptchaVerified(false)
       void mutate()
+      router.refresh()
     } catch (claimError) {
       setErrorMessage(claimError instanceof Error ? claimError.message : 'Could not claim the reward.')
     } finally {
@@ -158,6 +166,7 @@ export function YoutubeAdsPage() {
   function closeViewer() {
     setSelectedTask(null)
     setCaptchaChallenge(null)
+    setCaptchaModalOpen(false)
     setCaptchaVerified(false)
   }
 
@@ -172,7 +181,7 @@ export function YoutubeAdsPage() {
             <span className="flex size-14 shrink-0 items-center justify-center rounded-[22px] border-2 border-white/20 bg-red-400/15 text-red-100 shadow-lg"><Play size={25} /></span>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-red-100/75">{isRussian ? 'видеозадания рекламодателей' : 'sponsored video tasks'}</p>
-              <h2 id="youtube-ads-title" className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Смотри и зарабатывай' : 'Watch & Earn'}</h2>
+              <h2 id="youtube-ads-title" className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Смотри и зарабатывай' : 'Watch and Earn'}</h2>
               <p className="mt-2 max-w-2xl text-xs leading-5 text-white/75">{isRussian ? 'Смотрите YouTube-видео в плеере сайта, дождитесь таймера и пройдите AdsLab CAPTCHA. У каждого рекламодателя можно выполнить только одну видеокампанию.' : 'Watch a YouTube video in the embedded player, let the timer finish, and pass the AdsLab CAPTCHA. Each advertiser can be completed once per account.'}</p>
             </div>
           </div>
@@ -247,11 +256,14 @@ export function YoutubeAdsPage() {
         </dialog>
 
         <AdsLabCaptchaModal
-          solveUrl={captchaChallenge?.solveUrl ?? null}
+          solveUrl={captchaModalOpen ? captchaChallenge?.solveUrl ?? null : null}
           challengeToken={captchaChallenge?.challengeToken ?? null}
           captchaSessionId={captchaChallenge?.captchaSessionId ?? null}
           onReturned={(captchaSessionId) => void checkCaptcha(captchaSessionId)}
-          onClose={() => setCaptchaChallenge(null)}
+          onClose={() => {
+            setCaptchaModalOpen(false)
+            if (!captchaVerified) setCaptchaChallenge(null)
+          }}
           purpose="youtube"
         />
       </section>

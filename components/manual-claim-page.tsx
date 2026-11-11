@@ -17,6 +17,7 @@ import { WalletPage } from '@/components/wallet-page'
 import { PromoCodePage } from '@/components/promo-code-page'
 import { ReferralsPage } from '@/components/referrals-page'
 import { ViewAdsPage } from '@/components/view-ads-page'
+import { YoutubeAdsPage } from '@/components/youtube-ads-page'
 import { AdvertiserPage } from '@/components/advertiser-page'
 import { ShortlinksPage } from '@/components/shortlinks-page'
 import { AdsLabOfferwallPage } from '@/components/adslab-offerwall-page'
@@ -46,6 +47,7 @@ import {
   House,
   LogOut,
   Menu,
+  Play,
   ShieldCheck,
   Trophy,
   UsersRound,
@@ -78,6 +80,7 @@ const publisherNavGroups: NavigationGroup[] = [
       { label: 'Wheel of Fortune', icon: Dices },
       { label: 'Weekly Leaderboard', icon: Trophy },
       { label: 'PTC Ads', icon: BarChart3, section: 'View Ads' },
+      { label: 'Watch and Earn', icon: Play, section: 'Watch and Earn' },
       { label: 'Shortlinks', icon: Link2 },
       { label: 'Offerwall', icon: Gift },
     ],
@@ -248,7 +251,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} placementId={adslabPlacementId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Offerwall' ? <AdsLabOfferwallPage userId={guestProfileId} placementId={adslabPlacementId} /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>
