@@ -8,6 +8,7 @@ import { advertiserCampaigns, earningEvents, guestProfiles } from '@/lib/db/sche
 import { ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE, ADVERTISER_WALLET_EVENT_SOURCES, ADVERTISER_WALLET_PROMOTION_CHARGE_SOURCE } from '@/lib/advertiser-wallet'
 import { CAMPAIGN_COMMISSION_ATOMIC, CAMPAIGN_DURATION_SECONDS, CAMPAIGN_PROMOTION_DURATION_HOURS, CAMPAIGN_PROMOTION_FEE_ATOMIC, CAMPAIGN_REWARD_HOMERO_ATOMIC } from '@/lib/pepe-amount'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
+import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
 
 export const runtime = 'nodejs'
 
@@ -57,25 +58,33 @@ export async function POST(request: NextRequest) {
 
   const input = body as Record<string, unknown>
   const campaignId = typeof input.campaignId === 'string' && uuidPattern.test(input.campaignId) ? input.campaignId.toLowerCase() : null
-  const campaignType = input.campaignType === 'ptc' ? 'ptc' : null
+  const campaignType = input.campaignType === 'ptc' || input.campaignType === 'youtube' ? input.campaignType : null
   const title = typeof input.title === 'string' ? input.title.trim() : ''
   const description = typeof input.description === 'string' ? input.description.trim() : ''
-  const rewardPerTaskAtomic = CAMPAIGN_REWARD_HOMERO_ATOMIC
+  const requestedDuration = input.durationSeconds
+  const durationSeconds = campaignType === 'youtube'
+    ? requestedDuration === 60 ? 60 : requestedDuration === 30 ? 30 : 0
+    : CAMPAIGN_DURATION_SECONDS
+  const rewardPerTaskAtomic = CAMPAIGN_REWARD_HOMERO_ATOMIC * (campaignType === 'youtube' ? durationSeconds / CAMPAIGN_DURATION_SECONDS : 1)
   const totalTasks = typeof input.totalTasks === 'number' && Number.isSafeInteger(input.totalTasks) ? input.totalTasks : 0
-  const promote = input.promote === true
+  const promote = campaignType === 'ptc' && input.promote === true
   const promotionFeeAtomic = promote ? CAMPAIGN_PROMOTION_FEE_ATOMIC : 0
-  const durationSeconds = CAMPAIGN_DURATION_SECONDS
   const rawUrl = typeof input.targetUrl === 'string' ? input.targetUrl.trim() : ''
 
   let targetUrl: string | null = null
-  try {
-    const url = new URL(rawUrl)
-    if (url.protocol === 'https:' && !url.username && !url.password) targetUrl = url.toString()
-  } catch {
-    targetUrl = null
+  if (campaignType === 'youtube') {
+    const videoId = getYouTubeVideoId(rawUrl)
+    if (videoId) targetUrl = getYouTubeWatchUrl(videoId)
+  } else {
+    try {
+      const url = new URL(rawUrl)
+      if (url.protocol === 'https:' && !url.username && !url.password) targetUrl = url.toString()
+    } catch {
+      targetUrl = null
+    }
   }
 
-  if (!campaignId || !campaignType || title.length < 3 || title.length > 80 || description.length > 500 || !targetUrl || totalTasks < 1 || totalTasks > maxCampaignTasks) {
+  if (!campaignId || !campaignType || title.length < 3 || title.length > 80 || description.length > 500 || !targetUrl || durationSeconds === 0 || totalTasks < 1 || totalTasks > maxCampaignTasks) {
     return NextResponse.json({ error: 'Check the format, URL, title, and task count.' }, { status: 400, headers: noStoreHeaders })
   }
 

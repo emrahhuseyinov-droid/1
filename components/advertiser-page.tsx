@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { TokenLogo } from '@/components/token-logo'
+import { YoutubeCampaignForm } from '@/components/youtube-campaign-form'
+import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
 import {
   CAMPAIGN_COMMISSION_ATOMIC,
   CAMPAIGN_COMMISSION_PEPE,
@@ -78,12 +80,13 @@ type CampaignSnapshot = {
 type ApiErrorResponse = { error?: string }
 type CampaignPayload = {
   campaignId: string
-  campaignType: 'ptc'
+  campaignType: 'ptc' | 'youtube'
   title: string
   description: string
   targetUrl: string
   totalTasks: number
   promote: boolean
+  durationSeconds?: 30 | 60
 }
 type CampaignActionPayload = { campaignId: string; status: CampaignStatus }
 
@@ -226,7 +229,7 @@ function CampaignCard({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-extrabold ${statusClasses}`}>{getStatusLabel(campaign.status, isRussian)}</span>
-            <span className="rounded-full border border-cyan-200/15 bg-cyan-300/[0.07] px-2.5 py-1 text-[9px] font-extrabold text-cyan-100">PTC · {campaign.durationSeconds}s</span>
+            <span className={`rounded-full border px-2.5 py-1 text-[9px] font-extrabold ${campaign.campaignType === 'youtube' ? 'border-red-200/15 bg-red-300/[0.07] text-red-100' : 'border-cyan-200/15 bg-cyan-300/[0.07] text-cyan-100'}`}>{campaign.campaignType === 'youtube' ? 'YouTube' : 'PTC'} · {campaign.durationSeconds}s</span>
             {isPromoted && <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/20 bg-amber-300/10 px-2.5 py-1 text-[9px] font-extrabold text-amber-100"><BadgeCheck size={11} />{isRussian ? 'Приоритет Pro' : 'Pro priority'}</span>}
           </div>
           <h3 className="mt-3 break-words text-base font-extrabold text-white">{campaign.title}</h3>
@@ -239,7 +242,7 @@ function CampaignCard({
       <dl className="mt-4 grid grid-cols-2 gap-2 lg:grid-cols-4">
         <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
           <dt className="text-[9px] text-slate-400">{isRussian ? 'Награда / просмотр' : 'Reward per view'}</dt>
-          <dd className="mt-1 font-mono text-xs font-extrabold text-white">{formatAtomic(campaign.rewardPerTaskAtomic, language)} HOMERO</dd>
+          <dd className="mt-1 font-mono text-xs font-extrabold text-white">{formatAtomic(campaign.rewardPerTaskAtomic, language)} {campaign.campaignType === 'youtube' ? 'PEPE' : 'HOMERO'}</dd>
         </div>
         <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
           <dt className="text-[9px] text-slate-400">{isRussian ? 'Комиссия / просмотр' : 'Commission per view'}</dt>
@@ -278,6 +281,7 @@ export function AdvertiserPage() {
     revalidateOnFocus: true,
     refreshInterval: 30_000,
   })
+  const pepeQuote = useSWR<{ pepeUsd: number }>('/api/pepe-price', getJson, { refreshInterval: 60_000, revalidateOnFocus: true })
   const { trigger: transferFunds, isMutating: transferring } = useSWRMutation<AdvertiserWalletSnapshot, Error, string, { amount: string; transferId: string }>(
     '/api/advertiser/wallet/transfer',
     (_key, { arg }) => postJson<AdvertiserWalletSnapshot>('/api/advertiser/wallet', arg),
@@ -297,6 +301,11 @@ export function AdvertiserPage() {
   const [description, setDescription] = useState('')
   const [taskCount, setTaskCount] = useState('1')
   const [promote, setPromote] = useState(false)
+  const [youtubeTitle, setYoutubeTitle] = useState('')
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [youtubeDescription, setYoutubeDescription] = useState('')
+  const [youtubeTaskCount, setYoutubeTaskCount] = useState('1')
+  const [youtubeDuration, setYoutubeDuration] = useState<30 | 60>(30)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [busyCampaignId, setBusyCampaignId] = useState<string | null>(null)
   const transferIdRef = useRef<{ amount: string; id: string } | null>(null)
@@ -310,6 +319,18 @@ export function AdvertiserPage() {
   const isTaskCountValid = Number.isSafeInteger(parsedTaskCount) && parsedTaskCount >= 1 && parsedTaskCount <= 100_000
   const campaignCostAtomic = getCampaignCostAtomic(parsedTaskCount, promote)
   const hasEnoughCampaignFunds = campaignCostAtomic > 0n && advertiserBalanceAtomic >= campaignCostAtomic
+  const parsedYoutubeTaskCount = /^\d+$/.test(youtubeTaskCount) ? Number(youtubeTaskCount) : 0
+  const isYoutubeTaskCountValid = Number.isSafeInteger(parsedYoutubeTaskCount) && parsedYoutubeTaskCount >= 1 && parsedYoutubeTaskCount <= 100_000
+  const youtubeRewardAtomic = BigInt(CAMPAIGN_REWARD_HOMERO_ATOMIC) * BigInt(youtubeDuration / CAMPAIGN_DURATION_SECONDS)
+  const youtubeCostPerTaskAtomic = youtubeRewardAtomic + BigInt(CAMPAIGN_COMMISSION_ATOMIC)
+  const youtubeCampaignCostAtomic = isYoutubeTaskCountValid ? youtubeCostPerTaskAtomic * BigInt(parsedYoutubeTaskCount) : 0n
+  function formatUsdEstimate(amountAtomic: bigint) {
+    const price = pepeQuote.data?.pepeUsd
+    if (!price || !Number.isFinite(price)) return null
+    return new Intl.NumberFormat(language === 'ru' ? 'ru-RU' : 'en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(Number(amountAtomic) / Number(atomicUnitsPerPepe) * price)
+  }
+
+  const hasEnoughYoutubeFunds = youtubeCampaignCostAtomic > 0n && advertiserBalanceAtomic >= youtubeCampaignCostAtomic
   const hasCampaignsData = Boolean(campaigns.data && wallet.data)
 
   async function refreshBalances() {
@@ -394,6 +415,49 @@ export function AdvertiserPage() {
     }
   }
 
+  async function handleCreateYoutubeCampaign(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setFeedback(null)
+    if (!hasCampaignsData || !isYoutubeTaskCountValid || !hasEnoughYoutubeFunds) return
+
+    const videoId = getYouTubeVideoId(youtubeUrl.trim())
+    if (!videoId) {
+      setFeedback({ type: 'error', message: isRussian ? 'Введите действительную HTTPS-ссылку на видео YouTube.' : 'Enter a valid HTTPS YouTube video URL.' })
+      return
+    }
+    if (youtubeTitle.trim().length < 3 || youtubeTitle.trim().length > 80 || youtubeDescription.trim().length > 500) {
+      setFeedback({ type: 'error', message: isRussian ? 'Проверьте название и описание кампании.' : 'Check the campaign title and description.' })
+      return
+    }
+
+    const payload = {
+      campaignType: 'youtube' as const,
+      title: youtubeTitle.trim(),
+      targetUrl: getYouTubeWatchUrl(videoId),
+      description: youtubeDescription.trim(),
+      totalTasks: parsedYoutubeTaskCount,
+      durationSeconds: youtubeDuration,
+      promote: false,
+    }
+    const signature = JSON.stringify(payload)
+    const existing = campaignIdRef.current
+    const campaignId = existing?.signature === signature ? existing.id : crypto.randomUUID()
+    campaignIdRef.current = { signature, id: campaignId }
+
+    try {
+      await createCampaign({ ...payload, campaignId })
+      campaignIdRef.current = null
+      setYoutubeTitle('')
+      setYoutubeUrl('')
+      setYoutubeDescription('')
+      setYoutubeTaskCount('1')
+      setFeedback({ type: 'success', message: isRussian ? 'YouTube-кампания запущена. Каждый пользователь сможет выполнить только одну кампанию вашего аккаунта.' : 'YouTube campaign launched. Each user can complete only one campaign from your account.' })
+      void refreshBalances().catch(() => undefined)
+    } catch (error) {
+      setFeedback({ type: 'error', message: isRussian ? 'Не удалось запустить YouTube-кампанию. Проверьте данные и баланс.' : error instanceof Error ? error.message : 'Could not launch the YouTube campaign.' })
+    }
+  }
+
   async function handleCampaignStatusChange(campaign: AdvertiserCampaign, status: CampaignStatus) {
     if (status === 'cancelled') {
       const confirmed = window.confirm(isRussian
@@ -435,7 +499,7 @@ export function AdvertiserPage() {
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100/75">{isRussian ? 'рекламные кампании' : 'campaign management'}</p>
               <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Кабинет рекламодателя' : 'Advertiser workspace'}</h1>
-              <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC-кампаниями' : 'Create and manage PTC campaigns'}. {isRussian ? `Каждый просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит исполнителю ${CAMPAIGN_REWARD_HOMERO} HOMERO. Отдельная комиссия платформы — ${CAMPAIGN_COMMISSION_PEPE} PEPE за завершённый просмотр.` : `Each view lasts ${CAMPAIGN_DURATION_SECONDS} seconds and rewards the performer ${CAMPAIGN_REWARD_HOMERO} HOMERO. The platform charges a separate ${CAMPAIGN_COMMISSION_PEPE} PEPE commission per completed view.`}</p>
+              <p className="mt-2 max-w-3xl text-xs leading-5 text-blue-50/75">{isRussian ? 'Создавайте и управляйте PTC- и YouTube-кампаниями' : 'Create and manage PTC and YouTube campaigns'}. {isRussian ? `PTC-просмотр длится ${CAMPAIGN_DURATION_SECONDS} секунд и приносит ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube-награда: 150 PEPE за 30 секунд или 300 PEPE за 60 секунд; комиссия — ${CAMPAIGN_COMMISSION_PEPE} PEPE за просмотр.` : `PTC views last ${CAMPAIGN_DURATION_SECONDS} seconds and pay ${CAMPAIGN_REWARD_HOMERO} HOMERO. YouTube rewards are 150 PEPE for 30 seconds or 300 PEPE for 60 seconds, plus a separate ${CAMPAIGN_COMMISSION_PEPE} PEPE commission per view.`}</p>
             </div>
           </div>
         </header>
@@ -572,11 +636,32 @@ export function AdvertiserPage() {
           </section>
         </div>
 
+        <YoutubeCampaignForm
+          title={youtubeTitle}
+          targetUrl={youtubeUrl}
+          description={youtubeDescription}
+          taskCount={youtubeTaskCount}
+          durationSeconds={youtubeDuration}
+          perViewReward={String(Number(youtubeRewardAtomic) / Number(atomicUnitsPerPepe))}
+          totalCost={formatAtomic(youtubeCampaignCostAtomic, language)}
+          estimatedUsd={formatUsdEstimate(youtubeCampaignCostAtomic)}
+          validTaskCount={isYoutubeTaskCountValid}
+          hasEnoughFunds={hasEnoughYoutubeFunds}
+          ready={hasCampaignsData}
+          submitting={creatingCampaign}
+          onTitleChange={setYoutubeTitle}
+          onUrlChange={setYoutubeUrl}
+          onDescriptionChange={setYoutubeDescription}
+          onTaskCountChange={setYoutubeTaskCount}
+          onDurationChange={setYoutubeDuration}
+          onSubmit={handleCreateYoutubeCampaign}
+        />
+
         <section aria-labelledby="advertiser-campaigns-title" className="rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
           <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 id="advertiser-campaigns-title" className="text-sm font-extrabold text-white">{isRussian ? 'Ваши рекламные кампании' : 'Your advertiser campaigns'}</h2>
-              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? 'Активные кампании публикуются в заданиях «Просмотр рекламы».' : 'Active campaigns appear as tasks in View Ads.'}</p>
+              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? 'PTC-задания и YouTube-видео публикуются в соответствующих разделах.' : 'PTC tasks and YouTube videos appear in their respective sections.'}</p>
             </div>
             <button type="button" onClick={() => void refreshBalances()} disabled={wallet.isValidating || campaigns.isValidating} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-white/10 px-3 text-[10px] font-bold text-slate-300 transition hover:bg-white/[0.05] disabled:opacity-50"><RefreshCw size={12} className={wallet.isValidating || campaigns.isValidating ? 'animate-spin' : ''} />{isRussian ? 'Обновить' : 'Refresh'}</button>
           </header>
@@ -587,7 +672,7 @@ export function AdvertiserPage() {
               : <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-5 text-center">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-200"><Megaphone size={18} /></span>
                 <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока нет' : 'No campaigns yet'}</p>
-                <p className="mt-1 max-w-sm text-[10px] leading-5 text-slate-400">{isRussian ? 'Создайте PTC-кампанию, чтобы она появилась в заданиях для исполнителей.' : 'Create a PTC campaign to make it available as a View Ads task for performers.'}</p>
+                <p className="mt-1 max-w-sm text-[10px] leading-5 text-slate-400">{isRussian ? 'Создайте PTC- или YouTube-кампанию, чтобы она появилась в разделе заданий для исполнителей.' : 'Create a PTC or YouTube campaign to make it available to performers.'}</p>
               </div>}
         </section>
 
