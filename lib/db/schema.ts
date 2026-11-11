@@ -312,7 +312,7 @@ export const arcadeProfiles = pgTable('earnpepe_arcade_profiles', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
-  check('earnpepe_arcade_profiles_energy_check', sql`${table.energy} between 0 and 10`),
+  check('earnpepe_arcade_profiles_energy_check', sql`${table.energy} between 0 and 20`),
   check('earnpepe_arcade_profiles_daily_energy_check', sql`${table.dailyEnergyEarned} between 0 and 20`),
   check('earnpepe_arcade_profiles_total_runs_check', sql`${table.totalRuns} >= 0`),
 ])

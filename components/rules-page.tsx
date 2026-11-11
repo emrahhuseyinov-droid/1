@@ -9,7 +9,7 @@ import { LocalizedTree } from '@/components/site-language-provider'
 const rules = [
   {
     title: 'Daily bonuses and ad tasks',
-    description: 'Earn platform rewards by claiming the daily bonus and completing eligible View Ads tasks.',
+    description: 'Earn platform rewards from daily bonuses, View Ads, PTC, Shortlinks, and eligible sponsored tasks.',
     icon: Gift,
     tone: 'text-amber-200 bg-amber-300/10 ring-amber-200/15',
     points: [
@@ -18,7 +18,18 @@ const rules = [
       'Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.',
       'Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.',
       'AdsLab task requirements and PEPE rewards are shown before you start. Rewards are credited only after verification.',
+      'The Wheel of Fortune shows when a free spin is available and the reward before you collect it.',
       'Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.',
+    ],
+  },
+  {
+    title: 'Manual CAPTCHA faucet',
+    description: 'Complete an AdsLab CAPTCHA to unlock a 10 PEPE claim after server-side verification.',
+    icon: ShieldCheck,
+    tone: 'text-cyan-200 bg-cyan-300/10 ring-cyan-200/15',
+    points: [
+      'Start the challenge from Manual Faucet, complete it on AdsLab, then return to claim your PEPE.',
+      'Each claim requires a unique CAPTCHA session and is credited only after AdsLab confirms the result.',
     ],
   },
   {
@@ -50,7 +61,7 @@ const rules = [
     tone: 'text-emerald-200 bg-emerald-300/10 ring-emerald-200/15',
     points: [
       'The withdrawal form supports PEPE only and requires a registered, verified FaucetPay account email.',
-      'The minimum request is 1,000 PEPE. The daily limit is 50,000 PEPE and resets at 00:00 UTC.',
+      'The minimum request is 500 PEPE. The daily limit is 50,000 PEPE and resets at 00:00 UTC.',
       'Pending and paid requests count toward that day’s limit. The requested PEPE is reserved while the transfer is being processed.',
       'If FaucetPay rejects a request, the PEPE is returned to your balance. If the status is pending, do not submit the same withdrawal again; the balance remains reserved to prevent a duplicate transfer.',
     ],
@@ -70,15 +81,17 @@ export function RulesPage() {
       <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0a0f18]/85 backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-5 sm:h-[80px] sm:px-8">
           <Link href="/" aria-label="pepe.casa home" className="shrink-0 text-white">
-            <PepeCasaLogo size={36} textClassName="font-sans text-lg sm:text-xl" />
+            <PepeCasaLogo size={36} textClassName="font-sans text-base sm:text-xl" />
           </Link>
           <nav aria-label="Main navigation" className="flex items-center gap-2 sm:gap-4">
             <LanguageSwitcher compact />
             <Link href="/#features" className="hidden rounded-full px-3 py-2 text-xs font-bold text-white/60 transition hover:text-white sm:block">Features</Link>
             <Link href="/#faq" className="hidden rounded-full px-3 py-2 text-xs font-bold text-white/60 transition hover:text-white sm:block">FAQ</Link>
-            <Link href="/sign-in?next=%2Fdashboard" className="rounded-full px-3 py-2 text-xs font-bold text-white/70 transition hover:text-white">Sign in</Link>
-            <Link href="/sign-up?next=%2Fdashboard" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-amber-300 px-4 text-xs font-extrabold text-[#111722] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100">
-              Join pepe.casa <ArrowRight size={14} aria-hidden="true" />
+            <Link href="/sign-in?next=%2Fdashboard" className="hidden rounded-full px-3 py-2 text-xs font-bold text-white/70 transition hover:text-white sm:inline-flex">Sign in</Link>
+            <Link href="/sign-up?next=%2Fdashboard" className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap rounded-full bg-amber-300 px-2.5 text-[10px] font-extrabold text-[#111722] transition hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 sm:gap-2 sm:px-4 sm:text-xs">
+              <span className="sm:hidden">Join</span>
+              <span className="hidden sm:inline">Join pepe.casa</span>
+              <ArrowRight size={14} aria-hidden="true" />
             </Link>
           </nav>
         </div>
@@ -92,12 +105,12 @@ export function RulesPage() {
           </p>
           <h1 className="mt-5 max-w-3xl text-balance text-4xl font-black leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-6xl">Daily rewards. Ad tasks. Clear rules.</h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-            Learn how daily HOMERO bonuses, AdsLab PTC tasks, Arcade energy, and PEPE withdrawals work. Check the terms before you claim or withdraw.
+            Learn how CAPTCHA rewards, daily HOMERO bonuses, AdsLab tasks, the Wheel of Fortune, Arcade, and PEPE withdrawals work. Check the terms before you claim or withdraw.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
               <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/45">Minimum payout</p>
-              <p className="mt-2 font-mono text-xl font-black text-amber-100">1,000 PEPE</p>
+              <p className="mt-2 font-mono text-xl font-black text-amber-100">500 PEPE</p>
             </div>
             <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
               <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/45">Daily limit</p>
@@ -120,7 +133,7 @@ export function RulesPage() {
             {rules.map((rule, index) => {
               const Icon = rule.icon
               return (
-                <article key={rule.title} id={index === 3 ? 'payouts' : undefined} className="scroll-mt-28 rounded-[24px] border border-white/[0.08] bg-[#0e1520]/85 p-5 sm:p-7">
+                <article key={rule.title} id={rule.title === 'Request a PEPE payout' ? 'payouts' : undefined} className="scroll-mt-28 rounded-[24px] border border-white/[0.08] bg-[#0e1520]/85 p-5 sm:p-7">
                   <div className="flex items-start gap-4">
                     <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ring-1 ${rule.tone}`}><Icon size={19} aria-hidden="true" /></span>
                     <div className="min-w-0 flex-1">

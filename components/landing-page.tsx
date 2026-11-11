@@ -15,6 +15,7 @@ import {
   Gift,
   Gamepad2,
   MonitorPlay,
+  Menu,
   ShieldCheck,
   Trophy,
   UsersRound,
@@ -32,9 +33,15 @@ const navigation = [
 const features = [
   {
     title: 'Verified reward tasks',
-    description: 'Choose an offer, check its requirements, and track confirmed rewards in your account.',
+    description: 'Explore View Ads, PTC, Shortlinks, and eligible sponsored campaigns; check the reward and requirements before starting.',
     icon: Gift,
     tone: 'text-amber-200 bg-amber-300/10 ring-amber-200/15',
+  },
+  {
+    title: 'AdsLab CAPTCHA faucet',
+    description: 'Complete an AdsLab CAPTCHA to receive 10 PEPE after server-side verification.',
+    icon: ShieldCheck,
+    tone: 'text-cyan-200 bg-cyan-300/10 ring-cyan-200/15',
   },
   {
     title: 'Neon Arcade',
@@ -50,7 +57,7 @@ const features = [
   },
   {
     title: 'PEPE payouts',
-    description: 'Request payouts to a verified FaucetPay account. Minimum: 1,000 PEPE; daily limit: 50,000 PEPE.',
+    description: 'Request payouts to a verified FaucetPay account. Minimum: 500 PEPE; daily limit: 50,000 PEPE.',
     icon: Wallet,
     tone: 'text-blue-200 bg-blue-300/10 ring-blue-200/15',
   },
@@ -73,6 +80,18 @@ const features = [
     tone: 'text-rose-200 bg-rose-300/10 ring-rose-200/15',
   },
   {
+    title: 'Wheel of Fortune',
+    description: 'Use a free spin when it is available and collect the HOMERO reward shown in your account.',
+    icon: Zap,
+    tone: 'text-fuchsia-200 bg-fuchsia-300/10 ring-fuchsia-200/15',
+  },
+  {
+    title: 'Advertiser campaigns',
+    description: 'Discover sponsored tasks from pepe.casa advertisers alongside other eligible activities.',
+    icon: MonitorPlay,
+    tone: 'text-indigo-200 bg-indigo-300/10 ring-indigo-200/15',
+  },
+  {
     title: 'Payout history',
     description: 'Track each PEPE request and its FaucetPay status from your account.',
     icon: CircleHelp,
@@ -88,7 +107,7 @@ const steps = [
   },
   {
     title: 'Choose an activity',
-    description: 'Earn HOMERO through daily bonuses, complete tasks, or start Arcade runs.',
+    description: 'Explore verified ad tasks, the 10 PEPE CAPTCHA faucet, Wheel of Fortune spins, and Arcade runs.',
     icon: Zap,
   },
   {
@@ -98,14 +117,15 @@ const steps = [
   },
   {
     title: 'Withdraw your PEPE',
-    description: 'Have at least 1,000 PEPE? Add your FaucetPay account and request a payout instantly!',
+    description: 'Have at least 500 PEPE? Add your FaucetPay account and request a payout instantly!',
     icon: Wallet,
   },
 ]
 
-type FAQKind = 'payouts' | 'balances' | 'rewards' | 'leaderboard'
+type FAQKind = 'captcha' | 'payouts' | 'balances' | 'rewards' | 'leaderboard'
 
 const faqs: { kind: FAQKind; question: string }[] = [
+  { kind: 'captcha', question: 'How do I claim the 10 PEPE CAPTCHA reward?' },
   { kind: 'payouts', question: 'Does pepe.casa pay PEPE?' },
   { kind: 'balances', question: 'What is the difference between PEPE and HOMERO?' },
   { kind: 'rewards', question: 'Are rewards guaranteed?' },
@@ -119,31 +139,49 @@ type LandingPageProps = {
 function LandingHeader({ signInHref, signUpHref }: { signInHref: string; signUpHref: string }) {
   return (
     <LocalizedTree>
-    <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0a0f18]/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-2 px-3 sm:h-[80px] sm:gap-4 sm:px-8">
-        <Link href="/" aria-label="pepe.casa home" className="shrink-0 text-white">
-          <PepeCasaLogo size={36} textClassName="font-sans text-lg sm:text-xl" />
-        </Link>
+      <header className="sticky top-0 z-30 border-b border-violet-200/10 bg-[#0b1026]/70 px-3 backdrop-blur-2xl">
+        <div className="mx-auto max-w-[1760px] py-3 sm:px-4 sm:py-3.5">
+          <div className="relative flex h-[68px] items-center justify-between gap-2 rounded-[22px] border border-violet-200/20 bg-gradient-to-r from-[#171b43]/95 via-[#202754]/95 to-[#17334d]/90 px-3 shadow-[0_16px_42px_rgba(3,8,30,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] sm:h-[74px] sm:gap-4 sm:px-5">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-12 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-200/35 to-transparent" />
+            <Link href="/" aria-label="pepe.casa home" className="relative z-10 shrink-0 rounded-2xl text-white transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
+              <PepeCasaLogo size={36} textClassName="font-sans text-lg sm:text-xl" />
+            </Link>
 
-        <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex">
-            {navigation.map((item) => (
-              <Link key={item.href} href={item.href} className="text-sm font-semibold text-white/70 transition-colors hover:text-white">
-                {item.label}
+            <nav aria-label="Main navigation" className="hidden items-center gap-1 rounded-full border border-white/[0.07] bg-[#101634]/55 p-1 lg:flex">
+              {navigation.map((item) => (
+                <Link key={item.href} href={item.href} className="rounded-full px-3 py-2 text-xs font-bold text-white/65 transition-colors hover:bg-white/[0.07] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="relative z-10 flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+              <LanguageSwitcher compact />
+              <Link href={signInHref} className="hidden rounded-full px-3 py-2 text-xs font-bold text-white/65 transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 lg:inline-flex lg:px-4 lg:text-sm">
+                Sign in
               </Link>
-            ))}
-        </nav>
-
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <LanguageSwitcher compact />
-          <Link href={signInHref} className="rounded-full px-1.5 py-2 text-[11px] font-bold text-white/70 transition hover:text-white sm:px-4 sm:text-sm">
-            Sign in
-          </Link>
-          <Link href={signUpHref} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-amber-300 px-3 text-[11px] font-extrabold text-[#111722] shadow-[0_6px_24px_rgba(250,204,21,0.16)] transition hover:-translate-y-0.5 hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 sm:min-h-11 sm:gap-2 sm:px-5 sm:text-sm">
-            Get started <ArrowRight size={14} aria-hidden="true" />
-          </Link>
+              <Link href={signUpHref} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-amber-300 via-yellow-200 to-cyan-200 px-3 text-[11px] font-extrabold text-[#111722] shadow-[0_7px_24px_rgba(250,204,21,0.2),0_0_22px_rgba(88,217,255,0.12)] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 sm:min-h-11 sm:gap-2 sm:px-5 sm:text-sm">
+                Get started <ArrowRight size={14} aria-hidden="true" />
+              </Link>
+              <details className="relative lg:hidden">
+                <summary aria-label="Open navigation menu" className="grid size-10 cursor-pointer list-none place-items-center rounded-full border border-violet-100/20 bg-white/[0.04] text-white/80 transition hover:border-cyan-100/40 hover:bg-cyan-100/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 [&::-webkit-details-marker]:hidden">
+                  <Menu size={17} aria-hidden="true" />
+                </summary>
+                <nav aria-label="Main navigation" className="absolute right-0 top-[calc(100%+0.75rem)] z-40 flex w-56 flex-col gap-1 rounded-2xl border border-violet-200/20 bg-[#171e45]/95 p-2 shadow-[0_18px_42px_rgba(3,8,30,0.52)] backdrop-blur-xl">
+                  {navigation.map((item) => (
+                    <Link key={item.href} href={item.href} className="rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/[0.07] hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
+                      {item.label}
+                    </Link>
+                  ))}
+                  <Link href={signInHref} className="mt-1 rounded-xl border-t border-white/[0.08] px-3 py-3 text-sm font-bold text-white/70 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
+                    Sign in
+                  </Link>
+                </nav>
+              </details>
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
     </LocalizedTree>
   )
 }
@@ -151,7 +189,7 @@ function LandingHeader({ signInHref, signUpHref }: { signInHref: string; signUpH
 function HeroPreview() {
   return (
     <LocalizedTree>
-    <div className="relative mx-auto w-full max-w-[590px]">
+    <div className="relative mx-auto w-full max-w-[840px]">
       <div aria-hidden="true" className="absolute -inset-8 rounded-[42px] bg-blue-500/[0.08] blur-3xl" />
       <div className="cartoon-arcade-frame relative overflow-hidden rounded-[32px] border-2 border-violet-200/20 bg-[#1b2047] p-2.5 shadow-[0_32px_100px_rgba(0,0,0,0.46)] sm:p-3">
         <div className="flex items-center justify-between gap-3 px-2.5 pb-3 pt-1 sm:px-3 sm:pb-4">
@@ -217,7 +255,19 @@ function SectionHeading({ id, eyebrow, title, description }: { id?: string; eyeb
 function FAQAnswer({ kind }: { kind: FAQKind }) {
   return (
     <LocalizedTree>
-      {kind === 'payouts' ? (
+      {kind === 'captcha' ? (
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-2xl border border-cyan-200/10 bg-cyan-300/[0.045] p-4">
+            <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-cyan-200/10 text-cyan-100">
+              <ShieldCheck size={16} aria-hidden="true" />
+            </span>
+            <p className="text-[13px] leading-6 text-white/75 sm:text-sm">
+              {'Complete an AdsLab CAPTCHA to receive 10 PEPE after server-side verification.'}
+            </p>
+          </div>
+          <p className="text-[12px] leading-5 text-white/50">{'Open Manual Faucet, complete the challenge, and return to claim after AdsLab confirms it.'}</p>
+        </div>
+      ) : kind === 'payouts' ? (
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-2xl border border-amber-200/10 bg-amber-200/[0.045] p-4">
             <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-xl bg-amber-200/10 text-amber-100">
@@ -234,7 +284,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
               <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">{'Minimum payout'}</dt>
-              <dd className="mt-1.5 font-mono text-[14px] font-bold text-amber-100">{'1,000 PEPE'}</dd>
+              <dd className="mt-1.5 font-mono text-[14px] font-bold text-amber-100">{'500 PEPE'}</dd>
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3.5">
               <dt className="text-[10px] font-bold uppercase tracking-[0.13em] text-white/45">{'Daily limit'}</dt>
@@ -340,19 +390,16 @@ export function LandingPage({ referralCode }: LandingPageProps) {
 
       <LandingHeader signInHref={signInHref} signUpHref={signUpHref} />
 
-      <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-5 pb-20 pt-12 sm:gap-12 sm:px-8 sm:pb-24 sm:pt-16 md:grid-cols-[0.92fr_1.08fr] md:gap-10 lg:gap-16 lg:pb-28 lg:pt-20">
-        <div className="relative z-10 max-w-[560px]">
+      <section className="mx-auto grid max-w-[1760px] grid-cols-1 items-center gap-10 px-5 pb-20 pt-12 sm:gap-12 sm:px-8 sm:pb-24 sm:pt-16 md:grid-cols-[0.92fr_1.08fr] md:gap-10 lg:gap-16 lg:pb-28 lg:pt-20">
+        <div className="relative z-10 max-w-[720px]">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.055] px-4 py-2.5 text-[9px] font-extrabold uppercase tracking-[0.16em] text-white/75 shadow-[0_8px_26px_rgba(3,8,30,0.18)] sm:text-[10px]">
             <span className="size-1.5 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(252,211,77,0.8)]" />
             Tasks · Arcade · PEPE payouts
           </div>
-          <h1 className="mt-6 max-w-[620px] text-balance text-[clamp(2.9rem,6.2vw,4.5rem)] font-extrabold leading-[0.99] tracking-[-0.05em] text-white lg:text-[clamp(3.25rem,3.9vw,4rem)]">
+          <h1 className="mt-6 max-w-[760px] text-balance text-[clamp(2.9rem,6.2vw,4.5rem)] font-extrabold leading-[0.99] tracking-[-0.05em] text-white lg:text-[clamp(3.25rem,3.9vw,4rem)]">
             <span className="block">Play.</span>
             <span className="mt-1 block bg-gradient-to-r from-amber-200 via-yellow-100 to-cyan-200 bg-clip-text text-transparent">Earn PEPE.</span>
           </h1>
-          <p className="mt-6 max-w-[29rem] text-base leading-7 text-white/70 sm:text-[17px] sm:leading-8">
-            Complete verified tasks, play the neon Arcade, and request PEPE payouts through FaucetPay.
-          </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href={signUpHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-amber-300 px-6 text-sm font-extrabold text-[#111722] shadow-[0_10px_34px_rgba(250,204,21,0.18)] transition hover:-translate-y-0.5 hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#090e16]">
               Create your account <ArrowRight size={16} aria-hidden="true" />
@@ -367,12 +414,12 @@ export function LandingPage({ referralCode }: LandingPageProps) {
       </section>
 
       <section id="features" aria-labelledby="features-title" className="scroll-mt-24 border-y border-white/[0.06] bg-white/[0.018] px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-[1760px]">
           <SectionHeading
             id="features-title"
             eyebrow="One place for everything"
             title="Everything in one account"
-            description="Tasks, Arcade, wallet tools, and PEPE payout tracking — all in one place."
+            description="Verified tasks, CAPTCHA claims, Wheel of Fortune spins, Arcade, wallet tools, and PEPE payouts — all in one place."
           />
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             {features.map((feature) => {
@@ -395,7 +442,7 @@ export function LandingPage({ referralCode }: LandingPageProps) {
       </section>
 
       <section id="how-it-works" aria-labelledby="steps-title" className="scroll-mt-24 px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-[1760px]">
           <SectionHeading
             id="steps-title"
             title="Four steps to your first payout"
@@ -422,13 +469,13 @@ export function LandingPage({ referralCode }: LandingPageProps) {
       </section>
 
       <section id="faq" aria-labelledby="faq-title" className="scroll-mt-24 border-t border-white/[0.06] bg-white/[0.018] px-5 py-16 sm:px-8 sm:py-20">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-[1600px]">
           <SectionHeading
             id="faq-title"
             title="Frequently asked questions"
-            description="Clear answers about tasks, rewards, Arcade, and PEPE payouts."
+            description="Clear answers about CAPTCHA claims, tasks, rewards, Arcade, and PEPE payouts."
           />
-          <div className="space-y-3">
+          <div className="grid gap-3 lg:grid-cols-2">
             {faqs.map((faq) => (
               <details key={faq.question} className="group rounded-[22px] border border-white/[0.07] bg-gradient-to-br from-[#121b29] via-[#0e1621] to-[#0b111a] px-5 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.14)] transition-all duration-300 open:border-amber-200/25 open:shadow-[0_16px_42px_rgba(0,0,0,0.2),0_0_0_1px_rgba(251,191,36,0.04)] sm:px-6 sm:py-5">
                 <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-bold leading-6 text-white marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/60 sm:text-base [&::-webkit-details-marker]:hidden">
@@ -448,7 +495,7 @@ export function LandingPage({ referralCode }: LandingPageProps) {
 
       <footer className="relative isolate overflow-hidden border-t border-white/[0.07] bg-[#080d14] px-5 py-8 sm:px-8 sm:py-10">
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-32 bg-gradient-to-b from-indigo-500/[0.08] to-transparent" />
-        <div className="mx-auto grid max-w-7xl gap-7 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="mx-auto grid max-w-[1760px] gap-7 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div className="space-y-3">
             <Link href="/" aria-label="pepe.casa home" className="inline-flex rounded-xl text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
               <PepeCasaLogo size={30} textClassName="text-base" />
