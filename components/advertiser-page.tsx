@@ -524,7 +524,7 @@ export function AdvertiserPage({ view = 'overview' }: { view?: AdvertiserPageVie
 
               <div className="relative mx-auto grid w-full max-w-[19rem] place-items-center py-2 sm:py-3 lg:my-1">
                 <Image
-                  src="/images/pepe-coin-transparent.png"
+                  src="/images/pepe-coin-forward-transparent.png"
                   alt=""
                   aria-hidden="true"
                   width={640}
