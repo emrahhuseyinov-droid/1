@@ -23,8 +23,14 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
   if (!section) return { title: 'pepe.casa' }
 
   const language = cookieStore.get('pepecasa_language')?.value === 'en' ? 'en' : 'ru'
-  const title = translateSiteText(`${section} | pepe.casa`, language)
-  const description = language === 'ru'
+  const title = section === 'Advertiser'
+    ? language === 'ru' ? 'Кабинет рекламодателя | pepe.casa' : 'Advertiser workspace | pepe.casa'
+    : translateSiteText(`${section} | pepe.casa`, language)
+  const description = section === 'Advertiser'
+    ? language === 'ru'
+      ? 'Создавайте PTC-кампании, пополняйте рекламный кошелёк PEPE и управляйте заданиями.'
+      : 'Create PTC campaigns, fund your PEPE advertiser wallet, and manage sponsored tasks.'
+    : language === 'ru'
     ? section === 'Manual Faucet'
       ? 'Получайте награды PEPE после серверной проверки CAPTCHA.'
       : section === 'Wheel of Fortune'

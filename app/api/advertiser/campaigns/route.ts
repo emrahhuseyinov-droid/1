@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   const input = body as Record<string, unknown>
   const campaignId = typeof input.campaignId === 'string' && uuidPattern.test(input.campaignId) ? input.campaignId.toLowerCase() : null
-  const campaignType = input.campaignType === 'ptc' || input.campaignType === 'youtube' ? input.campaignType : null
+  const campaignType = input.campaignType === 'ptc' ? 'ptc' : null
   const title = typeof input.title === 'string' ? input.title.trim() : ''
   const description = typeof input.description === 'string' ? input.description.trim() : ''
   const rewardPerTaskAtomic = CAMPAIGN_REWARD_HOMERO_ATOMIC
@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
   try {
     const url = new URL(rawUrl)
     if (url.protocol === 'https:' && !url.username && !url.password) targetUrl = url.toString()
-    if (campaignType === 'youtube' && !['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname.toLowerCase())) targetUrl = null
   } catch {
     targetUrl = null
   }
