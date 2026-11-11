@@ -134,9 +134,9 @@ const advertiserNavGroups: NavigationGroup[] = [
   {
     title: 'Advertiser',
     links: [
-      { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser' },
       { label: 'Fund wallet', icon: ArrowLeftRight, section: 'Advertiser', href: '/advertiser/fund' },
-      { label: 'Create campaign', icon: Gift, section: 'Advertiser', href: '/advertiser/create' },
+      { label: 'Create PTC', icon: Gift, section: 'Advertiser', href: '/advertiser/create' },
+      { label: 'Create YouTube campaign', icon: Play, section: 'Advertiser', href: '/advertiser/create-youtube' },
       { label: 'Advertiser campaigns', icon: BarChart3, section: 'Advertiser', href: '/advertiser/campaigns' },
       { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser/activity' },
       { label: 'Dashboard', icon: House, section: 'Dashboard' },
@@ -273,7 +273,7 @@ export function ManualClaimPage({ initialSection, guestProfileId, adslabPlacemen
       <header className="sticky top-0 z-30 flex h-[62px] min-w-0 items-center justify-between border-b-2 border-violet-200/70 bg-[#fffaf0]/90 px-4 backdrop-blur-xl dark:border-violet-300/15 dark:bg-[#141b3b]/90 sm:px-6">
         <div className="flex shrink-0 items-center gap-3">
           <button type="button" aria-label="Open navigation menu" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"><Menu size={19} /></button>
-          {isAdvertiserMode && <p className="hidden text-xs font-extrabold text-slate-500 dark:text-slate-300 sm:block">Advertiser workspace</p>}
+          {isAdvertiserMode && <p className="hidden text-xs font-extrabold text-slate-500 dark:text-slate-300 sm:block">Advertiser wallet</p>}
         </div>
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           {isAdvertiserMode && <Link
