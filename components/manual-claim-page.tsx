@@ -19,7 +19,6 @@ import { ReferralsPage } from '@/components/referrals-page'
 import { ViewAdsPage } from '@/components/view-ads-page'
 import { ShortlinksPage } from '@/components/shortlinks-page'
 import { AdsLabOfferwallPage } from '@/components/adslab-offerwall-page'
-import { BannerRewardPromo } from '@/components/banner-reward-promo'
 import { ArcadePage } from '@/components/arcade-page'
 import { WheelOfFortunePage } from '@/components/wheel-of-fortune-page'
 import { ArcadeWeeklyLeaderboardPage } from '@/components/arcade-weekly-leaderboard-page'
@@ -254,7 +253,6 @@ export function ManualClaimPage({ initialSection, guestProfileId, email, name, i
         </div>
       </div>
 
-      <BannerRewardPromo />
       {notice && <div role="status" className="fixed bottom-5 left-1/2 z-[70] -translate-x-1/2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-xs font-semibold text-white shadow-xl"><span className="inline-flex items-center gap-1.5">{notice.includes('HOMERO') && <HomeroTokenLogo size={14} />}{notice}</span></div>}
 
 
