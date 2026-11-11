@@ -9,8 +9,8 @@ export function calculatePepeSwapFeeAtomic(amountAtomic: number | bigint) {
   return (BigInt(amountAtomic) * PEPE_SWAP_FEE_BASIS_POINTS) / BASIS_POINTS_DENOMINATOR
 }
 
-export const CAMPAIGN_REWARD_HOMERO_ATOMIC = 15_000_000_000
-export const CAMPAIGN_REWARD_HOMERO = 150
+export const CAMPAIGN_REWARD_PEPE_ATOMIC = 15_000_000_000
+export const CAMPAIGN_REWARD_PEPE = 150
 export const CAMPAIGN_DURATION_SECONDS = 30
 export const CAMPAIGN_COMMISSION_ATOMIC = 2_500_000_000
 export const CAMPAIGN_COMMISSION_PEPE = 25

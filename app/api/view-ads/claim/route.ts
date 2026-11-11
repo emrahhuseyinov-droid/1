@@ -150,7 +150,7 @@ async function claimAdvertiserTask(userId: string, clickId: string) {
         source: 'advertiser_task',
         sourceKey: click.clickId,
         itemId: campaign.id,
-        tokenSymbol: 'HOMERO',
+        tokenSymbol: 'PEPE',
         rewardAtomic: campaign.rewardPerTaskAtomic,
         createdAt: now,
       })
@@ -223,8 +223,8 @@ export async function POST(request: NextRequest) {
       if (result.status === 'already_completed') return NextResponse.json({ error: 'You have already completed this campaign.', code: 'already_completed' }, { status: 409, headers: noStoreHeaders })
       if (result.status === 'cooldown') return NextResponse.json({ error: 'This campaign task will be available again after the 24-hour cooldown.', code: 'cooldown', cooldownUntil: result.cooldownUntil, remainingSeconds: result.remainingSeconds }, { status: 429, headers: noStoreHeaders })
       if (result.status === 'too_early') return NextResponse.json({ error: 'The task timer has not finished.', code: result.status, remainingSeconds: result.remainingSeconds }, { status: 409, headers: noStoreHeaders })
-      if (result.status === 'already_credited') return NextResponse.json({ credited: true, alreadyCredited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: 'HOMERO' }, { headers: noStoreHeaders })
-      return NextResponse.json({ credited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: 'HOMERO', energy: result.energy, energyGranted: result.energyGranted, dailyEnergyEarned: result.dailyEnergyEarned, dailyEnergyCap: result.dailyEnergyCap }, { headers: noStoreHeaders })
+      if (result.status === 'already_credited') return NextResponse.json({ credited: true, alreadyCredited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: 'PEPE' }, { headers: noStoreHeaders })
+      return NextResponse.json({ credited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: 'PEPE', energy: result.energy, energyGranted: result.energyGranted, dailyEnergyEarned: result.dailyEnergyEarned, dailyEnergyCap: result.dailyEnergyCap }, { headers: noStoreHeaders })
     }
   } catch (error) {
     console.error('[view-ads-claim] Could not credit advertiser task:', error)
