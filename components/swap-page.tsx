@@ -349,7 +349,7 @@ export function SwapPage() {
             )}
             {snapshot && availableReserveAtomic <= 0n && !amount && <p role="status" className="text-[10px] text-dashboard-muted">The exchange balance is not available yet.</p>}
 
-            {swapAttempt && <p className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">The last request may still be processing. Retry the same amount to safely confirm it without a duplicate swap.</p>}
+            {swapAttempt && !isSwapping && <p className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">The last request may still be processing. Retry the same amount to safely confirm it without a duplicate swap.</p>}
             {notice && <Alert role={notice.kind === 'error' ? 'alert' : 'status'} variant={notice.kind === 'error' ? 'destructive' : 'default'}><AlertDescription>{notice.text}</AlertDescription></Alert>}
 
             <Button type="submit" size="lg" disabled={!canSwap} className="h-auto w-full py-3">
