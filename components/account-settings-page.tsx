@@ -5,7 +5,7 @@ import { BadgeCheck, Check, Copy, LockKeyhole, UserRound } from 'lucide-react'
 import { AccountSecurityPanel } from '@/components/account-security-panel'
 import { PepeCasaAvatar } from '@/components/pepecasa-avatar'
 import { LocalizedTree } from '@/components/site-language-provider'
-import { PROFILE_AVATARS, type ProfileAvatarSrc } from '@/lib/profile-avatars'
+import { getAvailableProfileAvatars, type ProfileAvatarSrc } from '@/lib/profile-avatars'
 
 type SettingsTab = 'profile' | 'security'
 
@@ -14,7 +14,8 @@ const tabs: { id: SettingsTab; label: string; icon: typeof UserRound }[] = [
   { id: 'security', label: 'Security', icon: LockKeyhole },
 ]
 
-export function AccountSettingsPage({ name, email, avatarSrc, onAvatarChange }: { name: string; email: string; avatarSrc: ProfileAvatarSrc; onAvatarChange: (avatarSrc: ProfileAvatarSrc) => void }) {
+export function AccountSettingsPage({ name, email, avatarSrc, isAdmin, onAvatarChange }: { name: string; email: string; avatarSrc: ProfileAvatarSrc; isAdmin: boolean; onAvatarChange: (avatarSrc: ProfileAvatarSrc) => void }) {
+  const availableAvatars = getAvailableProfileAvatars(isAdmin)
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [copyStatus, setCopyStatus] = useState('')
   const [avatarStatus, setAvatarStatus] = useState('')
@@ -31,7 +32,7 @@ export function AccountSettingsPage({ name, email, avatarSrc, onAvatarChange }: 
   }
 
   async function saveAvatar(nextAvatar: ProfileAvatarSrc) {
-    if (savingAvatar || nextAvatar === avatarSrc) return
+    if (savingAvatar) return
 
     setSavingAvatar(true)
     setAvatarStatus('')
@@ -137,18 +138,19 @@ export function AccountSettingsPage({ name, email, avatarSrc, onAvatarChange }: 
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 id="avatar-picker-title" className="text-xs font-extrabold">Choose your avatar</h3>
-                  <p className="mt-1 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Pick a hooded avatar; your choice will appear across your account.</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Choose an avatar; your choice will appear across your account.</p>
                 </div>
                 <PepeCasaAvatar size={48} src={avatarSrc} className="border-2 border-blue-500/30 shadow-md shadow-blue-950/10" />
               </div>
 
               <div role="group" aria-label="Choose your avatar" aria-busy={savingAvatar} className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 xl:grid-cols-8">
-                {PROFILE_AVATARS.map((avatar) => {
+                {availableAvatars.map((avatar) => {
                   const selected = avatarSrc === avatar.src
                   return (
                     <button
                       key={avatar.id}
                       type="button"
+                      aria-label={`Choose ${avatar.label} avatar`}
                       aria-pressed={selected}
                       disabled={savingAvatar}
                       onClick={() => void saveAvatar(avatar.src)}
@@ -158,7 +160,6 @@ export function AccountSettingsPage({ name, email, avatarSrc, onAvatarChange }: 
                         <PepeCasaAvatar size={54} src={avatar.src} className="shadow-sm" />
                         {selected && <span aria-hidden="true" className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-blue-600 text-white shadow"><Check size={12} strokeWidth={3} /></span>}
                       </span>
-                      <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300">{avatar.label}</span>
                     </button>
                   )
                 })}

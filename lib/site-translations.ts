@@ -308,7 +308,7 @@ const ruPhrases = new Map<string, string>([
   ['Ranked & Casual Arcade', 'Рейтинговая и свободная аркада'],
   ['One place for everything', 'Всё необходимое — под рукой'],
   ['Everything in one account', 'Всё в одном аккаунте'],
-  ['Verified tasks, CAPTCHA claims, Wheel of Fortune spins, Arcade, wallet tools, and PEPE payouts — all in one place.', 'Подтверждённые задания, награды за CAPTCHA, коле��о фортуны, аркада, инструменты кошелька и выплаты PEPE — всё в одном месте.'],
+  ['Verified tasks, CAPTCHA claims, Wheel of Fortune spins, Arcade, wallet tools, and PEPE payouts — all in one place.', 'Подтверждённ��е задания, награды за CAPTCHA, коле��о фортуны, аркада, инструменты кошелька и выплаты PEPE — всё в одном месте.'],
   ['Verified reward tasks', 'Проверенные задания'],
   ['Choose an offer, check its requirements, and track confirmed rewards in your account.', 'Выбирайте задание, изучайте условия и сл��дите за начисленными наградами в личном кабинете.'],
   ['Explore View Ads, PTC, Shortlinks, and eligible sponsored campaigns; check the reward and requirements before starting.', 'Выполняйте задания View Ads, PTC, Shortlinks и доступные реклам��ые кампании; перед началом проверьте условия и награду.'],
@@ -432,7 +432,7 @@ const ruPhrases = new Map<string, string>([
   ['If FaucetPay rejects a request, the PEPE is returned to your balance. If the status is pending, do not submit the same withdrawal again; the balance remains reserved to prevent a duplicate transfer.', 'Если FaucetPay отклонит заявку, PEPE вернутся на баланс. Пока заявка обрабатывается, не отправляйте её повторно: сумма остаётся в резерве, чтобы избежать дублирующего перевода.'],
   ['Balances are not all the same', 'Балансы имеют разные назначения'],
   ['PEPE and HOMERO are recorded separately in your account. The withdrawal form sends PEPE only. HOMERO remains an in-platform balance; if an exchange option is available to you, its current rate and fee are shown before you confirm.', 'PEPE и HOMERO учитываются в аккаунте отдельно. Форма вывода отправляет только PEPE. HOMERO остаётся внутренним балансом платформы; если обмен доступен, курс и комиссия будут показаны до подтверждения.'],
-  ['PEPE is a crypto asset, so its market value can change. pepe.casa does not promise a fixed fiat value or guaranteed earnings.', 'PEPE — криптоактив, его рыночная стоимость может меняться. pepe.casa не гарантирует фиксированную стоимость в фиатной валюте или доход.'],
+  ['PEPE is a crypto asset, so its market value can change. pepe.casa does not promise a fixed fiat value or guaranteed earnings.', 'PEPE — криптоактив, его ры��очная стоимость может меняться. pepe.casa не гарантирует фиксированную стоимость в фиатной валюте или доход.'],
   ['Ready to get started?', 'Готовы начать?'],
   ['See available activities and the current terms in your account.', 'Посмотрите доступные задания и актуальные условия в аккаунте.'],
   ['Create your account', 'Создайте аккаунт'],
@@ -476,6 +476,12 @@ const ruPhrases = new Map<string, string>([
   ['Daily bonus', 'Ежедневный бонус'],
   ['HOMERO reward', 'Награда HOMERO'],
   ['PEPE reward', 'Награда PEPE'],
+  ['Wheel of Fortune reward', 'Награда колеса фортуны'],
+  ['Wheel of Fortune prize: 10 HOMERO', 'Приз колеса фортуны: 10 HOMERO'],
+  ['Wheel of Fortune prize: 25 HOMERO', 'Приз колеса фортуны: 25 HOMERO'],
+  ['Wheel of Fortune prize: 100 HOMERO', 'Приз колеса фортуны: 100 HOMERO'],
+  ['Wheel of Fortune prize: 500 HOMERO', 'Приз колеса фортуны: 500 HOMERO'],
+  ['Wheel of Fortune jackpot: 1,000 HOMERO', 'Джекпот колеса фортуны: 1 000 HOMERO'],
   ['Referral commission', 'Реферальная комиссия'],
   ['Arcade HOMERO coin', 'Монета HOMERO в Аркаде'],
   ['Ledger activity', 'Операции по счёту'],
@@ -656,7 +662,7 @@ const ruPhrases = new Map<string, string>([
   ['Security', 'Безопасность'],
   ['Profile details', 'Данные профиля'],
   ['Choose your avatar', 'Выберите аватар'],
-  ['Pick a hooded avatar; your choice will appear across your account.', 'Выберите аватар в капюшоне — он будет отображаться во всём аккаунте.'],
+  ['Choose an avatar; your choice will appear across your account.', 'Выберите аватар — он будет отображаться во всём аккаунте.'],
   ['Avatar saved.', 'Аватар сохранён.'],
   ['Could not save avatar. Please try again.', 'Не удалось сохранить аватар. Попробуйте ещё раз.'],
   ['Saving avatar…', 'Сохраняем аватар…'],
@@ -1353,7 +1359,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Забегов: ${russianNumber(match[1])}`
 
   match = value.match(/^(\d+) jumps(?: · (\d+) milestone rewards? queued or paid)?$/i)
-  if (match) return `Прыжки: ${russianNumber(match[1])}${match[2] ? ` · награды за этапы: ${russianNumber(match[2])} — в очереди или выплачены` : ''}`
+  if (match) return `Прыжки: ${russianNumber(match[1])}${match[2] ? ` · награды за этапы: ${russianNumber(match[2])} — в очереди или ��ыплачены` : ''}`
 
   match = value.match(/^Wait (\d+) more seconds?\.?$/i)
   if (match) return `Подождите ещё ${match[1]} сек.`

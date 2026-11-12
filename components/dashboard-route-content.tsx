@@ -9,6 +9,7 @@ import { getDashboardOverview } from '@/lib/dashboard'
 import { releaseAdsLabOfferwallRewards } from '@/lib/adslab-offerwall'
 import { getDashboardSectionPath, type DashboardSection } from '@/lib/dashboard-sections'
 import { getProfileAvatar } from '@/lib/profile-avatars'
+import { isPepeReserveAdmin } from '@/lib/pepe-reserve'
 import { getPromoActivityEligibility, getPromoClaims } from '@/lib/promos'
 import { getReferralOverview, guestCookieName } from '@/lib/referrals'
 
@@ -71,6 +72,7 @@ export async function DashboardRouteContent({
     ? `${requestedPath}?ref=${encodeURIComponent(referralCode)}`
     : requestedPath
   if (!session?.user) redirect(`/sign-in?next=${encodeURIComponent(nextPath)}`)
+  const isAdmin = isPepeReserveAdmin(session.user.email, session.user.emailVerified)
 
   const cookieStore = await withDashboardStep(section, 'request.cookies', () => cookies())
   const guestToken = cookieStore.get(guestCookieName)?.value
@@ -99,7 +101,8 @@ export async function DashboardRouteContent({
       adslabPlacementId={process.env.ADSLAB_PLACEMENT_ID?.trim() ?? ''}
       email={session.user.email}
       name={session.user.name}
-      initialAvatarUrl={getProfileAvatar(session.user.image)}
+      initialAvatarUrl={getProfileAvatar(session.user.image, isAdmin)}
+      isAdmin={isAdmin}
       referralOverview={referralOverview}
       promoClaims={promoClaims}
       promoActivity={promoActivity}

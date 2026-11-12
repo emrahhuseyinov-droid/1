@@ -85,12 +85,28 @@ export const PROFILE_AVATARS = [
 
 export type ProfileAvatarSrc = (typeof PROFILE_AVATARS)[number]['src']
 
-export const DEFAULT_PROFILE_AVATAR = PROFILE_AVATARS[0].src
+export const ADMIN_HOODED_PROFILE_AVATAR = PROFILE_AVATARS[0]
+export const DEFAULT_PROFILE_AVATAR: ProfileAvatarSrc = '/avatars/portrait-01.png'
 
 export function isProfileAvatar(value: unknown): value is ProfileAvatarSrc {
   return typeof value === 'string' && PROFILE_AVATARS.some((avatar) => avatar.src === value)
 }
 
-export function getProfileAvatar(value: unknown): ProfileAvatarSrc {
-  return isProfileAvatar(value) ? value : DEFAULT_PROFILE_AVATAR
+export function isHoodedProfileAvatar(value: unknown) {
+  return PROFILE_AVATARS.some((avatar) => avatar.src === value && (avatar.id === 'original' || avatar.src.includes('/hooded-')))
+}
+
+export function getAvailableProfileAvatars(isAdmin: boolean) {
+  return PROFILE_AVATARS.filter((avatar) =>
+    !isHoodedProfileAvatar(avatar.src)
+    || (isAdmin && avatar.src === ADMIN_HOODED_PROFILE_AVATAR.src),
+  )
+}
+
+export function getProfileAvatar(value: unknown, isAdmin = false): ProfileAvatarSrc {
+  if (!isProfileAvatar(value)) return DEFAULT_PROFILE_AVATAR
+  if (isHoodedProfileAvatar(value) && (!isAdmin || value !== ADMIN_HOODED_PROFILE_AVATAR.src)) {
+    return DEFAULT_PROFILE_AVATAR
+  }
+  return value
 }
