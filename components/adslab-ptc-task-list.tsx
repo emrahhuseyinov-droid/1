@@ -148,6 +148,7 @@ export function AdsLabPtcTaskList({
   const [message, setMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const targetWindowRef = useRef<Window | null>(null)
+  const originalPageTitleRef = useRef<string | null>(null)
   const claimingRef = useRef(false)
   const claimAttemptedRef = useRef(false)
   const deferredPollingRef = useRef(false)
@@ -155,6 +156,7 @@ export function AdsLabPtcTaskList({
   const pausedAtRef = useRef<number | null>(null)
   const nowRef = useRef(now)
   nowRef.current = now
+  const activeIsAdvertiserCampaign = Boolean(activeTask && advertiserTaskKeyPattern.test(activeTask.key))
   const secondsRemaining = deadline === null ? 0 : Math.max(0, Math.ceil((deadline - now) / 1000))
 
   useEffect(() => {
@@ -194,7 +196,7 @@ export function AdsLabPtcTaskList({
       return
     }
 
-    const shouldPauseCountdown = isDocumentVisible && Boolean(activeTask) && !awaitingPostback
+    const shouldPauseCountdown = !activeIsAdvertiserCampaign && isDocumentVisible && Boolean(activeTask) && !awaitingPostback
     if (shouldPauseCountdown) {
       if (pausedAtRef.current === null) {
         pausedAtRef.current = Date.now()
@@ -212,7 +214,21 @@ export function AdsLabPtcTaskList({
     setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 250)
     return () => window.clearInterval(timer)
-  }, [activeTask, awaitingPostback, deadline, isDocumentVisible])
+  }, [activeIsAdvertiserCampaign, activeTask, awaitingPostback, deadline, isDocumentVisible])
+
+  useEffect(() => {
+    if (originalPageTitleRef.current === null) originalPageTitleRef.current = document.title
+
+    if (activeIsAdvertiserCampaign && activeTask && deadline !== null) {
+      document.title = `${formatCountdown(secondsRemaining)} | ${activeTask.title} | ${originalPageTitleRef.current}`
+    } else {
+      document.title = originalPageTitleRef.current
+    }
+  }, [activeIsAdvertiserCampaign, activeTask, deadline, secondsRemaining])
+
+  useEffect(() => () => {
+    if (originalPageTitleRef.current !== null) document.title = originalPageTitleRef.current
+  }, [])
 
   useEffect(() => {
     if (!clickId || deadline === null) return
