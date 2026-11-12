@@ -146,8 +146,8 @@ export function YoutubeAdsPage() {
         captchaSessionId: captchaChallenge.captchaSessionId,
       })
       setMessage(isRussian
-        ? `Начислено ${formatTokenAtomic(result.rewardAtomic)} PEPE. Другие YouTube-кампании этого рекламодателя больше недоступны для вашего аккаунта.`
-        : `${formatTokenAtomic(result.rewardAtomic)} PEPE credited. Other YouTube campaigns from this advertiser are now unavailable to your account.`)
+        ? `Начислено ${formatTokenAtomic(result.rewardAtomic)} PEPE. Эту кампанию нельзя пройти повторно, но другие YouTube-кампании доступны отдельно.`
+        : `${formatTokenAtomic(result.rewardAtomic)} PEPE credited. This campaign cannot be repeated, but other YouTube campaigns remain available.`)
       setSelectedTask(null)
       setActiveViewId(null)
       setDeadline(null)
@@ -182,7 +182,7 @@ export function YoutubeAdsPage() {
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-red-100/75">{isRussian ? 'видеозадания рекламодателей' : 'sponsored video tasks'}</p>
               <h2 id="youtube-ads-title" className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'Смотри и зарабатывай' : 'Watch and Earn'}</h2>
-              <p className="mt-2 max-w-2xl text-xs leading-5 text-white/75">{isRussian ? 'Смотрите YouTube-видео в плеере сайта, дождитесь таймера и пройдите AdsLab CAPTCHA. У каждого рекламодателя можно выполнить только одну видеокампанию.' : 'Watch a YouTube video in the embedded player, let the timer finish, and pass the AdsLab CAPTCHA. Each advertiser can be completed once per account.'}</p>
+              <p className="mt-2 max-w-2xl text-xs leading-5 text-white/75">{isRussian ? 'Смотрите YouTube-видео в плеере сайта, дождитесь таймера и пройдите AdsLab CAPTCHA. Каждую кампанию можно выполнить один раз.' : 'Watch a YouTube video in the embedded player, let the timer finish, and pass the AdsLab CAPTCHA. Each campaign can be completed once.'}</p>
             </div>
           </div>
         </header>

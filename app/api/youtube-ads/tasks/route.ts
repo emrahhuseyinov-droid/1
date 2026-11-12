@@ -32,21 +32,18 @@ export async function GET(request: NextRequest) {
       )).orderBy(advertiserCampaigns.createdAt).limit(100),
       db.select({
         campaignId: youtubeAdViews.campaignId,
-        advertiserId: advertiserCampaigns.advertiserId,
         id: youtubeAdViews.id,
         status: youtubeAdViews.status,
         startedAt: youtubeAdViews.startedAt,
         expiresAt: youtubeAdViews.expiresAt,
       }).from(youtubeAdViews)
-        .innerJoin(advertiserCampaigns, eq(youtubeAdViews.campaignId, advertiserCampaigns.id))
         .where(eq(youtubeAdViews.guestId, account.profile.id)),
     ])
 
     const viewsByCampaign = new Map(views.map((view) => [view.campaignId, view]))
-    const completedAdvertiserIds = new Set(views.filter((view) => view.status === 'completed').map((view) => view.advertiserId))
     const tasks = campaigns.flatMap((campaign) => {
       const videoId = getYouTubeVideoId(campaign.targetUrl)
-      if (!videoId || completedAdvertiserIds.has(campaign.advertiserId)) return []
+      if (!videoId) return []
       const view = viewsByCampaign.get(campaign.id)
       if (view?.status === 'completed') return []
       const elapsed = view ? Math.max(0, Math.floor((Date.now() - view.startedAt.getTime()) / 1000)) : 0
