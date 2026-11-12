@@ -196,7 +196,7 @@ export function AdsLabPtcTaskList({
       return
     }
 
-    const shouldPauseCountdown = !activeIsAdvertiserCampaign && isDocumentVisible && Boolean(activeTask) && !awaitingPostback
+    const shouldPauseCountdown = isDocumentVisible && Boolean(activeTask) && !awaitingPostback
     if (shouldPauseCountdown) {
       if (pausedAtRef.current === null) {
         pausedAtRef.current = Date.now()
