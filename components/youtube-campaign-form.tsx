@@ -133,8 +133,8 @@ export function YoutubeCampaignForm({
               <dd className="font-mono text-xs font-bold text-white">{perViewReward} PEPE</dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-[10px] text-slate-300">{isRussian ? 'Комиссия платформы · 40%' : 'Platform fee · 40%'}</dt>
-              <dd className="font-mono text-xs font-bold text-rose-200">+{perViewCommission} PEPE</dd>
+              <dt className="text-[10px] text-slate-300">{isRussian ? 'Комиссия платформы' : 'Platform fee'}</dt>
+              <dd className="font-mono text-xs font-bold text-rose-200">−40%</dd>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-white/[0.08] pt-3">
               <dt className="text-[10px] font-extrabold text-white">{isRussian ? 'Стоимость просмотра' : 'Cost per view'}</dt>
