@@ -108,37 +108,37 @@ function RewardToastCard({
       : `+${Number(event.quantity ?? 0).toFixed(2).replace(/\.?0+$/, '')} ${isRussian ? 'доп. жизни' : 'extra life'}`
 
   return (
-    <article role="status" aria-live="polite" className="relative w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-[26px] border-2 border-cyan-200/60 bg-gradient-to-br from-[#283b78] via-[#27235f] to-[#171e45] p-4 text-white shadow-[0_22px_55px_rgba(3,8,32,0.48)] ring-4 ring-cyan-200/10">
+    <article role="status" aria-live="polite" className="relative w-[min(320px,calc(100vw-2rem))] overflow-hidden rounded-[22px] border-2 border-cyan-200/60 bg-gradient-to-br from-[#283b78] via-[#27235f] to-[#171e45] p-3 text-white shadow-[0_22px_55px_rgba(3,8,32,0.48)] ring-4 ring-cyan-200/10 sm:w-[min(360px,calc(100vw-2rem))] sm:rounded-[26px] sm:p-4">
       <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 size-32 rounded-full border-[14px] border-white/[0.06]" />
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-12 left-1/3 size-28 rounded-full bg-cyan-300/[0.08] blur-2xl" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-1 rounded-b-full bg-gradient-to-r from-cyan-200 via-white to-amber-200" />
 
-      <div className="relative flex items-start gap-3">
-        <span aria-hidden="true" className="relative mt-0.5 flex size-12 shrink-0 items-center justify-center rounded-[18px] bg-gradient-to-br from-cyan-200 via-sky-300 to-indigo-300 text-indigo-950 shadow-lg shadow-sky-950/30 ring-4 ring-white/10">
-          <Gift size={22} strokeWidth={2.5} />
-          <Sparkles className="absolute -right-1 -top-1 text-amber-200" size={16} />
+      <div className="relative flex items-start gap-2.5 sm:gap-3">
+        <span aria-hidden="true" className="relative mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[15px] bg-gradient-to-br from-cyan-200 via-sky-300 to-indigo-300 text-indigo-950 shadow-lg shadow-sky-950/30 ring-4 ring-white/10 sm:size-12 sm:rounded-[18px]">
+          <Gift className="size-[18px] sm:size-[22px]" strokeWidth={2.5} />
+          <Sparkles className="absolute -right-1 -top-1 size-[13px] text-amber-200 sm:size-4" />
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-sm font-black leading-5 tracking-tight text-white">{title}</p>
-              <p className="mt-0.5 truncate text-[11px] font-bold text-cyan-100/80">{eventLabel}</p>
+              <p className="text-[13px] font-black leading-4 tracking-tight text-white sm:text-sm sm:leading-5">{title}</p>
+              <p className="mt-0.5 truncate text-[10px] font-bold text-cyan-100/80 sm:text-[11px]">{eventLabel}</p>
             </div>
-            <button type="button" onClick={onClose} aria-label={isRussian ? 'Закрыть уведомление' : 'Dismiss notification'} className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-white/65 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
-              <X size={16} />
+            <button type="button" onClick={onClose} aria-label={isRussian ? 'Закрыть уведомление' : 'Dismiss notification'} className="-mr-0.5 -mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full text-white/65 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200 sm:-mr-1 sm:-mt-1 sm:size-8">
+              <X className="size-3.5 sm:size-4" />
             </button>
           </div>
 
-          <div className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full border border-amber-200/45 bg-gradient-to-r from-amber-300/20 to-yellow-200/10 px-3 text-xs font-black text-amber-100 shadow-inner shadow-amber-100/5">
-            {event.kind === 'token' ? <Coins size={15} className="text-amber-200" /> : event.kind === 'energy' ? <Sparkles size={15} className="text-cyan-200" /> : <Heart size={15} className="text-rose-200" />}
-            <span>{rewardValue}</span>
+          <div className="mt-2.5 inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-full border border-amber-200/45 bg-gradient-to-r from-amber-300/20 to-yellow-200/10 px-2.5 text-[11px] font-black text-amber-100 shadow-inner shadow-amber-100/5 sm:mt-3 sm:min-h-9 sm:gap-2 sm:px-3 sm:text-xs">
+            {event.kind === 'token' ? <Coins className="size-[13px] shrink-0 text-amber-200 sm:size-[15px]" /> : event.kind === 'energy' ? <Sparkles className="size-[13px] shrink-0 text-cyan-200 sm:size-[15px]" /> : <Heart className="size-[13px] shrink-0 text-rose-200 sm:size-[15px]" />}
+            <span className="min-w-0 break-words">{rewardValue}</span>
           </div>
         </div>
       </div>
 
-      <div className="relative mt-3 flex items-center gap-1.5 border-t border-white/10 pt-2.5 text-[10px] font-semibold text-cyan-100/70">
-        <Check size={13} className="text-emerald-300" />
+      <div className="relative mt-2 flex items-center gap-1.5 border-t border-white/10 pt-2 text-[9px] font-semibold text-cyan-100/70 sm:mt-3 sm:pt-2.5 sm:text-[10px]">
+        <Check className="size-[11px] shrink-0 text-emerald-300 sm:size-[13px]" />
         {isRussian ? 'Награда уже на вашем балансе' : 'The reward is already in your balance'}
       </div>
     </article>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { BatteryCharging, Coins, Gamepad2, Heart, ShoppingBag, Timer, Trophy, Zap } from 'lucide-react'
+import { BatteryCharging, ChevronDown, Coins, Gamepad2, Heart, ShoppingBag, Timer, Trophy, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 import { ARCADE_ENERGY_CAP, ARCADE_HOMERO_COIN_REWARD, type ArcadeBoostCode, type ArcadeInventoryCode, type ArcadeShopCode } from '@/lib/arcade-gameplay'
@@ -70,18 +70,21 @@ const arcadeGuideCards = [
     title: 'Weekly leaderboard:',
     description: 'Take part in Ranked runs to climb the leaderboard. Every result is automatically verified before the weekly results are finalized.',
     Icon: Trophy,
+    iconTone: 'bg-amber-300/10 text-amber-200',
     color: 'border-amber-100/90 bg-gradient-to-br from-amber-100 via-yellow-200 to-amber-300',
   },
   {
     title: 'Run rewards:',
     description: 'Valuable coins appear along the route in Ranked mode. Collect them while running to add to your HOMERO balance!',
     Icon: Coins,
+    iconTone: 'bg-cyan-300/10 text-cyan-200',
     color: 'border-cyan-100/90 bg-gradient-to-br from-cyan-100 via-sky-200 to-sky-300',
   },
   {
     title: 'Energy refill:',
     description: 'Out of energy for another attempt? Complete verified View Ads tasks and jump straight back into the game!',
     Icon: BatteryCharging,
+    iconTone: 'bg-rose-300/10 text-rose-200',
     color: 'border-rose-100/90 bg-gradient-to-br from-rose-100 via-pink-200 to-fuchsia-200',
   },
 ] as const
@@ -283,9 +286,9 @@ export function ArcadePage() {
   return (
     <LocalizedTree>
     <main id="top" className="dashboard-page-shell min-w-0 space-y-5 text-white">
-      <header className="space-y-4">
+      <header className="space-y-3 sm:space-y-4">
         <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[30px]"><Gamepad2 className="text-amber-300" size={25} /> Arcade</h1>
-        <section aria-label="Arcade guide" className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <section aria-label="Arcade guide" className="hidden grid-cols-1 gap-3 md:grid md:grid-cols-3">
           {arcadeGuideCards.map(({ title, description, Icon, color }) => (
             <article key={title} className={cn('relative min-h-[136px] overflow-hidden rounded-[22px] border-2 p-3.5 text-[#241600] shadow-[0_5px_0_rgba(0,0,0,0.25),0_14px_28px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-1 sm:p-4', color)}>
               <div className="flex items-start justify-between gap-3">
@@ -296,6 +299,23 @@ export function ArcadePage() {
             </article>
           ))}
         </section>
+        <details className="group overflow-hidden rounded-2xl border border-sky-300/15 bg-[#11182c]/80 shadow-[0_12px_35px_rgba(0,0,0,0.2)] md:hidden">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center gap-2 text-xs font-extrabold text-white/85"><Gamepad2 size={15} className="text-sky-200" aria-hidden="true" />Arcade guide</span>
+            <ChevronDown size={16} className="shrink-0 text-white/60 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div className="grid gap-2 border-t border-white/10 p-3">
+            {arcadeGuideCards.map(({ title, description, Icon, iconTone }) => (
+              <article key={title} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.035] p-3">
+                <span aria-hidden="true" className={cn('grid size-9 shrink-0 place-items-center rounded-xl', iconTone)}><Icon size={17} /></span>
+                <div className="min-w-0">
+                  <h2 className="text-[11px] font-extrabold text-white/90">{title}</h2>
+                  <p className="mt-1 text-[10px] leading-relaxed text-white/60">{description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </details>
       </header>
 
       <div className="min-w-0 space-y-5">

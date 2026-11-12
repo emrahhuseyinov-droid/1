@@ -16,13 +16,19 @@ export function AdsLabCaptchaModal({
   onReturned,
   onClose,
   purpose = 'wheel',
+  statusMessage,
+  onCheckStatus,
+  checking = false,
 }: {
   solveUrl: string | null
   challengeToken: string | null
   captchaSessionId: string | null
   onReturned: (sessionId: string) => void
   onClose: () => void
-  purpose?: 'wheel' | 'faucet' | 'youtube'
+  purpose?: 'wheel' | 'faucet' | 'youtube' | 'daily_bonus'
+  statusMessage?: string | null
+  onCheckStatus?: () => void
+  checking?: boolean
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const popupRef = useRef<Window | null>(null)
@@ -63,7 +69,7 @@ export function AdsLabCaptchaModal({
       complete(event.data)
     }
 
-    const channelPrefix = purpose === 'faucet' ? 'adslab-faucet-captcha' : 'adslab-wheel-captcha'
+    const channelPrefix = purpose === 'faucet' ? 'adslab-faucet-captcha' : purpose === 'daily_bonus' ? 'adslab-daily-bonus-captcha' : 'adslab-wheel-captcha'
     const channel = typeof BroadcastChannel === 'undefined'
       ? null
       : new BroadcastChannel(`${channelPrefix}:${activeSessionId}`)
@@ -129,8 +135,8 @@ export function AdsLabCaptchaModal({
     >
       <div className="flex items-start justify-between gap-4 border-b border-white/10 p-4 sm:p-5">
         <div>
-          <h2 id="adslab-captcha-title" className="text-base font-black">{purpose === 'faucet' ? 'Verify to claim' : purpose === 'youtube' ? 'Verify to claim your video reward' : 'Verify to spin'}</h2>
-          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'faucet' || purpose === 'youtube' ? 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before your reward is credited.' : 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before the wheel spins.'}</p>
+          <h2 id="adslab-captcha-title" className="text-base font-black">{purpose === 'faucet' ? 'Verify to claim' : purpose === 'youtube' ? 'Verify to claim your video reward' : purpose === 'daily_bonus' ? 'Verify to claim your Daily Bonus' : 'Verify to spin'}</h2>
+          <p id="adslab-captcha-description" className="mt-1 text-xs leading-5 text-white/60">{purpose === 'daily_bonus' ? 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before your Daily Bonus is credited.' : purpose === 'faucet' || purpose === 'youtube' ? 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before your reward is credited.' : 'The CAPTCHA challenge opens in a separate window. Return here after solving; the server checks the session before the wheel spins.'}</p>
         </div>
         <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close verification" className="grid size-9 shrink-0 place-items-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
           <X aria-hidden="true" />
@@ -142,8 +148,9 @@ export function AdsLabCaptchaModal({
           {popupOpened ? 'Reopen CAPTCHA challenge' : 'Open CAPTCHA challenge'}
         </button>
         <p role="status" aria-live="polite" className="mt-3 min-h-5 text-center text-[10px] leading-5 text-white/55">
-          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : popupOpened ? 'Waiting for you to return from the CAPTCHA…' : purpose === 'faucet' || purpose === 'youtube' ? 'Your reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.'}
+          {popupBlocked ? 'Pop-up was blocked. Allow pop-ups for this site and try again.' : statusMessage ?? (popupOpened ? 'Waiting for you to return from the CAPTCHA…' : purpose === 'daily_bonus' ? 'Your Daily Bonus is credited only after server-side verification.' : purpose === 'faucet' || purpose === 'youtube' ? 'Your reward is credited only after server-side verification.' : 'Your wheel result is created only after server-side verification.')}
         </p>
+        {onCheckStatus && <button type="button" onClick={onCheckStatus} disabled={checking} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-white/15 px-4 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 disabled:cursor-wait disabled:opacity-60">{checking ? 'Checking verification…' : 'Check CAPTCHA status'}</button>}
       </div>
     </dialog>
     </LocalizedTree>

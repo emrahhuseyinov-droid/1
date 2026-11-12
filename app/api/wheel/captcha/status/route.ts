@@ -29,6 +29,13 @@ export async function GET(request: NextRequest) {
 
   const states = request.nextUrl.searchParams.getAll('state')
   const captchaSessionId = states.length === 1 ? states[0].toLowerCase() : ''
+  const purposes = request.nextUrl.searchParams.getAll('purpose')
+  const purpose: 'wheel' | 'daily_bonus' | null = purposes.length === 0
+    ? 'wheel'
+    : purposes.length === 1 && (purposes[0] === 'wheel' || purposes[0] === 'daily_bonus')
+      ? purposes[0] as 'wheel' | 'daily_bonus'
+      : null
+  if (!purpose) return NextResponse.json({ error: 'A valid CAPTCHA purpose is required.' }, { status: 400, headers: noStoreHeaders })
   if (!uuidPattern.test(captchaSessionId)) {
     return NextResponse.json({ error: 'A valid CAPTCHA session is required.' }, { status: 400, headers: noStoreHeaders })
   }
@@ -40,6 +47,7 @@ export async function GET(request: NextRequest) {
       .where(and(
         eq(wheelCaptchaSessions.id, captchaSessionId),
         eq(wheelCaptchaSessions.guestId, account.profile.id),
+        eq(wheelCaptchaSessions.purpose, purpose),
       ))
       .limit(1)
 
@@ -82,6 +90,7 @@ export async function GET(request: NextRequest) {
         .where(and(
           eq(wheelCaptchaSessions.id, captchaSessionId),
           eq(wheelCaptchaSessions.guestId, account.profile.id),
+        eq(wheelCaptchaSessions.purpose, purpose),
           eq(wheelCaptchaSessions.status, 'pending'),
           gt(wheelCaptchaSessions.expiresAt, now),
         ))
@@ -95,6 +104,7 @@ export async function GET(request: NextRequest) {
         .where(and(
           eq(wheelCaptchaSessions.id, captchaSessionId),
           eq(wheelCaptchaSessions.guestId, account.profile.id),
+        eq(wheelCaptchaSessions.purpose, purpose),
         ))
         .limit(1)
       if (!latestSession) return NextResponse.json({ error: 'CAPTCHA session not found.' }, { status: 404, headers: noStoreHeaders })

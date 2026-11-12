@@ -137,7 +137,6 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
           {!claimedToday && !isClaiming && <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
         </button>
         {error && <p role="alert" className="mt-2 text-[10px] font-semibold text-rose-300">{error}</p>}
-        <p className="mt-2 text-center text-[9px] text-slate-500">One claim each UTC day · credited to your internal ledger</p>
       </div>
     </section>
     </LocalizedTree>
