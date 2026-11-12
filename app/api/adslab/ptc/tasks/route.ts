@@ -66,7 +66,7 @@ async function loadPtcTaskStats(userId: string) {
       .from(earningEvents)
       .where(and(
         eq(earningEvents.guestId, userId),
-        inArray(earningEvents.source, ['adslab_ptc', 'adslab_ptc_reversal', 'advertiser_task']),
+        inArray(earningEvents.source, ['adslab_ptc', 'adslab_ptc_reversal', 'advertiser_task', 'advertiser_task_pepe_correction']),
       ))
       .groupBy(earningEvents.tokenSymbol),
   ])
@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
         url: campaign.url,
         iconUrl: null,
         rewardAtomic: String(parseHomeroPayoutAtomic(history?.pendingPayout ?? null) ?? campaign.rewardAtomic),
-        tokenSymbol: history?.pendingTokenSymbol ?? 'HOMERO',
+        tokenSymbol: 'PEPE',
         pepeUsdPrice: providerFeed?.pepeUsdPrice ?? '0',
         durationSeconds: campaign.durationSeconds,
         visitsRemaining: 1,

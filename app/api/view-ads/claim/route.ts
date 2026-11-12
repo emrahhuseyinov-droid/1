@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { and, asc, desc, eq, gt, inArray, ne } from 'drizzle-orm'
+import { and, desc, eq, gt, ne } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { db } from '@/lib/db'
@@ -9,7 +9,6 @@ import { calculateUnusedPromotionRefundAtomic } from '@/lib/advertiser-promotion
 import { getEligibleReward, VIEW_ADS_REWARD_COOLDOWN_MS } from '@/lib/referral-rewards'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { addPtcCommissionToArcadeReserve, grantPtcArcadeEnergy } from '@/lib/arcade-service'
-import { getHomeroTreasuryAdminProfile, getHomeroTreasurySnapshot, recordHomeroTreasuryTransfer } from '@/lib/homero-treasury'
 
 export const runtime = 'nodejs'
 
@@ -27,18 +26,14 @@ async function getClickId(request: NextRequest) {
 }
 
 async function claimAdvertiserTask(userId: string, clickId: string) {
-  const treasuryAdmin = await getHomeroTreasuryAdminProfile()
-  if (!treasuryAdmin) return { status: 'treasury_unavailable' as const }
-
   return db.transaction(async (transaction) => {
-    const profileIds = [...new Set([userId, treasuryAdmin.id])].sort()
-    const lockedProfiles = await transaction
+    const [lockedProfile] = await transaction
       .select({ id: guestProfiles.id })
       .from(guestProfiles)
-      .where(inArray(guestProfiles.id, profileIds))
-      .orderBy(asc(guestProfiles.id))
+      .where(eq(guestProfiles.id, userId))
       .for('update')
-    if (lockedProfiles.length !== profileIds.length) return { status: 'not_found' as const }
+      .limit(1)
+    if (!lockedProfile) return { status: 'not_found' as const }
 
     const [click] = await transaction
       .select({ clickId: ptcClicks.clickId, taskId: ptcClicks.taskId, status: ptcClicks.status, createdAt: ptcClicks.createdAt })
@@ -49,15 +44,15 @@ async function claimAdvertiserTask(userId: string, clickId: string) {
     if (click.status === 'rejected') return { status: 'rejected' as const }
 
     const [existingCredit] = await transaction
-    .select({ rewardAtomic: earningEvents.rewardAtomic, tokenSymbol: earningEvents.tokenSymbol })
-    .from(earningEvents)
-    .where(and(
-      eq(earningEvents.guestId, userId),
-      eq(earningEvents.source, 'advertiser_task'),
-      eq(earningEvents.sourceKey, click.clickId),
-    ))
-    .limit(1)
-  if (existingCredit) return { status: 'already_credited' as const, rewardAtomic: existingCredit.rewardAtomic, tokenSymbol: existingCredit.tokenSymbol }
+      .select({ rewardAtomic: earningEvents.rewardAtomic })
+      .from(earningEvents)
+      .where(and(
+        eq(earningEvents.guestId, userId),
+        eq(earningEvents.source, 'advertiser_task'),
+        eq(earningEvents.sourceKey, click.clickId),
+      ))
+      .limit(1)
+    if (existingCredit) return { status: 'already_credited' as const, rewardAtomic: existingCredit.rewardAtomic, tokenSymbol: 'PEPE' as const }
 
     if (click.status === 'completed') return { status: 'already_completed' as const }
 
@@ -100,10 +95,6 @@ async function claimAdvertiserTask(userId: string, clickId: string) {
       .for('update')
       .limit(1)
     if (!campaign || campaign.status !== 'active' || campaign.remainingTasks < 1) return { status: 'unavailable' as const }
-
-    const treasury = await getHomeroTreasurySnapshot(transaction, treasuryAdmin.id)
-    if (!treasury.initialReserveSeeded) return { status: 'treasury_not_seeded' as const }
-    if (BigInt(treasury.availableAtomic) < BigInt(campaign.rewardPerTaskAtomic)) return { status: 'treasury_insufficient' as const }
 
     const cooldownCutoff = new Date(Date.now() - VIEW_ADS_REWARD_COOLDOWN_MS)
     const [recentCampaignCredit] = await transaction
@@ -152,16 +143,16 @@ async function claimAdvertiserTask(userId: string, clickId: string) {
       .returning({ id: advertiserCampaigns.id })
     if (!updatedCampaign) return { status: 'unavailable' as const }
 
-    await recordHomeroTreasuryTransfer(
-      transaction,
-      treasuryAdmin.id,
-      userId,
-      campaign.rewardPerTaskAtomic,
-      click.clickId,
-      'advertiser_task',
-      campaign.id,
-      now,
-    )
+    await transaction.insert(earningEvents).values({
+      id: randomUUID(),
+      guestId: userId,
+      source: 'advertiser_task',
+      sourceKey: click.clickId,
+      itemId: campaign.id,
+      tokenSymbol: 'PEPE',
+      rewardAtomic: campaign.rewardPerTaskAtomic,
+      createdAt: now,
+    })
     const energy = await grantPtcArcadeEnergy(transaction, userId, now)
     const reserveFunding = await addPtcCommissionToArcadeReserve(transaction, click.clickId, campaign.commissionPerTaskAtomic, now)
 
@@ -195,7 +186,7 @@ async function claimAdvertiserTask(userId: string, clickId: string) {
     return {
       status: 'credited' as const,
       rewardAtomic: campaign.rewardPerTaskAtomic,
-      tokenSymbol: 'HOMERO' as const,
+      tokenSymbol: 'PEPE' as const,
       energy: energy.energy,
       energyGranted: energy.energyGranted,
       dailyEnergyEarned: energy.dailyEnergyEarned,
@@ -229,9 +220,6 @@ export async function POST(request: NextRequest) {
       if (result.status === 'already_completed') return NextResponse.json({ error: 'You have already completed this campaign.', code: 'already_completed' }, { status: 409, headers: noStoreHeaders })
       if (result.status === 'cooldown') return NextResponse.json({ error: 'This campaign task will be available again after the 24-hour cooldown.', code: 'cooldown', cooldownUntil: result.cooldownUntil, remainingSeconds: result.remainingSeconds }, { status: 429, headers: noStoreHeaders })
       if (result.status === 'too_early') return NextResponse.json({ error: 'The task timer has not finished.', code: result.status, remainingSeconds: result.remainingSeconds }, { status: 409, headers: noStoreHeaders })
-      if (result.status === 'treasury_unavailable') return NextResponse.json({ error: 'The HOMERO treasury is not configured for advertiser rewards.' }, { status: 503, headers: noStoreHeaders })
-      if (result.status === 'treasury_not_seeded') return NextResponse.json({ error: 'Advertiser rewards are temporarily paused until the HOMERO treasury is initialized.' }, { status: 409, headers: noStoreHeaders })
-      if (result.status === 'treasury_insufficient') return NextResponse.json({ error: 'The HOMERO treasury cannot cover this reward right now.' }, { status: 409, headers: noStoreHeaders })
       if (result.status === 'already_credited') return NextResponse.json({ credited: true, alreadyCredited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: result.tokenSymbol }, { headers: noStoreHeaders })
       return NextResponse.json({ credited: true, rewardAtomic: result.rewardAtomic, tokenSymbol: result.tokenSymbol, energy: result.energy, energyGranted: result.energyGranted, dailyEnergyEarned: result.dailyEnergyEarned, dailyEnergyCap: result.dailyEnergyCap }, { headers: noStoreHeaders })
     }

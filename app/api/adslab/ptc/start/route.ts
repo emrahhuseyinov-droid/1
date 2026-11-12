@@ -88,13 +88,21 @@ async function startAdvertiserPtcTask(userId: string, campaignId: string) {
 
       if (pending.taskId === campaign.id) {
         const elapsedSeconds = Math.max(0, Math.floor(elapsedMs / 1000))
+        await transaction
+          .update(ptcClicks)
+          .set({ payoutTokenSymbol: 'PEPE' })
+          .where(and(
+            eq(ptcClicks.clickId, pending.clickId),
+            eq(ptcClicks.userId, userId),
+            eq(ptcClicks.status, 'pending'),
+          ))
         return {
           status: 'started' as const,
           clickId: pending.clickId,
           directLink: campaign.targetUrl,
           timerSeconds: Math.max(0, durationSeconds - elapsedSeconds),
           rewardAtomic: String(campaign.rewardPerTaskAtomic),
-          tokenSymbol: 'HOMERO' as const,
+          tokenSymbol: 'PEPE' as const,
           pepeUsdPrice: '0',
         }
       }
@@ -125,7 +133,7 @@ async function startAdvertiserPtcTask(userId: string, campaignId: string) {
       taskId: campaign.id,
       status: 'pending',
       payout: formatPepePayoutAtomic(campaign.rewardPerTaskAtomic),
-      payoutTokenSymbol: 'HOMERO',
+      payoutTokenSymbol: 'PEPE',
       durationSeconds: campaign.durationSeconds,
       visitsPerUser: 1,
       cooldownMinutes: 0,
@@ -139,7 +147,7 @@ async function startAdvertiserPtcTask(userId: string, campaignId: string) {
       directLink: campaign.targetUrl,
       timerSeconds: campaign.durationSeconds,
       rewardAtomic: String(campaign.rewardPerTaskAtomic),
-      tokenSymbol: 'HOMERO' as const,
+      tokenSymbol: 'PEPE' as const,
       pepeUsdPrice: '0',
     }
   })
