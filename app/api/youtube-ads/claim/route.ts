@@ -51,15 +51,6 @@ export async function POST(request: NextRequest) {
       )).for('update').limit(1)
       if (!campaign || campaign.advertiserId === account.profile.id) return { status: 'unavailable' as const }
 
-      const [completedFromAdvertiser] = await transaction.select({ id: youtubeAdViews.id }).from(youtubeAdViews)
-        .innerJoin(advertiserCampaigns, eq(youtubeAdViews.campaignId, advertiserCampaigns.id))
-        .where(and(
-          eq(youtubeAdViews.guestId, account.profile.id),
-          eq(youtubeAdViews.status, 'completed'),
-          eq(advertiserCampaigns.advertiserId, campaign.advertiserId),
-        )).limit(1)
-      if (completedFromAdvertiser) return { status: 'already_completed' as const }
-
       const requiredMs = campaign.durationSeconds * 1000
       const elapsedMs = now.getTime() - view.startedAt.getTime()
       if (elapsedMs < requiredMs) return { status: 'too_early' as const, remainingSeconds: Math.max(1, Math.ceil((requiredMs - elapsedMs) / 1000)) }

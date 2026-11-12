@@ -476,7 +476,7 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
   return (
     <LocalizedTree>
       <main id="top" className={`dashboard-page-shell flex flex-col gap-5 sm:gap-6 ${view === 'fund' ? 'min-h-[calc(100dvh-62px)]' : ''}`}>
-        {view !== 'fund' && view !== 'create' && view !== 'youtube' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
+        {view === 'activity' && <header className="relative isolate overflow-hidden rounded-[30px] border border-cyan-200/15 bg-gradient-to-br from-[#132e50] via-[#1b2750] to-[#321f50] p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-7">
           <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-14 size-48 rounded-full border-[24px] border-white/[0.05]" />
           <div className="relative flex items-start gap-4">
             <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><Check size={22} strokeWidth={3} /></span>
@@ -680,13 +680,17 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
           onSubmit={handleCreateYoutubeCampaign}
         />}
 
-        {view === 'campaigns' && <section id="advertiser-campaigns" aria-labelledby="advertiser-campaigns-title" className="scroll-mt-20 rounded-[26px] border border-white/[0.08] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
-          <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 id="advertiser-campaigns-title" className="text-sm font-extrabold text-white">{isRussian ? 'Ваши рекламные кампании' : 'Your advertiser campaigns'}</h2>
-              <p className="mt-1 text-[10px] text-slate-400">{isRussian ? 'PTC-задания и YouTube-видео публикуются в соответствующих разделах.' : 'PTC tasks and YouTube videos appear in their respective sections.'}</p>
+        {view === 'campaigns' && <section id="advertiser-campaigns" aria-labelledby="advertiser-campaigns-title" className="relative isolate scroll-mt-20 overflow-hidden rounded-[28px] border border-cyan-200/15 bg-gradient-to-br from-[#121d3c] via-[#0d142c] to-[#171632] p-4 shadow-xl shadow-black/20 sm:p-6">
+          <header className="relative mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.07] pb-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100 shadow-sm"><Megaphone size={17} aria-hidden="true" /></span>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/70">{isRussian ? 'Управление рекламой' : 'Advertiser studio'}</p>
+                <h2 id="advertiser-campaigns-title" className="mt-0.5 text-base font-black tracking-tight text-white">{isRussian ? 'Ваши рекламные кампании' : 'Your advertiser campaigns'}</h2>
+                <p className="mt-0.5 text-[10px] text-slate-400">{isRussian ? 'PTC-задания и YouTube-видео публикуются в соответствующих разделах.' : 'PTC tasks and YouTube videos appear in their respective sections.'}</p>
+              </div>
             </div>
-            <button type="button" onClick={() => void refreshBalances()} disabled={wallet.isValidating || campaigns.isValidating} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-white/10 px-3 text-[10px] font-bold text-slate-300 transition hover:bg-white/[0.05] disabled:opacity-50"><RefreshCw size={12} className={wallet.isValidating || campaigns.isValidating ? 'animate-spin' : ''} />{isRussian ? 'Обновить' : 'Refresh'}</button>
+            <button type="button" onClick={() => void refreshBalances()} disabled={wallet.isValidating || campaigns.isValidating} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-100/15 bg-white/[0.025] px-4 text-[10px] font-bold text-slate-200 transition hover:border-cyan-100/30 hover:bg-cyan-100/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200/50 disabled:opacity-50"><RefreshCw size={13} className={wallet.isValidating || campaigns.isValidating ? 'animate-spin' : ''} />{isRussian ? 'Обновить' : 'Refresh'}</button>
           </header>
           {campaigns.isLoading ? <div role="status" className="flex min-h-28 items-center justify-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] text-xs text-slate-400"><LoaderCircle size={16} className="animate-spin" />{isRussian ? 'Загружаем рекламные кампании…' : 'Loading advertiser campaigns…'}</div>
             : campaigns.data?.campaigns.length ? <div className="flex flex-col gap-3">
