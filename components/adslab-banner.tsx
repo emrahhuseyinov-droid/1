@@ -8,7 +8,7 @@ type AdsLabBannerProps = {
   id: string
   container: string
   alignment?: 'center' | 'right'
-  format?: 'compact' | 'medium-rectangle' | 'large-rectangle'
+  format?: 'compact' | 'medium-banner' | 'medium-rectangle' | 'large-rectangle' | 'leaderboard' | 'skyscraper'
   onClick?: () => void
 }
 
@@ -65,13 +65,25 @@ export function AdsLabBanner({ id, container: containerId, alignment = 'right', 
   }, [onClick])
 
   const alignmentClass = alignment === 'right'
-    ? 'flex w-full shrink-0 justify-center lg:w-[320px] lg:justify-end'
+    ? format === 'leaderboard'
+      ? 'flex w-full max-w-full shrink-0 justify-center lg:w-[728px] lg:justify-end'
+      : format === 'medium-banner'
+        ? 'flex w-full max-w-full shrink-0 justify-center lg:w-[468px] lg:justify-end'
+        : format === 'skyscraper'
+          ? 'flex w-full max-w-full shrink-0 justify-center lg:w-[160px] lg:justify-end'
+          : 'flex w-full max-w-full shrink-0 justify-center lg:w-[320px] lg:justify-end'
     : 'flex w-full justify-center'
-  const sizeClass = format === 'large-rectangle'
-    ? 'h-[280px] w-[336px] max-w-full overflow-hidden'
-    : format === 'medium-rectangle'
-      ? 'h-[250px] w-[300px] max-w-full overflow-hidden'
-      : 'h-[50px] w-[320px] max-w-full overflow-hidden'
+  const sizeClass = format === 'leaderboard'
+    ? 'h-[90px] w-[728px] max-w-full overflow-hidden'
+    : format === 'medium-banner'
+      ? 'h-[60px] w-[468px] max-w-full overflow-hidden'
+      : format === 'skyscraper'
+        ? 'h-[600px] w-[160px] max-w-full overflow-hidden'
+        : format === 'large-rectangle'
+          ? 'h-[280px] w-[336px] max-w-full overflow-hidden'
+          : format === 'medium-rectangle'
+            ? 'h-[250px] w-[300px] max-w-full overflow-hidden'
+            : 'h-[50px] w-[320px] max-w-full overflow-hidden'
 
   return (
     <aside aria-label="Advertisement" className={alignmentClass} onClickCapture={() => onClick?.()}>

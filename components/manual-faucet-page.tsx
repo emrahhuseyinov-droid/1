@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { Check, Clock3, Gift, LoaderCircle, RefreshCw, ShieldCheck } from 'lucide-react'
+import { AdsLabBanner } from '@/components/adslab-banner'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
 import { TokenLogo } from '@/components/token-logo'
@@ -189,10 +190,13 @@ export function ManualFaucetPage() {
   return (
     <LocalizedTree>
     <main id="top" className="dashboard-page-shell space-y-5 sm:space-y-6">
-      <header className="space-y-1">
-        <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-cyan-300">Earning features</p>
-        <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">Manual Faucet</h1>
-        <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim free PEPE after completing a secure CAPTCHA.</p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 max-w-2xl space-y-1">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-cyan-300">Earning features</p>
+          <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">Manual Faucet</h1>
+          <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim free PEPE after completing a secure CAPTCHA.</p>
+        </div>
+        <AdsLabBanner id="unit-jkhhu6le3" container="adslab-banner-unit-jkhhu6le3" alignment="right" format="leaderboard" />
       </header>
 
       <section aria-label="Faucet reward and claim limit" className="grid gap-4 md:grid-cols-2">
@@ -215,7 +219,14 @@ export function ManualFaucetPage() {
         </div>
       </section>
 
-      <section aria-labelledby="faucet-captcha-title" className="mx-auto w-full max-w-3xl rounded-[28px] border border-violet-200/20 bg-[#171e42] p-5 shadow-[0_20px_60px_rgba(4,9,32,0.32)] sm:p-8">
+      <div className="relative mx-auto w-full max-w-3xl">
+        <div className="absolute right-full top-0 mr-6 hidden w-[160px] 2xl:block">
+          <AdsLabBanner id="unit-h2xkw0j13" container="adslab-banner-unit-h2xkw0j13" alignment="center" format="skyscraper" />
+        </div>
+        <div className="absolute left-full top-0 ml-6 hidden w-[160px] 2xl:block">
+          <AdsLabBanner id="unit-cf6cr4ie2" container="adslab-banner-unit-cf6cr4ie2" alignment="center" format="skyscraper" />
+        </div>
+        <section aria-labelledby="faucet-captcha-title" className="w-full rounded-[28px] border border-violet-200/20 bg-[#171e42] p-5 shadow-[0_20px_60px_rgba(4,9,32,0.32)] sm:p-8">
         <div className="mx-auto flex max-w-xl flex-col items-center text-center">
           <span className="grid size-14 place-items-center rounded-2xl bg-violet-400/10 text-violet-200"><ShieldCheck aria-hidden="true" /></span>
           <h2 id="faucet-captcha-title" className="mt-4 text-lg font-black sm:text-xl">Secure human verification</h2>
@@ -272,12 +283,14 @@ export function ManualFaucetPage() {
           {actionError && <p role="alert" className="mt-4 text-xs font-semibold text-rose-200">{actionError}</p>}
           {message && <p role="status" aria-live="polite" className="mt-4 text-xs font-semibold text-emerald-200">{message}</p>}
         </div>
-      </section>
+        </section>
+      </div>
 
       <div className="mx-auto flex max-w-3xl items-center justify-center gap-2 text-center text-[10px] leading-5 text-slate-500">
         <ShieldCheck aria-hidden="true" size={14} className="shrink-0" />
         <p>CAPTCHA results are verified by the server before any PEPE is credited.</p>
       </div>
+      <AdsLabBanner id="unit-2a7xnmbi8" container="adslab-banner-unit-2a7xnmbi8" alignment="center" format="medium-banner" />
 
       <AdsLabCaptchaModal
         purpose="faucet"
