@@ -531,7 +531,7 @@ export function AdsLabPtcTaskList({
         </li>
       ) : visibleTasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-8 text-center text-xs text-dashboard-muted">
-          {isRussian ? 'По этим условиям заданий не най��ено.' : 'No tasks match these filters.'}
+          {isRussian ? 'По этим условиям заданий не най����ено.' : 'No tasks match these filters.'}
         </li>
       ) : visibleTasks.map((task) => {
         const isActive = activeTask?.key === task.key
@@ -547,34 +547,36 @@ export function AdsLabPtcTaskList({
         })()
 
         return (
-          <li key={task.key} className="ptc-task-card group flex min-h-[210px] flex-col border border-dashboard-outline bg-dashboard-surface p-4 transition duration-200 motion-reduce:transition-none motion-reduce:hover:transform-none">
-            <div className="flex min-w-0 items-start gap-3">
+          <li key={task.key} className="ptc-task-card group relative isolate flex min-h-[270px] flex-col overflow-hidden rounded-[28px] border-2 border-cyan-100/25 bg-gradient-to-br from-[#29375f] via-[#202d54] to-[#17374d] p-4 shadow-[0_12px_30px_rgba(4,10,35,0.32)] transition-all duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:border-cyan-100/60 motion-safe:hover:shadow-[0_18px_40px_rgba(56,189,248,0.18)] motion-reduce:transition-none">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-9 size-24 rounded-full border-[14px] border-white/[0.06] bg-cyan-300/[0.03] transition-transform duration-500 group-hover:scale-110 motion-reduce:transition-none" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-5 top-0 h-1.5 rounded-b-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300 opacity-70" />
+            <div className="relative z-10 flex min-w-0 items-start gap-3.5">
               {task.iconUrl ? (
-                <img src={task.iconUrl} alt="" aria-hidden="true" referrerPolicy="no-referrer" className="size-12 shrink-0 rounded-2xl border-2 border-cyan-200/25 bg-[#26345d] object-contain p-1.5 shadow-sm" />
+                <img src={task.iconUrl} alt="" aria-hidden="true" referrerPolicy="no-referrer" className="size-14 shrink-0 rounded-[20px] border-[3px] border-cyan-100/40 bg-[#142244] object-contain p-1.5 shadow-lg shadow-cyan-950/20 transition-transform duration-300 group-hover:rotate-[-3deg] group-hover:scale-105 motion-reduce:transition-none" />
               ) : (
-                <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-100/60 bg-[#ffd166] text-[#29204e] shadow-md shadow-amber-950/15"><Eye size={18} /></span>
+                <span aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-[20px] border-[3px] border-amber-100/70 bg-gradient-to-br from-amber-200 to-orange-300 text-[#29204e] shadow-lg shadow-amber-950/20 transition-transform duration-300 group-hover:rotate-[-3deg] group-hover:scale-105 motion-reduce:transition-none"><Eye size={20} /></span>
               )}
               <div className="min-w-0 flex-1">
-                <h3 className="truncate text-sm font-extrabold tracking-tight">{task.title}</h3>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
-                  <span className="inline-flex items-center gap-1"><Globe2 size={11} />{domain}</span>
-                  <span className="inline-flex items-center gap-1 text-dashboard-accent"><BadgeCheck size={11} />Partner</span>
+                <h3 className="truncate pr-6 text-sm font-black tracking-tight text-white sm:text-base">{task.title}</h3>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                  <span className="inline-flex items-center gap-1.5"><Globe2 size={13} className="text-cyan-100/70" />{domain}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-cyan-100/20 bg-cyan-300/10 px-2 py-1 text-[10px] font-extrabold text-cyan-100"><BadgeCheck size={12} />Partner</span>
                 </div>
-                {task.description && <p className="mt-1.5 line-clamp-1 text-[10px] leading-4 text-dashboard-muted">{task.description}</p>}
+                {task.description && <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-300/90">{task.description}</p>}
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-dashboard-outline pt-3 text-[10px] font-bold">
-              <span className="inline-flex items-center gap-1.5 text-dashboard-gold"><Coins size={13} />{formatTokenAtomic(task.rewardAtomic)} {task.tokenSymbol}</span>
-              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300" title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={12} aria-hidden="true" />{isRussian ? `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} энергии для бегуна Pepe` : `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span>
-              <span className="inline-flex items-center gap-1.5 text-dashboard-muted"><Clock3 size={12} />{task.durationSeconds} {isRussian ? 'сек.' : 'sec'}</span>
-              <span className="text-dashboard-muted">{isRussian ? `Осталось: ${task.visitsRemaining}` : `Visits left: ${task.visitsRemaining}`}</span>
+            <div className="relative z-10 mt-4 grid grid-cols-2 gap-2 border-t border-white/10 pt-3 text-[11px] font-bold">
+              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-xl border border-amber-200/15 bg-amber-300/[0.08] px-2.5 py-2 text-amber-100"><Coins size={14} className="shrink-0 text-amber-300" /><span className="truncate">{formatTokenAtomic(task.rewardAtomic)} {task.tokenSymbol}</span></span>
+              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-xl border border-emerald-200/15 bg-emerald-300/[0.08] px-2.5 py-2 text-emerald-100" title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={14} aria-hidden="true" className="shrink-0 text-emerald-300" /><span className="truncate">{isRussian ? `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} энергии для бегуна Pepe` : `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span></span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#111a39]/55 px-2.5 py-2 text-slate-200"><Clock3 size={14} className="text-cyan-100/70" />{task.durationSeconds} {isRussian ? 'сек.' : 'sec'}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#111a39]/55 px-2.5 py-2 text-slate-200"><span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.8)]" />{isRussian ? `Осталось: ${task.visitsRemaining}` : `Visits left: ${task.visitsRemaining}`}</span>
             </div>
 
-            <div className="mt-auto pt-3">
+            <div className="relative z-10 mt-auto pt-4">
               {isActive ? (
-                <div role="status" aria-live="polite" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-gold/30 bg-dashboard-gold/10 px-3 py-2 text-[11px] font-bold text-dashboard-gold">
-                  <Timer size={14} />
+                <div role="status" aria-live="polite" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-amber-200/25 bg-amber-300/10 px-3 py-2 text-xs font-extrabold text-amber-100">
+                  <Timer size={15} />
                   {claiming
                     ? (isRussian ? 'Начисляем подтверждённую награду…' : 'Crediting your confirmed reward…')
                     : awaitingPostback
@@ -584,20 +586,20 @@ export function AdsLabPtcTaskList({
                         : (isRussian ? 'Автоматически проверяем выполнение…' : 'Automatically verifying completion…')}
                 </div>
               ) : onCooldown ? (
-                <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-outline bg-dashboard-surface-raised px-3 py-2 text-center text-[10px] font-bold text-dashboard-muted">
-                  <Clock3 size={13} />{isRussian ? `Доступно через ${formatCountdown(task.cooldownRemainingSeconds)}` : `Available in ${formatCountdown(task.cooldownRemainingSeconds)}`}
+                <span role="status" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#111a39]/75 px-3 py-2 text-center text-xs font-bold text-slate-300">
+                  <Clock3 size={14} />{isRussian ? `Доступно через ${formatCountdown(task.cooldownRemainingSeconds)}` : `Available in ${formatCountdown(task.cooldownRemainingSeconds)}`}
                 </span>
               ) : task.awaitingConfirmation ? (
-                <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-gold/30 bg-dashboard-gold/10 px-3 py-2 text-center text-[10px] font-bold text-dashboard-gold">{isRussian ? 'Ожидаем подтверждения этой награды' : 'Waiting for confirmation of this reward'}</span>
+                <span role="status" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-amber-200/25 bg-amber-300/10 px-3 py-2 text-center text-xs font-extrabold text-amber-100">{isRussian ? 'Ожидаем подтверждения этой награды' : 'Waiting for confirmation of this reward'}</span>
               ) : isStarting ? (
-                <span role="status" className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-dashboard-outline bg-dashboard-surface-raised px-3 py-2 text-[10px] font-bold text-dashboard-muted">{isRussian ? 'Открываем задание…' : 'Opening task…'}</span>
+                <span role="status" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#111a39]/75 px-3 py-2 text-xs font-bold text-slate-300">{isRussian ? 'Открываем задание…' : 'Opening task…'}</span>
               ) : task.isInProgress ? (
-                <button type="button" onClick={() => void startTask(task)} disabled={disabled} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-dashboard-gold px-3 py-2 text-[11px] font-extrabold text-slate-950 shadow-sm transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-gold focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50">{isRussian ? 'Продолжить задание' : 'Resume task'}<ArrowUpRight size={13} /></button>
+                <button type="button" onClick={() => void startTask(task)} disabled={disabled} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-amber-100/60 bg-gradient-to-r from-amber-200 to-orange-300 px-3 py-2.5 text-xs font-black text-[#241c35] shadow-[0_8px_20px_rgba(251,191,36,0.2)] transition-all hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#202d54] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none">{isRussian ? 'Продолжить задание' : 'Resume task'}<ArrowUpRight size={15} className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" /></button>
               ) : (
-                <button type="button" onClick={() => void startTask(task)} disabled={disabled} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl border-2 border-cyan-100/70 bg-dashboard-accent px-4 py-2 text-[11px] font-black text-[#11203e] shadow-md shadow-cyan-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50">{isRussian ? 'Смотреть рекламу' : 'View Ad'}<ArrowUpRight size={13} /></button>
+                <button type="button" onClick={() => void startTask(task)} disabled={disabled} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-cyan-100/75 bg-gradient-to-r from-cyan-300 via-sky-300 to-blue-300 px-4 py-2.5 text-xs font-black text-[#10203a] shadow-[0_8px_22px_rgba(56,189,248,0.22)] transition-all hover:-translate-y-0.5 hover:saturate-125 hover:shadow-[0_12px_28px_rgba(56,189,248,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#202d54] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none">{isRussian ? 'Смотреть рекламу' : 'View Ad'}<ArrowUpRight size={15} className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" /></button>
               )}
             </div>
-            {task.isInProgress && !isActive && <p className="mt-2 text-center text-[10px] text-dashboard-muted">{isRussian ? `Осталось ${task.activeRemainingSeconds ?? 0} сек.` : `${task.activeRemainingSeconds ?? 0}s left`}</p>}
+            {task.isInProgress && !isActive && <p className="relative z-10 mt-2 text-center text-[11px] text-slate-300">{isRussian ? `Осталось ${task.activeRemainingSeconds ?? 0} сек.` : `${task.activeRemainingSeconds ?? 0}s left`}</p>}
           </li>
         )
       })}
