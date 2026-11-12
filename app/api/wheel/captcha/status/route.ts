@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
         .where(and(
           eq(wheelCaptchaSessions.id, captchaSessionId),
           eq(wheelCaptchaSessions.guestId, account.profile.id),
-        eq(wheelCaptchaSessions.purpose, purpose),
+          eq(wheelCaptchaSessions.purpose, purpose),
           eq(wheelCaptchaSessions.status, 'pending'),
           gt(wheelCaptchaSessions.expiresAt, now),
         ))
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         .where(and(
           eq(wheelCaptchaSessions.id, captchaSessionId),
           eq(wheelCaptchaSessions.guestId, account.profile.id),
-        eq(wheelCaptchaSessions.purpose, purpose),
+          eq(wheelCaptchaSessions.purpose, purpose),
         ))
         .limit(1)
       if (!latestSession) return NextResponse.json({ error: 'CAPTCHA session not found.' }, { status: 404, headers: noStoreHeaders })

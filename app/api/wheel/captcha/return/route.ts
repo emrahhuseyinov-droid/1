@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const sessionId = ${serializedSessionId};
     const status = document.getElementById('status');
     if (!sessionId) {
-      status.textContent = 'A recognizable session ID was not received. Return to the wheel and try again.';
+      status.textContent = 'A recognizable session ID was not received. Return to the ' + ${serializedReturnPageName} + ' and try again.';
     } else {
       const message = { type: 'adslab-captcha-return', captchaSessionId: sessionId };
       let notified = false;
