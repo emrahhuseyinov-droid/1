@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           guestId: account.profile.id,
           source: ADVERTISER_WALLET_TRANSFER_OUT_SOURCE,
           sourceKey: transferId,
-          itemId: 'Publisher to advertiser wallet',
+          itemId: 'Earner to advertiser wallet',
           tokenSymbol: 'PEPE',
           rewardAtomic: -amountAtomic,
           createdAt: now,
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
           guestId: account.profile.id,
           source: ADVERTISER_WALLET_TRANSFER_IN_SOURCE,
           sourceKey: transferId,
-          itemId: 'Publisher to advertiser wallet',
+          itemId: 'Earner to advertiser wallet',
           tokenSymbol: 'PEPE',
           rewardAtomic: amountAtomic,
           createdAt: now,
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     if (result.status === 'profile_missing') return NextResponse.json({ error: 'Account profile not found.' }, { status: 404, headers: noStoreHeaders })
     if (result.status === 'insufficient_balance') {
-      return NextResponse.json({ error: 'Your Publisher PEPE balance is too low for this transfer.', code: 'insufficient_pepe', publisherBalanceAtomic: result.publisherBalanceAtomic }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({ error: 'Your Earner PEPE balance is too low for this transfer.', code: 'insufficient_pepe', publisherBalanceAtomic: result.publisherBalanceAtomic }, { status: 409, headers: noStoreHeaders })
     }
     if (result.status === 'balance_limit') return NextResponse.json({ error: 'The Advertiser balance would exceed the internal ledger limit.' }, { status: 409, headers: noStoreHeaders })
     if (result.status === 'idempotency_conflict') return NextResponse.json({ error: 'This transfer ID was already used for a different amount.' }, { status: 409, headers: noStoreHeaders })

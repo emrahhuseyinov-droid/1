@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { ArrowUpRight, BadgeCheck, BatteryCharging, Clock3, Coins, Eye, Globe2, Timer } from 'lucide-react'
+import { ArrowUpRight, BadgeCheck, BatteryCharging, Clock3, Coins, Eye, Globe2, Sparkles, Timer } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { ARCADE_PTC_ENERGY_REWARD } from '@/lib/arcade-gameplay'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -484,6 +484,7 @@ export function AdsLabPtcTaskList({
   }
 
   const tasks = Array.isArray(data?.tasks) ? data.tasks : []
+  const proTaskKey = tasks[0]?.key
   const visibleTasks = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase()
     return tasks
@@ -493,11 +494,13 @@ export function AdsLabPtcTaskList({
         return matchesSearch && (!availableOnly || isAvailable)
       })
       .sort((first, second) => {
+        if (first.key === proTaskKey) return -1
+        if (second.key === proTaskKey) return 1
         if (sortBy === 'duration') return first.durationSeconds - second.durationSeconds
         const rewardDifference = BigInt(second.rewardAtomic) - BigInt(first.rewardAtomic)
         return rewardDifference > 0n ? 1 : rewardDifference < 0n ? -1 : 0
       })
-  }, [availableOnly, searchQuery, sortBy, tasks])
+  }, [availableOnly, proTaskKey, searchQuery, sortBy, tasks])
   const loadingLabel = isRussian ? 'Загружаем задания…' : 'Loading tasks…'
 
   if (isLoading && !data) {
@@ -531,9 +534,10 @@ export function AdsLabPtcTaskList({
         </li>
       ) : visibleTasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-8 text-center text-xs text-dashboard-muted">
-          {isRussian ? 'По этим условиям заданий не найдено.' : 'No tasks match these filters.'}
+          {isRussian ? 'По этим условиям заданий не най��ено.' : 'No tasks match these filters.'}
         </li>
       ) : visibleTasks.map((task) => {
+        const isPro = task.key === proTaskKey
         const isActive = activeTask?.key === task.key
         const onCooldown = task.cooldownRemainingSeconds > 0 && !task.isInProgress
         const isStarting = startingKey === task.key
@@ -547,14 +551,14 @@ export function AdsLabPtcTaskList({
         })()
 
         return (
-          <li key={task.key} className="ptc-task-card group flex min-h-[210px] flex-col border border-dashboard-outline bg-dashboard-surface p-4 transition duration-200 motion-reduce:transition-none motion-reduce:hover:transform-none">
-            <div className="flex min-w-0 items-start gap-3">
+          <li key={task.key} className={`ptc-task-card group flex min-h-[210px] flex-col border border-dashboard-outline bg-dashboard-surface p-4 transition duration-200 motion-reduce:transition-none motion-reduce:hover:transform-none ${isPro ? 'ptc-task-card-pro' : ''}`}>
+            <div className="relative flex min-w-0 items-start gap-3">
               {task.iconUrl ? (
                 <img src={task.iconUrl} alt="" aria-hidden="true" referrerPolicy="no-referrer" className="size-12 shrink-0 rounded-2xl border-2 border-cyan-200/25 bg-[#26345d] object-contain p-1.5 shadow-sm" />
               ) : (
                 <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-100/60 bg-[#ffd166] text-[#29204e] shadow-md shadow-amber-950/15"><Eye size={18} /></span>
               )}
-              <div className="min-w-0 flex-1">
+              <div className={`min-w-0 flex-1 ${isPro ? 'pr-16' : ''}`}>
                 <h3 className="truncate text-sm font-extrabold tracking-tight">{task.title}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
                   <span className="inline-flex items-center gap-1"><Globe2 size={11} />{domain}</span>
@@ -562,6 +566,7 @@ export function AdsLabPtcTaskList({
                 </div>
                 {task.description && <p className="mt-1.5 line-clamp-1 text-[10px] leading-4 text-dashboard-muted">{task.description}</p>}
               </div>
+              {isPro && <span className="absolute right-0 top-0 inline-flex items-center gap-1 rounded-full border border-amber-100/80 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-400 px-2.5 py-1 text-[9px] font-black tracking-[0.16em] text-[#2c1e26] shadow-[0_4px_16px_rgba(251,191,36,0.3)]"><Sparkles size={11} aria-hidden="true" />PRO</span>}
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-dashboard-outline pt-3 text-[10px] font-bold">

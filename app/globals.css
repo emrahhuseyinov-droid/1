@@ -537,10 +537,23 @@ dialog.adslab-captcha-dialog[open] {
   pointer-events: none;
 }
 
+.ptc-task-card.ptc-task-card-pro {
+  border-color: rgb(255 209 102 / 0.78);
+  background-image:
+    radial-gradient(circle at 94% 8%, rgb(255 209 102 / 0.2), transparent 8rem),
+    linear-gradient(145deg, #2a355e 0%, #1e294f 58%, #302645 100%);
+  box-shadow: 0 16px 38px rgb(3 8 30 / 0.32), 0 0 0 1px rgb(255 209 102 / 0.16), inset 0 2px 0 rgb(255 255 255 / 0.08);
+}
+
 .ptc-task-card:hover {
   border-color: rgb(99 216 255 / 0.56);
   box-shadow: 0 20px 40px rgb(34 153 227 / 0.17), inset 0 2px 0 rgb(255 255 255 / 0.08);
   transform: translateY(-4px) rotate(-0.35deg);
+}
+
+.ptc-task-card.ptc-task-card-pro:hover {
+  border-color: rgb(255 224 150 / 0.94);
+  box-shadow: 0 20px 42px rgb(68 47 14 / 0.3), 0 0 0 1px rgb(255 209 102 / 0.24), inset 0 2px 0 rgb(255 255 255 / 0.1);
 }
 
 .cartoon-auth-shell {
