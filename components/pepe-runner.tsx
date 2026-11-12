@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   ARCADE_RUNNER_FRAME_MS,
   ARCADE_HOMERO_COIN_INTERVAL_M,
@@ -116,6 +116,38 @@ function drawFallbackPepe(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
 function positiveModulo(value: number, divisor: number) {
   return ((value % divisor) + divisor) % divisor
+}
+
+function loadSceneImage(image: HTMLImageElement, source: string, onLoad?: () => void) {
+  return new Promise<void>((resolve) => {
+    let settled = false
+    let loaded = false
+    const settle = () => {
+      if (settled) return
+      settled = true
+      image.onload = null
+      image.onerror = null
+      resolve()
+    }
+    const handleLoad = () => {
+      if (loaded) return
+      loaded = true
+      try {
+        onLoad?.()
+      } finally {
+        settle()
+      }
+    }
+
+    image.onload = handleLoad
+    image.onerror = settle
+    image.src = source
+
+    if (image.complete) {
+      if (image.naturalWidth > 0) handleLoad()
+      else settle()
+    }
+  })
 }
 
 function createBrownShoeSprite(image: HTMLImageElement) {
@@ -352,6 +384,7 @@ export function PepeRunner({
 }: PepeRunnerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagesRef = useRef<SceneImages>({ background: null, idle: null, runA: null, runB: null, jump: null, train: null, homeroCoin: null })
+  const [sceneAssetsReady, setSceneAssetsReady] = useState(false)
   const pendingJumpRef = useRef(false)
   const pausedRef = useRef(paused)
   const disabledRef = useRef(disabled)
@@ -362,39 +395,39 @@ export function PepeRunner({
   callbacksRef.current = { onProgress, onLivesChange, onFinish }
 
   useEffect(() => {
-    const background = new Image()
-    background.crossOrigin = 'anonymous'
-    background.src = '/arcade/arcade-background-no-portal.png'
+    let disposed = false
 
-    const idleImage = new Image()
-    idleImage.crossOrigin = 'anonymous'
-    idleImage.onload = () => { imagesRef.current.idle = createPepeIdleSprite(idleImage) }
-    idleImage.src = '/arcade/homepage-pepe-sheet-key.png'
+    const createImage = () => {
+      const image = new Image()
+      image.crossOrigin = 'anonymous'
+      return image
+    }
 
-    const runA = new Image()
-    runA.crossOrigin = 'anonymous'
-    runA.onload = () => { imagesRef.current.runA = createBrownShoeSprite(runA) ?? runA }
-    runA.src = '/arcade/pepe-run-a.png'
+    const background = createImage()
+    const idleImage = createImage()
+    const runA = createImage()
+    const runB = createImage()
+    const jump = createImage()
+    const homeroCoin = createImage()
+    const trainImage = createImage()
+    const sceneImages: SceneImages = { background, idle: null, runA, runB, jump, train: null, homeroCoin }
+    imagesRef.current = sceneImages
 
-    const runB = new Image()
-    runB.crossOrigin = 'anonymous'
-    runB.onload = () => { imagesRef.current.runB = createBrownShoeSprite(runB) ?? runB }
-    runB.src = '/arcade/pepe-run-b.png'
+    void Promise.all([
+      loadSceneImage(background, '/arcade/arcade-background-no-portal.png'),
+      loadSceneImage(idleImage, '/arcade/homepage-pepe-sheet-key.png', () => { sceneImages.idle = createPepeIdleSprite(idleImage) }),
+      loadSceneImage(runA, '/arcade/pepe-run-a.png', () => { sceneImages.runA = createBrownShoeSprite(runA) ?? runA }),
+      loadSceneImage(runB, '/arcade/pepe-run-b.png', () => { sceneImages.runB = createBrownShoeSprite(runB) ?? runB }),
+      loadSceneImage(jump, '/arcade/pepe-jump.png', () => { sceneImages.jump = createBrownShoeSprite(jump) ?? jump }),
+      loadSceneImage(homeroCoin, '/homero-token.png'),
+      loadSceneImage(trainImage, '/arcade/neon-train.png', () => { sceneImages.train = createFiveCarTrainSprite(trainImage) }),
+    ]).then(() => {
+      if (!disposed) setSceneAssetsReady(true)
+    })
 
-    const jump = new Image()
-    jump.crossOrigin = 'anonymous'
-    jump.onload = () => { imagesRef.current.jump = createBrownShoeSprite(jump) ?? jump }
-    jump.src = '/arcade/pepe-jump.png'
-
-    const homeroCoin = new Image()
-    homeroCoin.crossOrigin = 'anonymous'
-    homeroCoin.src = '/homero-token.png'
-
-    imagesRef.current = { background, idle: null, runA, runB, jump, train: null, homeroCoin }
-    const trainImage = new Image()
-    trainImage.crossOrigin = 'anonymous'
-    trainImage.onload = () => { imagesRef.current.train = createFiveCarTrainSprite(trainImage) }
-    trainImage.src = '/arcade/neon-train.png'
+    return () => {
+      disposed = true
+    }
   }, [])
 
   useEffect(() => {
@@ -411,6 +444,8 @@ export function PepeRunner({
   }, [runId])
 
   useEffect(() => {
+    if (!sceneAssetsReady) return
+
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
@@ -465,7 +500,7 @@ export function PepeRunner({
 
     animationFrameId = window.requestAnimationFrame(render)
     return () => window.cancelAnimationFrame(animationFrameId)
-  }, [boostCodes, extraLives, homeroCoinsEnabled, homeroCoinsRemaining, jumpRequestRef, runId, runSeed])
+  }, [boostCodes, extraLives, homeroCoinsEnabled, homeroCoinsRemaining, jumpRequestRef, runId, runSeed, sceneAssetsReady])
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLCanvasElement>) => {
     if (!runId || pausedRef.current || disabledRef.current) return
@@ -482,6 +517,7 @@ export function PepeRunner({
       aria-label={runId ? homeroCoinsEnabled ? `Pepe running through the nighttime pixel-art city. Jump to collect ${ARCADE_HOMERO_COIN_REWARD} HOMERO every ${ARCADE_HOMERO_COIN_INTERVAL_M} meters.` : 'Pepe running through the nighttime pixel-art city. Tap or click to jump over obstacles.' : 'Pepe standing at the nighttime pixel-art city starting line.'}
       onPointerDown={handlePointerDown}
       className="block h-full w-full touch-manipulation [image-rendering:pixelated]"
+      style={{ backgroundImage: "url('/arcade/arcade-background-no-portal.png')", backgroundPosition: 'center', backgroundSize: 'cover' }}
     />
   )
 }
