@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles } from '@/lib/db/schema'
-import { getManualFaucetRewardAtomic } from '@/lib/referral-rewards'
+import { getManualFaucetRewardAtomic } from '@/lib/manual-faucet-pricing'
 import { manualClaimCooldownMs, manualClaimDailyLimit } from '@/lib/manual-claim-status'
 
 export class ManualFaucetError extends Error {
@@ -21,9 +21,12 @@ function getUtcDayStart(now: Date) {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
 }
 
-export async function getManualFaucetState(guestId: string, now = new Date()) {
+export async function getManualFaucetState(guestId: string, now = new Date(), rewardAtomicOverride?: number) {
   const dayStart = getUtcDayStart(now)
-  const [latestClaim, todayCount] = await Promise.all([
+  const rewardPromise = rewardAtomicOverride === undefined
+    ? getManualFaucetRewardAtomic()
+    : Promise.resolve(rewardAtomicOverride)
+  const [latestClaim, todayCount, rewardAtomic] = await Promise.all([
     db.select({ createdAt: earningEvents.createdAt })
       .from(earningEvents)
       .where(and(eq(earningEvents.guestId, guestId), eq(earningEvents.source, 'manual_faucet')))
@@ -36,6 +39,7 @@ export async function getManualFaucetState(guestId: string, now = new Date()) {
         eq(earningEvents.source, 'manual_faucet'),
         gte(earningEvents.createdAt, dayStart),
       )),
+    rewardPromise,
   ])
 
   const cooldownUntil = latestClaim[0]
@@ -43,7 +47,7 @@ export async function getManualFaucetState(guestId: string, now = new Date()) {
     : 0
 
   return {
-    rewardAtomic: String(getManualFaucetRewardAtomic()),
+    rewardAtomic: String(rewardAtomic),
     dailyLimit: manualClaimDailyLimit,
     claimsLeft: Math.max(0, manualClaimDailyLimit - (todayCount[0]?.count ?? 0)),
     cooldownUntil: cooldownUntil > now.getTime() ? cooldownUntil : 0,
@@ -52,7 +56,25 @@ export async function getManualFaucetState(guestId: string, now = new Date()) {
 }
 
 export async function claimManualFaucet(guestId: string, captchaSessionId: string, now = new Date()) {
-  const rewardAtomic = getManualFaucetRewardAtomic()
+  const [previousClaim] = await db
+    .select({ rewardAtomic: earningEvents.rewardAtomic })
+    .from(earningEvents)
+    .where(and(
+      eq(earningEvents.guestId, guestId),
+      eq(earningEvents.source, 'manual_faucet'),
+      eq(earningEvents.sourceKey, captchaSessionId),
+    ))
+    .limit(1)
+
+  if (previousClaim) {
+    return {
+      alreadyClaimed: true,
+      rewardAtomic: String(previousClaim.rewardAtomic),
+      state: await getManualFaucetState(guestId, now, previousClaim.rewardAtomic),
+    }
+  }
+
+  const rewardAtomic = await getManualFaucetRewardAtomic()
   const result = await db.transaction(async (transaction) => {
     const [profile] = await transaction
       .select({ id: guestProfiles.id })
@@ -64,7 +86,7 @@ export async function claimManualFaucet(guestId: string, captchaSessionId: strin
     if (!profile) throw new ManualFaucetError('Account profile not found.', 404, 'profile_missing')
 
     const [existingClaim] = await transaction
-      .select({ id: earningEvents.id })
+      .select({ rewardAtomic: earningEvents.rewardAtomic })
       .from(earningEvents)
       .where(and(
         eq(earningEvents.guestId, guestId),
@@ -73,7 +95,7 @@ export async function claimManualFaucet(guestId: string, captchaSessionId: strin
       ))
       .limit(1)
 
-    if (existingClaim) return { alreadyClaimed: true }
+    if (existingClaim) return { alreadyClaimed: true, rewardAtomic: existingClaim.rewardAtomic }
 
     const [latestClaim] = await transaction
       .select({ createdAt: earningEvents.createdAt })
@@ -115,14 +137,26 @@ export async function claimManualFaucet(guestId: string, captchaSessionId: strin
         createdAt: now,
       })
       .onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
-      .returning({ id: earningEvents.id })
+      .returning({ id: earningEvents.id, rewardAtomic: earningEvents.rewardAtomic })
 
-    return { alreadyClaimed: !credit }
+    if (credit) return { alreadyClaimed: false, rewardAtomic: credit.rewardAtomic }
+
+    const [conflictingClaim] = await transaction
+      .select({ rewardAtomic: earningEvents.rewardAtomic })
+      .from(earningEvents)
+      .where(and(
+        eq(earningEvents.guestId, guestId),
+        eq(earningEvents.source, 'manual_faucet'),
+        eq(earningEvents.sourceKey, captchaSessionId),
+      ))
+      .limit(1)
+
+    return { alreadyClaimed: true, rewardAtomic: conflictingClaim?.rewardAtomic ?? rewardAtomic }
   })
 
   return {
     ...result,
-    rewardAtomic: String(rewardAtomic),
-    state: await getManualFaucetState(guestId),
+    rewardAtomic: String(result.rewardAtomic),
+    state: await getManualFaucetState(guestId, now, result.rewardAtomic),
   }
 }

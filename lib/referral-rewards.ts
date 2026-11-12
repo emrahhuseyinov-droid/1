@@ -9,10 +9,7 @@ export type EligibleReward = {
 
 const MANUAL_CLAIM_REWARD_HOMERO = 50
 const HOMERO_ATOMIC_UNITS = 100_000_000
-const MANUAL_FAUCET_REWARD_PEPE = 10
-const PEPE_ATOMIC_UNITS = 100_000_000
 const manualClaimRewardAtomic = MANUAL_CLAIM_REWARD_HOMERO * HOMERO_ATOMIC_UNITS
-const manualFaucetRewardAtomic = MANUAL_FAUCET_REWARD_PEPE * PEPE_ATOMIC_UNITS
 export const VIEW_ADS_TASK_REWARD = 80
 export const VIEW_ADS_TASK_REWARD_ATOMIC = VIEW_ADS_TASK_REWARD * HOMERO_ATOMIC_UNITS
 
@@ -74,8 +71,4 @@ export function getEligibleReward(source: string, itemId: string | null): Eligib
 
 export function getManualClaimRewardAtomic() {
   return manualClaimRewardAtomic
-}
-
-export function getManualFaucetRewardAtomic() {
-  return manualFaucetRewardAtomic
 }

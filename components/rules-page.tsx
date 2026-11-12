@@ -24,7 +24,7 @@ const rules = [
   },
   {
     title: 'Manual CAPTCHA faucet',
-    description: 'Complete a CAPTCHA to unlock a 10 PEPE claim after server-side verification.',
+    description: 'Complete a CAPTCHA to unlock the current PEPE reward after server-side verification.',
     icon: ShieldCheck,
     tone: 'text-cyan-200 bg-cyan-300/10 ring-cyan-200/15',
     points: [
