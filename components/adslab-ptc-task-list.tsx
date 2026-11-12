@@ -19,6 +19,7 @@ type AdsLabTask = {
   pepeUsdPrice: string
   durationSeconds: number
   visitsRemaining: number
+  isPro?: boolean
   cooldownRemainingSeconds: number
   isInProgress: boolean
   awaitingConfirmation: boolean
@@ -70,6 +71,7 @@ function isAdsLabTask(value: unknown): value is AdsLabTask {
     && typeof value.pepeUsdPrice === 'string'
     && typeof value.durationSeconds === 'number' && Number.isFinite(value.durationSeconds)
     && typeof value.visitsRemaining === 'number' && Number.isFinite(value.visitsRemaining)
+    && (value.isPro === undefined || typeof value.isPro === 'boolean')
     && typeof value.cooldownRemainingSeconds === 'number' && Number.isFinite(value.cooldownRemainingSeconds)
     && typeof value.isInProgress === 'boolean'
     && typeof value.awaitingConfirmation === 'boolean'
@@ -484,7 +486,6 @@ export function AdsLabPtcTaskList({
   }
 
   const tasks = Array.isArray(data?.tasks) ? data.tasks : []
-  const proTaskKey = tasks[0]?.key
   const visibleTasks = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase()
     return tasks
@@ -494,13 +495,14 @@ export function AdsLabPtcTaskList({
         return matchesSearch && (!availableOnly || isAvailable)
       })
       .sort((first, second) => {
-        if (first.key === proTaskKey) return -1
-        if (second.key === proTaskKey) return 1
+        const firstIsPro = first.isPro === true
+        const secondIsPro = second.isPro === true
+        if (firstIsPro !== secondIsPro) return firstIsPro ? -1 : 1
         if (sortBy === 'duration') return first.durationSeconds - second.durationSeconds
         const rewardDifference = BigInt(second.rewardAtomic) - BigInt(first.rewardAtomic)
         return rewardDifference > 0n ? 1 : rewardDifference < 0n ? -1 : 0
       })
-  }, [availableOnly, proTaskKey, searchQuery, sortBy, tasks])
+  }, [availableOnly, searchQuery, sortBy, tasks])
   const loadingLabel = isRussian ? 'Загружаем задания…' : 'Loading tasks…'
 
   if (isLoading && !data) {
@@ -537,7 +539,7 @@ export function AdsLabPtcTaskList({
           {isRussian ? 'По этим условиям заданий не най��ено.' : 'No tasks match these filters.'}
         </li>
       ) : visibleTasks.map((task) => {
-        const isPro = task.key === proTaskKey
+        const isPro = task.isPro === true
         const isActive = activeTask?.key === task.key
         const onCooldown = task.cooldownRemainingSeconds > 0 && !task.isInProgress
         const isStarting = startingKey === task.key

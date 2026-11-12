@@ -116,6 +116,7 @@ export async function GET(request: NextRequest) {
         rewardAtomic: advertiserCampaigns.rewardPerTaskAtomic,
         durationSeconds: advertiserCampaigns.durationSeconds,
         remainingTasks: advertiserCampaigns.remainingTasks,
+        promotionExpiresAt: advertiserCampaigns.promotionExpiresAt,
       }).from(advertiserCampaigns).where(and(
         eq(advertiserCampaigns.campaignType, 'ptc'),
         eq(advertiserCampaigns.status, 'active'),
@@ -221,6 +222,7 @@ export async function GET(request: NextRequest) {
         pepeUsdPrice: providerFeed?.pepeUsdPrice ?? '0',
         durationSeconds: campaign.durationSeconds,
         visitsRemaining: 1,
+        isPro: Boolean(campaign.promotionExpiresAt && campaign.promotionExpiresAt.getTime() > now),
         cooldownRemainingSeconds: 0,
         isInProgress: pendingIsActive,
         awaitingConfirmation,
