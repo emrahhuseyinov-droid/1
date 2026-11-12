@@ -19,6 +19,9 @@ type SwapSnapshot = {
   balancesAtomic: { HOMERO: string; PEPE: string }
   reserveAvailableAtomic: string
   initialReserveSeeded: boolean
+  homeroTreasuryAvailableAtomic: string
+  homeroRemainingSupplyAtomic: string
+  homeroTreasurySeeded: boolean
   isReserveAdmin: boolean
 }
 
@@ -115,7 +118,7 @@ export function SwapPage() {
   const insufficientHomero = amountAtomic !== null && BigInt(amountAtomic) > homeroBalanceAtomic
   const insufficientReserve = amountAtomic !== null && BigInt(amountAtomic) > availableReserveAtomic
   const canSwap = Boolean(
-    snapshot && amountAtomic !== null && amountAtomic > 0 && !isSwapping &&
+    snapshot && snapshot.homeroTreasurySeeded && amountAtomic !== null && amountAtomic > 0 && !isSwapping &&
     (retryingSameSwap || (!insufficientHomero && !insufficientReserve)),
   )
   const estimatedUsd = amountAtomic !== null && quote
@@ -135,8 +138,12 @@ export function SwapPage() {
     try {
       const quoteResponse = await fetchJson<{
         swapQuote: { amountAtomic: string; quoteToken: string } | null
+        homeroTreasurySeeded: boolean
       }>(`/api/referrals/swap?amount=${encodeURIComponent(amount)}`)
       const freshQuote = quoteResponse.swapQuote
+      if (!quoteResponse.homeroTreasurySeeded) {
+        throw new Error('The HOMERO treasury has not been initialized yet.')
+      }
       if (!freshQuote?.quoteToken || freshQuote.amountAtomic !== String(amountAtomic)) {
         throw new Error('Could not prepare a fresh exchange quote. Please try again.')
       }
@@ -171,7 +178,7 @@ export function SwapPage() {
     }
   }
 
-  async function handleReserveAction(action: 'initialize' | 'fund', event: FormEvent<HTMLFormElement>) {
+  async function handleReserveAction(action: 'initialize' | 'initialize_homero' | 'fund', event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!snapshot?.isReserveAdmin || isFunding) return
 
@@ -194,7 +201,7 @@ export function SwapPage() {
       const response = await fetch('/api/referrals/swap/reserve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(action === 'initialize'
+        body: JSON.stringify(action !== 'fund'
           ? { action }
           : { action, amount: topUpAmount, idempotencyKey: attempt?.idempotencyKey }),
       })
@@ -206,7 +213,11 @@ export function SwapPage() {
 
       setReserveNotice({
         kind: 'success',
-        text: action === 'initialize' ? 'The exchange balance is ready.' : 'PEPE was added to the exchange balance.',
+        text: action === 'initialize'
+          ? 'The exchange balance is ready.'
+          : action === 'initialize_homero'
+            ? 'The HOMERO treasury is ready.'
+            : 'PEPE was added to the exchange balance.',
       })
       if (action === 'fund') {
         setTopUpAmount('')
@@ -330,6 +341,12 @@ export function SwapPage() {
 
             {insufficientHomero && <p role="status" className="text-[10px] text-rose-600">Amount exceeds your available HOMERO balance.</p>}
             {insufficientReserve && <p role="status" className="text-[10px] text-rose-600">This amount exceeds the available exchange balance.</p>}
+            {snapshot && !snapshot.homeroTreasurySeeded && (
+              <Alert role="status">
+                <CircleAlert />
+                <AlertDescription>The HOMERO treasury has not been initialized yet.</AlertDescription>
+              </Alert>
+            )}
             {snapshot && availableReserveAtomic <= 0n && !amount && <p role="status" className="text-[10px] text-dashboard-muted">The exchange balance is not available yet.</p>}
 
             {swapAttempt && <p className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[10px] leading-relaxed text-amber-700 dark:text-amber-300">The last request may still be processing. Retry the same amount to safely confirm it without a duplicate swap.</p>}
@@ -410,6 +427,28 @@ export function SwapPage() {
                   </FieldGroup>
                 </form>
               )}
+
+              <div className="mt-5 rounded-2xl border border-dashboard-outline bg-dashboard-surface-raised p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-xs font-extrabold">HOMERO treasury balance</h3>
+                  <span className="font-mono text-xs font-bold">{formatPepeAtomic(snapshot.homeroTreasuryAvailableAtomic)} HOMERO</span>
+                </div>
+                <p className="mt-1 text-[9px] text-dashboard-muted">
+                  Remaining HOMERO treasury supply: {formatPepeAtomic(snapshot.homeroRemainingSupplyAtomic)} HOMERO
+                </p>
+                {!snapshot.homeroTreasurySeeded ? (
+                  <>
+                    <p className="mt-3 text-[9px] leading-relaxed text-dashboard-muted">This changes internal site balances only. It does not send or withdraw on-chain PEPE.</p>
+                    <form onSubmit={(event) => handleReserveAction('initialize_homero', event)} className="mt-3">
+                      <Button type="submit" variant="secondary" size="lg" disabled={isFunding} className="h-auto w-full py-2.5">
+                        {isFunding ? 'Initializing…' : 'Initialize 10B HOMERO treasury'}
+                      </Button>
+                    </form>
+                  </>
+                ) : (
+                  <p role="status" className="mt-3 text-[9px] text-emerald-600">The HOMERO treasury is ready.</p>
+                )}
+              </div>
               {reserveNotice && <Alert role={reserveNotice.kind === 'error' ? 'alert' : 'status'} variant={reserveNotice.kind === 'error' ? 'destructive' : 'default'} className="mt-3"><AlertDescription>{reserveNotice.text}</AlertDescription></Alert>}
             </section>
           )}
