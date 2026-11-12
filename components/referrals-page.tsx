@@ -110,16 +110,22 @@ export function ReferralsPage({ referralOverview }: Props) {
         </div>
       </section>
 
-      <section aria-label="Referral statistics" className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <section aria-label="Referral statistics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {[
           { label: 'Total referrals', icon: UsersRound, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', value: String(referralOverview.referralCount) },
           { label: 'Rewarded referrals', icon: Flame, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', value: String(referralOverview.activeReferralCount) },
           { label: 'Commission events', icon: Wallet, iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-500', value: String(referralOverview.commissionCount) },
           { label: 'Commission balance', icon: Wallet, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', value: `${formatAtomicAmount(referralOverview.commissionAtomic)} HOMERO` },
         ].map(({ label, icon: Icon, iconBg, iconColor, value }) => (
-          <article key={label} className="flex min-h-[88px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-[#111a2b] sm:p-4">
+          <article key={label} className="flex min-h-[88px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-[#111a2b] sm:p-4">
             <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg} ${iconColor}`}><Icon size={17} /></span>
-            <div className="min-w-0"><p className="truncate text-[9px] font-extrabold uppercase tracking-wide text-slate-400">{label}</p><p className={`mt-1 inline-flex items-center gap-1 whitespace-nowrap font-black ${label === 'Commission balance' ? 'text-xs sm:text-base' : 'text-base'}`}>{label === 'Commission balance' && <HomeroTokenLogo size={14} />}{value}</p></div>
+            <div className="min-w-0 flex-1">
+              <p className="whitespace-normal break-words text-[9px] font-extrabold uppercase leading-snug tracking-wide text-slate-400">{label}</p>
+              <p className={`mt-1 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 break-words font-black leading-tight ${label === 'Commission balance' ? 'text-xs sm:text-base' : 'text-base'}`}>
+                {label === 'Commission balance' && <HomeroTokenLogo size={14} />}
+                {value}
+              </p>
+            </div>
           </article>
         ))}
       </section>
