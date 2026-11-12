@@ -60,6 +60,7 @@ export function ManualFaucetPage() {
   const router = useRouter()
   const { data, error: stateError, isLoading, mutate } = useSWR<FaucetState>('/api/manual-faucet/state', getFaucetState, {
     revalidateOnFocus: true,
+    refreshInterval: 35_000,
   })
   const [now, setNow] = useState(() => Date.now())
   const [busy, setBusy] = useState(false)
@@ -80,7 +81,7 @@ export function ManualFaucetPage() {
 
   const cooldownRemainingMs = data ? Math.max(0, data.cooldownUntil - now) : 0
   const canClaim = Boolean(data && data.claimsLeft > 0 && cooldownRemainingMs === 0)
-  const reward = data ? formatTokenAtomic(data.rewardAtomic) : '10.00000000'
+  const reward = data ? formatTokenAtomic(data.rewardAtomic) : '—'
 
   async function startVerification() {
     if (!canClaim || busy || captchaVerified) return

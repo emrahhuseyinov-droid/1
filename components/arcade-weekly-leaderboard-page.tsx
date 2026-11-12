@@ -38,14 +38,13 @@ export function ArcadeWeeklyLeaderboardPage() {
           <div className="flex flex-wrap items-center gap-2.5">
             <Trophy aria-hidden="true" className="text-amber-200" size={24} />
             <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Weekly leaderboard</h1>
-            <span className="rounded-md border border-emerald-200/35 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-emerald-100">FREE</span>
           </div>
           <p className="mt-1.5 max-w-3xl text-sm leading-6 text-white/75">
             Your best server-verified ranked run earns the spot. Casual and boosted runs stay off the board.
           </p>
         </div>
-        <div className="inline-flex min-h-9 w-fit items-center gap-2 rounded-full border border-rose-200/25 bg-rose-400/10 px-3 py-1.5 text-xs font-bold text-rose-50 shadow-[0_0_22px_rgba(244,63,94,0.12)]">
-          <span className="size-2 animate-pulse rounded-full bg-rose-300 shadow-[0_0_10px_rgba(251,113,133,0.8)] motion-reduce:animate-none" />
+        <div className="inline-flex min-h-9 w-fit items-center gap-2 rounded-full border border-emerald-200/25 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-50 shadow-[0_0_22px_rgba(16,185,129,0.12)]">
+          <span className="size-2 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.8)] motion-reduce:animate-none" />
           <Radio aria-hidden="true" size={14} /> Live
         </div>
       </header>

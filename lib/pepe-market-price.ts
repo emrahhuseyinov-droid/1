@@ -55,7 +55,7 @@ function pairLiquidityUsd(pair: JsonRecord): number {
   return positiveNumber(pair.liquidity.usd) ?? 0
 }
 
-const PEPE_PRICE_CACHE_TTL_MS = 60_000
+const PEPE_PRICE_CACHE_TTL_MS = 35_000
 const MAX_STALE_PRICE_AGE_MS = 10 * 60_000
 const HOMERO_RATE_SCALE = 1_000_000_000_000
 
@@ -102,6 +102,12 @@ async function getCachedPepePrice() {
   } finally {
     refreshPepePrice = null
   }
+}
+
+export async function getFreshPepeUsdPrice() {
+  const quote = await getCachedPepePrice()
+  if (quote.isStale) throw new Error('The live PEPE market price is temporarily unavailable.')
+  return quote.pepeUsd
 }
 
 export async function getPepeMarketQuote(): Promise<PepeMarketQuote> {

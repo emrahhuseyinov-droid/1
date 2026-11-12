@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type TransitionEvent } from 'react'
 import useSWR from 'swr'
-import { Check, Clock3, Sparkles, Volume2, VolumeX } from 'lucide-react'
+import { Check, Clock3, Volume2, VolumeX } from 'lucide-react'
 import { AdsLabBanner } from '@/components/adslab-banner'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
@@ -283,10 +283,9 @@ export function WheelOfFortunePage() {
     <LocalizedTree>
       <main id="top" className="dashboard-page-shell cartoon-wheel-page min-w-0 space-y-5 text-white">
         <header className="flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0 max-w-2xl">
-            <p className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200/25 bg-amber-200/10 px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-amber-100"><Sparkles size={12} aria-hidden="true" />Daily rewards</p>
-            <h1 className="text-3xl font-black tracking-tight sm:text-[36px]">Wheel of Fortune</h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/65 sm:text-sm">One free spin every 2 hours. The server selects each result using the published odds.</p>
+            <div className="min-w-0 max-w-2xl space-y-1.5">
+              <h1 className="text-3xl font-black tracking-tight sm:text-[36px]">Wheel of Fortune</h1>
+              <p className="max-w-2xl text-xs leading-5 text-white/65 sm:text-sm">One free spin every 2 hours. The server selects each result using the published odds.</p>
           </div>
           <div className="flex w-full flex-col items-center gap-3 lg:w-[728px] lg:items-end">
             <AdsLabBanner id="unit-q3q7z693j" container="adslab-banner-unit-q3q7z693j" alignment="right" format="leaderboard" />

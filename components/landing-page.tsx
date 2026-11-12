@@ -39,7 +39,7 @@ const features = [
   },
   {
     title: 'CAPTCHA faucet',
-    description: 'Complete a CAPTCHA to receive 10 PEPE after server-side verification.',
+    description: 'Complete a CAPTCHA to receive the current PEPE reward after server-side verification.',
     icon: ShieldCheck,
     tone: 'text-cyan-200 bg-cyan-300/10 ring-cyan-200/15',
   },
@@ -107,7 +107,7 @@ const steps = [
   },
   {
     title: 'Choose an activity',
-    description: 'Explore verified ad tasks, the 10 PEPE CAPTCHA faucet, Wheel of Fortune spins, and Arcade runs.',
+    description: 'Explore verified ad tasks, the current PEPE CAPTCHA reward, Wheel of Fortune spins, and Arcade runs.',
     icon: Zap,
   },
   {
@@ -125,7 +125,7 @@ const steps = [
 type FAQKind = 'captcha' | 'payouts' | 'balances' | 'rewards' | 'leaderboard'
 
 const faqs: { kind: FAQKind; question: string }[] = [
-  { kind: 'captcha', question: 'How do I claim the 10 PEPE CAPTCHA reward?' },
+  { kind: 'captcha', question: 'How do I claim the current CAPTCHA faucet reward?' },
   { kind: 'payouts', question: 'Does pepe.casa pay PEPE?' },
   { kind: 'balances', question: 'What is the difference between PEPE and HOMERO?' },
   { kind: 'rewards', question: 'Are rewards guaranteed?' },
@@ -262,7 +262,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
               <ShieldCheck size={16} aria-hidden="true" />
             </span>
             <p className="text-[13px] leading-6 text-white/75 sm:text-sm">
-              {'Complete a CAPTCHA to receive 10 PEPE after server-side verification.'}
+              {'Complete a CAPTCHA to receive the current PEPE reward after server-side verification.'}
             </p>
           </div>
           <p className="text-[12px] leading-5 text-white/50">{'Open Manual Faucet, complete the challenge, and return to claim after verification.'}</p>
