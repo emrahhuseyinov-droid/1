@@ -9,6 +9,14 @@ import { getStreakFromDate, getUtcDateKey } from '@/lib/daily-bonus'
 import type { DashboardActivity, DashboardOverview } from '@/lib/dashboard-types'
 import type { WalletBalancesAtomic, WalletCoinSymbol } from '@/lib/wallet-assets'
 
+const wheelRewardActivityTitles: Record<string, string> = {
+  'small-prize': 'Wheel of Fortune prize: 25 HOMERO',
+  'medium-prize': 'Wheel of Fortune prize: 100 HOMERO',
+  'large-prize': 'Wheel of Fortune prize: 500 HOMERO',
+  jackpot: 'Wheel of Fortune jackpot: 1,000 HOMERO',
+  'consolation-prize': 'Wheel of Fortune prize: 10 HOMERO',
+}
+
 export async function getDashboardBalancesAtomic(guestId: string): Promise<Record<WalletCoinSymbol, string>> {
   const [balanceRows, commissionTotal] = await Promise.all([
     db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
@@ -66,7 +74,9 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
   const activity: DashboardActivity[] = [
     ...earningRows.map((row) => ({
       id: row.id,
-      title: row.source === 'adslab_ptc' || row.source === 'advertiser_task' || row.source === 'advertiser_task_pepe_correction'
+      title: row.source === 'wheel_of_fortune'
+        ? wheelRewardActivityTitles[row.itemId ?? ''] ?? 'Wheel of Fortune reward'
+        : row.source === 'adslab_ptc' || row.source === 'advertiser_task' || row.source === 'advertiser_task_pepe_correction'
         ? 'PTC task reward'
         : row.source === 'adslab_shortlink'
           ? 'Shortlink reward'

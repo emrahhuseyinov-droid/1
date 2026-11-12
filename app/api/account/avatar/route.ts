@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { db } from '@/lib/db'
 import { user } from '@/lib/db/schema'
-import { isProfileAvatar } from '@/lib/profile-avatars'
+import { ADMIN_HOODED_PROFILE_AVATAR, isHoodedProfileAvatar, isProfileAvatar } from '@/lib/profile-avatars'
+import { isPepeReserveAdmin } from '@/lib/pepe-reserve'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 
 export const runtime = 'nodejs'
@@ -33,6 +34,12 @@ export async function POST(request: NextRequest) {
     )
     if (!account) {
       return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
+    }
+
+    const isAdmin = isPepeReserveAdmin(account.session.user.email, account.session.user.emailVerified)
+    if (isHoodedProfileAvatar(payload.image)
+      && (!isAdmin || payload.image !== ADMIN_HOODED_PROFILE_AVATAR.src)) {
+      return NextResponse.json({ error: 'Choose an available avatar.' }, { status: 403, headers: noStoreHeaders })
     }
 
     const [updatedUser] = await db
