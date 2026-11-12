@@ -138,7 +138,7 @@ const advertiserNavGroups: NavigationGroup[] = [
       { label: 'Create YouTube task', icon: Play, section: 'Advertiser', href: '/advertiser/create-youtube' },
       { label: 'Advertiser tasks', icon: Check, section: 'Advertiser', href: '/advertiser/campaigns' },
       { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser/activity' },
-      { label: 'Dashboard', icon: House, section: 'Dashboard' },
+      { label: 'Switch to Earner', icon: House, section: 'Dashboard' },
     ],
   },
 ]

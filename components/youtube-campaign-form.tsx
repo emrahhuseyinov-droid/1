@@ -1,7 +1,8 @@
 'use client'
 
 import type { FormEvent } from 'react'
-import { LoaderCircle, Megaphone, Play } from 'lucide-react'
+import Image from 'next/image'
+import { LoaderCircle, Megaphone } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
 
@@ -57,14 +58,14 @@ export function YoutubeCampaignForm({
       <header className="relative flex flex-col gap-4 overflow-hidden rounded-[24px] border border-rose-100/[0.12] bg-gradient-to-br from-[#171f3d] via-[#141a32] to-[#24182f] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-20 size-48 rounded-full bg-rose-300/[0.08] blur-3xl" />
         <div className="relative flex min-w-0 items-center gap-3 sm:gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-rose-100/15 bg-rose-300/[0.08] text-rose-100 shadow-[0_8px_24px_rgba(244,63,94,0.12)]"><Play size={18} fill="currentColor" aria-hidden="true" /></span>
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-rose-100/15 bg-rose-300/[0.08] shadow-[0_8px_24px_rgba(244,63,94,0.12)]"><Image src="/youtube.svg" alt="YouTube" width={32} height={23} className="h-[22px] w-8 object-contain" /></span>
           <div className="min-w-0">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-rose-100/85">{isRussian ? 'YouTube · рекламная студия' : 'YouTube · campaign studio'}</p>
             <h1 id="youtube-campaign-create-title" className="sr-only">{isRussian ? 'Создать YouTube-кампанию' : 'Create a YouTube campaign'}</h1>
           </div>
         </div>
         <div className="relative flex shrink-0 items-center gap-3 rounded-2xl border border-white/[0.1] bg-[#0b1228]/65 px-4 py-3 shadow-inner shadow-black/10">
-          <span className="grid size-10 place-items-center rounded-xl border border-rose-100/10 bg-rose-300/[0.07] text-rose-100"><Play size={15} fill="currentColor" aria-hidden="true" /></span>
+          <span className="grid size-10 place-items-center rounded-xl border border-rose-100/10 bg-rose-300/[0.07]"><Image src="/youtube.svg" alt="YouTube" width={28} height={20} className="h-5 w-7 object-contain" /></span>
           <span>
             <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">{isRussian ? 'Награда за просмотр' : 'Reward per view'}</span>
             <span className="mt-0.5 block font-mono text-lg font-black tracking-tight text-white">{perViewReward} <span className="text-sm text-rose-100">PEPE</span></span>
@@ -88,7 +89,8 @@ export function YoutubeCampaignForm({
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="youtube-campaign-description" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Описание' : 'Description'} <span className="font-normal text-slate-500">({isRussian ? 'необязательно' : 'optional'})</span></label>
-          <textarea id="youtube-campaign-description" rows={2} maxLength={500} value={description} onChange={(event) => onDescriptionChange(event.target.value)} placeholder={isRussian ? 'Кратко опишите видео' : 'Briefly describe the video'} disabled={submitting || !ready} className="min-h-16 resize-y rounded-xl border border-white/10 bg-[#111a35] px-3 py-2.5 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
+          <textarea id="youtube-campaign-description" rows={2} maxLength={500} aria-describedby="youtube-campaign-description-count" value={description} onChange={(event) => onDescriptionChange(event.target.value)} placeholder={isRussian ? 'Кратко опишите видео' : 'Briefly describe the video'} disabled={submitting || !ready} className="min-h-16 resize-y rounded-xl border border-white/10 bg-[#111a35] px-3 py-2.5 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
+          <p id="youtube-campaign-description-count" className="text-right text-[9px] font-medium text-slate-500">{description.length} / 500 {isRussian ? 'символов' : 'characters'}</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -148,7 +150,7 @@ export function YoutubeCampaignForm({
             </div>
             <p className="shrink-0 text-right font-mono text-lg font-black tracking-tight text-white">{validTaskCount ? totalCost : '—'} PEPE</p>
           </div>
-          {ready && validTaskCount && !hasEnoughFunds && <p className="relative mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства из Publisher.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from Publisher first.'}</p>}
+          {ready && validTaskCount && !hasEnoughFunds && <p className="relative mt-3 text-[10px] font-semibold text-rose-300">{isRussian ? 'Недостаточно PEPE в рекламном кошельке. Сначала переведите средства со счёта Исполнителя.' : 'Not enough PEPE in your Advertiser wallet. Transfer funds from your Earner balance first.'}</p>}
           <p className="relative mt-3 text-[9px] leading-4 text-slate-500">{isRussian ? 'При длительности 60 секунд награда и комиссия удваиваются. Неиспользованный бюджет возвращается при отмене.' : 'A 60-second view pays double the reward and adds the same 40% commission. Unused budget is refunded on cancellation.'}</p>
         </aside>
 
