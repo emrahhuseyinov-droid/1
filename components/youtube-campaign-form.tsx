@@ -60,7 +60,7 @@ export function YoutubeCampaignForm({
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl border border-rose-100/15 bg-rose-300/[0.08] text-rose-100 shadow-[0_8px_24px_rgba(244,63,94,0.12)]"><Play size={18} fill="currentColor" aria-hidden="true" /></span>
           <div className="min-w-0">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-rose-100/85">{isRussian ? 'YouTube · рекламная студия' : 'YouTube · campaign studio'}</p>
-            <h1 id="youtube-campaign-create-title" className="mt-2 text-xl font-black tracking-tight text-white sm:text-2xl">{isRussian ? 'Создать YouTube-кампанию' : 'Create a YouTube campaign'}</h1>
+            <h1 id="youtube-campaign-create-title" className="sr-only">{isRussian ? 'Создать YouTube-кампанию' : 'Create a YouTube campaign'}</h1>
           </div>
         </div>
         <div className="relative flex shrink-0 items-center gap-3 rounded-2xl border border-white/[0.1] bg-[#0b1228]/65 px-4 py-3 shadow-inner shadow-black/10">
@@ -81,7 +81,7 @@ export function YoutubeCampaignForm({
             <input id="youtube-campaign-title" required minLength={3} maxLength={80} value={title} onChange={(event) => onTitleChange(event.target.value)} placeholder={isRussian ? 'Название видео' : 'Video title'} disabled={submitting || !ready} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="youtube-campaign-url" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Ссылка YouTube или embed URL' : 'YouTube link or embed URL'}</label>
+            <label htmlFor="youtube-campaign-url" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Ссылка YouTube' : 'YouTube link'}</label>
             <input id="youtube-campaign-url" type="url" required maxLength={2048} value={targetUrl} onChange={(event) => onUrlChange(event.target.value)} placeholder="https://youtu.be/…" disabled={submitting || !ready} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
           </div>
         </div>
