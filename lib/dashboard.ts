@@ -66,7 +66,7 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
   const activity: DashboardActivity[] = [
     ...earningRows.map((row) => ({
       id: row.id,
-      title: row.source === 'adslab_ptc'
+      title: row.source === 'adslab_ptc' || row.source === 'advertiser_task' || row.source === 'advertiser_task_pepe_correction'
         ? 'PTC task reward'
         : row.source === 'adslab_shortlink'
           ? 'Shortlink reward'
@@ -87,7 +87,7 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
           : row.source === 'manual_mining'
             ? row.itemId === 'manual-faucet' ? 'CAPTCHA reward' : 'Legacy reward'
               : row.source === 'youtube_advertiser_task'
-                ? 'Sponsored YouTube video reward'
+                ? 'YouTube reward'
                 : row.source === 'view_ads'
                   ? 'View Ads task reward'
               : row.source === 'applixir_video'
