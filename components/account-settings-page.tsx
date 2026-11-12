@@ -156,7 +156,7 @@ export function AccountSettingsPage({ name, email, avatarSrc, isAdmin, onAvatarC
                       onClick={() => void saveAvatar(avatar.src)}
                       className="group flex min-w-0 flex-col items-center gap-1.5 rounded-xl p-1.5 text-center transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-wait disabled:opacity-70 dark:hover:bg-slate-800"
                     >
-                      <span className={`relative rounded-full ${selected ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900' : 'ring-1 ring-slate-300/70 dark:ring-slate-700'}`}>
+                      <span className={`relative rounded-full ${selected ? 'ring-2 ring-blue-500' : 'ring-1 ring-slate-300/70 dark:ring-slate-700'}`}>
                         <PepeCasaAvatar size={54} src={avatar.src} className="shadow-sm" />
                         {selected && <span aria-hidden="true" className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-blue-600 text-white shadow"><Check size={12} strokeWidth={3} /></span>}
                       </span>

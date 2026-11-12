@@ -129,15 +129,23 @@ export function SwapPage() {
     const attempt = swapAttempt?.amount === amount
       ? swapAttempt
       : { idempotencyKey: crypto.randomUUID(), amount }
-    setSwapAttempt(attempt)
     setNotice(null)
     setIsSwapping(true)
 
     try {
+      const quoteResponse = await fetchJson<{
+        swapQuote: { amountAtomic: string; quoteToken: string } | null
+      }>(`/api/referrals/swap?amount=${encodeURIComponent(amount)}`)
+      const freshQuote = quoteResponse.swapQuote
+      if (!freshQuote?.quoteToken || freshQuote.amountAtomic !== String(amountAtomic)) {
+        throw new Error('Could not prepare a fresh exchange quote. Please try again.')
+      }
+
+      setSwapAttempt(attempt)
       const response = await fetch('/api/referrals/swap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, idempotencyKey: attempt.idempotencyKey }),
+        body: JSON.stringify({ amount, idempotencyKey: attempt.idempotencyKey, quoteToken: freshQuote.quoteToken }),
       })
       const payload = await response.json().catch(() => null) as (ApiError & { homeroDebitedAtomic?: number; pepeCreditedAtomic?: number; feeAtomic?: number }) | null
       if (!response.ok) {
