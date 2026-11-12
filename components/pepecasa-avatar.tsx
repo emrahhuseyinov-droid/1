@@ -18,7 +18,7 @@ export function PepeCasaAvatar({ size = 40, className = '', src = '/images/pepec
         alt=""
         width={size}
         height={size}
-        className="h-full w-full rounded-full object-cover"
+        className="block h-full w-full scale-[1.12] rounded-full object-cover"
       />
     </span>
   )
