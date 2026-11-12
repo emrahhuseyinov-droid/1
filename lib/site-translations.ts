@@ -865,7 +865,7 @@ const ruPhrases = new Map<string, string>([
   ['Run live. Tap, click, Space, or ↑ to clear the neon hazards.', 'Забег начался. Нажмите экран, кликните мышью, пробел или ↑, чтобы перепрыгнуть препятствия.'],
   ['Arcade guide', 'Подсказки аркады'],
   ['Weekly leaderboard:', 'Недельный рейтинг:'],
-  ['Take part in Ranked runs to climb the leaderboard. Every result is automatically verified before the weekly results are finalized.', 'Участвуйте в рейтинговых забегах, чтобы занять топовые места в лидерборде. Все резуль��аты автоматически проверяются перед подведением итогов недели.'],
+  ['Take part in Ranked runs to climb the leaderboard. Every result is automatically verified before the weekly results are finalized.', 'Участвуйте в рейтинговых забегах, чтобы занять топовые места в лидерборде. Все результаты автоматически проверяются перед подведением итогов недели.'],
   ['Run rewards:', 'Награды за забег:'],
   ['Valuable coins appear along the route in Ranked mode. Collect them while running to add to your HOMERO balance!', 'В рейтинговом режиме на дистанции вам будут попадаться ценные монеты. Собирайте их прямо во время бега, чтобы пополнять свой баланс HOMERO!'],
   ['Energy refill:', 'Восполнение энергии:'],

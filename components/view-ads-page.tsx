@@ -130,44 +130,38 @@ export function ViewAdsPage() {
           />
         </section>
 
-        <section aria-label={isRussian ? 'Доступные PTC-задания' : 'Available PTC tasks'} className="cartoon-panel relative isolate overflow-hidden rounded-[32px] border-2 border-cyan-200/40 bg-gradient-to-br from-[#142344] via-[#1a2950] to-[#12384f] shadow-[0_24px_60px_rgba(5,12,35,0.42)]">
-          <header className="relative overflow-hidden border-b border-cyan-100/15 bg-gradient-to-r from-[#293d70] via-[#24516d] to-[#352d68] px-4 py-4 sm:px-5 sm:py-5">
-            <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-14 size-40 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="relative flex items-center gap-3.5">
-              <span aria-hidden="true" className="flex size-12 shrink-0 rotate-[-4deg] items-center justify-center rounded-2xl border-2 border-white/45 bg-gradient-to-br from-cyan-200 via-sky-300 to-violet-300 text-[#142344] shadow-lg shadow-cyan-950/25"><Sparkles size={20} /></span>
-              <div>
-                <h2 className="text-base font-black tracking-tight text-white sm:text-lg">{isRussian ? 'Рекламные задания PTC' : 'PTC ad tasks'}</h2>
-                <p className="mt-1 text-xs leading-relaxed text-slate-100/80">{isRussian ? 'Найдите задание и отсортируйте по награде или времени.' : 'Find a task and sort by reward or duration.'}</p>
-              </div>
-            </div>
+        <section aria-label={isRussian ? 'Доступные PTC-задания' : 'Available PTC tasks'} className="cartoon-panel overflow-hidden rounded-[32px] border-2 border-dashboard-outline bg-[#171f40] shadow-xl shadow-indigo-950/30">
+          <header className="border-b-2 border-white/10 bg-gradient-to-r from-[#252f5b] to-[#20294e] px-4 py-4 sm:px-5">
+            <h2 className="text-sm font-extrabold">{isRussian ? 'Рекламные задания PTC' : 'PTC ad tasks'}</h2>
+            <p className="mt-0.5 text-[10px] text-dashboard-muted">{isRussian ? 'Найдите задание и отсортируйте по награде или времени.' : 'Find a task and sort by reward or duration.'}</p>
           </header>
-          <div className="relative flex flex-col gap-3 border-b border-white/10 bg-[#1b2648]/90 px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
+          <div className="flex flex-col gap-2 border-b-2 border-white/10 bg-[#1c2548] px-4 py-3 sm:flex-row sm:items-center sm:px-5">
             <label className="relative min-w-0 flex-1">
               <span className="sr-only">{isRussian ? 'Поиск рекламных заданий' : 'Search ad tasks'}</span>
-              <Search aria-hidden="true" size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-100/70" />
+              <Search aria-hidden="true" size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dashboard-muted" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={isRussian ? 'Поиск рекламных заданий' : 'Search ads'}
-                className="min-h-11 w-full rounded-2xl border-2 border-cyan-100/15 bg-[#101935] px-4 pl-11 text-xs text-white shadow-inner shadow-black/10 outline-none transition placeholder:text-slate-400 focus:border-cyan-200/75 focus:ring-4 focus:ring-cyan-300/15"
+                className="min-h-10 w-full rounded-2xl border-2 border-white/10 bg-[#121a39] px-3 pl-9 text-[11px] outline-none transition placeholder:text-dashboard-muted focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
               />
             </label>
-            <div className="flex gap-2 sm:shrink-0">
+            <div className="flex gap-2">
               <button
                 type="button"
                 aria-pressed={availableOnly}
                 onClick={() => setAvailableOnly((current) => !current)}
-                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border-2 px-3.5 text-xs font-extrabold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2648] ${availableOnly ? 'border-cyan-100/70 bg-gradient-to-r from-cyan-300 to-sky-400 text-[#13203a] shadow-md shadow-cyan-950/20' : 'border-white/10 bg-[#202c52] text-slate-200 hover:border-cyan-100/35 hover:bg-[#273762] hover:text-white'}`}
+                className={`inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border px-3 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-accent ${availableOnly ? 'border-dashboard-accent/40 bg-dashboard-accent/10 text-dashboard-accent' : 'border-dashboard-outline bg-dashboard-surface text-dashboard-muted hover:text-foreground'}`}
               >
-                <Filter size={14} />{isRussian ? 'Доступные' : 'Available'}
+                <Filter size={12} />{isRussian ? 'Доступные' : 'Available'}
               </button>
               <label>
                 <span className="sr-only">{isRussian ? 'Сортировка заданий' : 'Sort tasks'}</span>
                 <select
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value as TaskSort)}
-                  className="min-h-11 max-w-[170px] rounded-2xl border-2 border-cyan-100/15 bg-[#101935] px-3.5 text-xs font-bold text-white outline-none transition focus:border-cyan-200/75 focus:ring-4 focus:ring-cyan-300/15"
+                  className="min-h-10 max-w-[158px] rounded-2xl border-2 border-white/10 bg-[#121a39] px-3 text-[10px] font-bold text-foreground outline-none focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
                 >
                   <option value="reward">{isRussian ? 'Сначала награда' : 'Highest reward'}</option>
                   <option value="duration">{isRussian ? 'Сначала быстрее' : 'Shortest duration'}</option>
@@ -175,8 +169,8 @@ export function ViewAdsPage() {
               </label>
             </div>
           </div>
-          <div className="relative p-4 sm:p-5">
-            <ul aria-label={isRussian ? 'PTC-задания' : 'PTC tasks'} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="p-3 sm:p-4">
+            <ul aria-label={isRussian ? 'PTC-задания' : 'PTC tasks'} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <AdsLabPtcTaskList
                 onSummaryChange={setSummary}
                 searchQuery={searchQuery}

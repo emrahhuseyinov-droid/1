@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type TransitionEvent } from 'react'
 import useSWR from 'swr'
 import { Check, Clock3, Volume2, VolumeX } from 'lucide-react'
-import { AdsLabBanner } from '@/components/adslab-banner'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -287,8 +286,7 @@ export function WheelOfFortunePage() {
               <h1 className="text-3xl font-black tracking-tight sm:text-[36px]">Wheel of Fortune</h1>
               <p className="max-w-2xl text-xs leading-5 text-white/65 sm:text-sm">One free spin every 2 hours. The server selects each result using the published odds.</p>
           </div>
-          <div className="flex w-full flex-col items-center gap-3 lg:w-[728px] lg:items-end">
-            <AdsLabBanner id="unit-q3q7z693j" container="adslab-banner-unit-q3q7z693j" alignment="right" format="leaderboard" />
+          <div className="flex w-full justify-center lg:w-auto lg:justify-end">
             <button type="button" onClick={() => setSoundEnabled((enabled) => !enabled)} aria-pressed={soundEnabled} className="inline-flex min-h-10 items-center gap-2 rounded-xl border-2 border-violet-200/25 bg-[#202951] px-3 text-[10px] font-extrabold text-white/85 shadow-[0_6px_16px_rgba(4,9,32,0.2)] transition hover:border-cyan-200/45 hover:bg-[#29345f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200">
               {soundEnabled ? <Volume2 size={14} aria-hidden="true" /> : <VolumeX size={14} aria-hidden="true" />}
               {soundEnabled ? 'Sound on' : 'Sound off'}
