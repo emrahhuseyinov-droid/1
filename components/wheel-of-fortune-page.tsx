@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type TransitionEvent } from 'react'
 import useSWR from 'swr'
-import { Check, Clock3, Volume2, VolumeX } from 'lucide-react'
+import { Check, Clock3, Volume2, VolumeX, Zap } from 'lucide-react'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -318,7 +318,24 @@ export function WheelOfFortunePage() {
                           top: `${50 - Math.cos(radians) * 36}%`,
                           transform: 'translate(-50%, -50%)',
                         }
-                        return <span key={sector.key} style={labelStyle} className="wheel-sector-label absolute z-10 max-w-[88px] rounded-lg border border-white/15 bg-[#111831]/70 px-2 py-1 text-center text-[11px] font-black leading-tight shadow-lg backdrop-blur-[2px] sm:max-w-[112px] sm:text-[13px] 2xl:text-[15px]">{sector.shortLabel}</span>
+                        const isEnergyReward = sector.rewardType === 'energy'
+                        const labelClassName = isEnergyReward
+                          ? `wheel-energy-label ${sector.key === 'arcade-energy' ? 'wheel-energy-label--green' : 'wheel-energy-label--blue'}`
+                          : 'max-w-[88px] rounded-lg border border-white/15 bg-[#111831]/70 px-2 py-1 text-center text-[11px] font-black leading-tight shadow-lg backdrop-blur-[2px] sm:max-w-[112px] sm:text-[13px] 2xl:text-[15px]'
+
+                        return (
+                          <span key={sector.key} style={labelStyle} className={`wheel-sector-label absolute z-10 ${labelClassName}`}>
+                            {isEnergyReward ? (
+                              <>
+                                <span className="wheel-energy-icon"><Zap size={11} strokeWidth={2.8} aria-hidden="true" /></span>
+                                <span className="wheel-energy-copy">
+                                  <span className="wheel-energy-amount">+{sector.rewardQuantity}</span>
+                                  <span className="wheel-energy-unit">energy</span>
+                                </span>
+                              </>
+                            ) : sector.shortLabel}
+                          </span>
+                        )
                       })}
                     </div>
                     <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full">
