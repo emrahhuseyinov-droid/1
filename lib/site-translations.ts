@@ -484,6 +484,12 @@ const ruPhrases = new Map<string, string>([
   ['HOMERO → PEPE · 1% fee', 'HOMERO → PEPE · комиссия 1%'],
   ['PTC task reward', 'Награда PTC'],
   ['YouTube reward', 'Награда YouTube'],
+  ['Legacy reward', 'Награда за архивное задание'],
+  ['PEPE withdrawal request', 'Заявка на вывод PEPE'],
+  ['Rejected PEPE withdrawal refund', 'Возврат PEPE после отклонения заявки'],
+  ['Token exchange commission', 'Комиссия за обмен токенов'],
+  ['PEPE transfer to advertiser wallet', 'Перевод PEPE на счёт рекламодателя'],
+
   ['Shortlink reward', 'Награда за задание по короткой ссылке'],
   ['Shortlink chargeback', 'Возврат по заданию по короткой ссылке'],
   ['PTC chargeback', 'Возврат по заданию PTC'],
@@ -1324,7 +1330,13 @@ function russianNumber(value: string) {
 }
 
 function translateDynamicPhrase(value: string): string | null {
-  let match = value.match(/^One-way internal exchange at a 1:1 reference rate\. A (\d+(?:\.\d+)?)% fee is deducted from PEPE received and credited to the admin balance\.$/i)
+  let match = value.match(/^Token exchange\s+(.+)$/i)
+  if (match) return `Обмен токенов ${match[1].replace(/\s*→\s*/g, ' → ')}`
+
+  match = value.match(/^Promo code(?::\s*(.+))?$/i)
+  if (match) return `Промокод${match[1] ? `: ${match[1]}` : ''}`
+
+  match = value.match(/^One-way internal exchange at a 1:1 reference rate\. A (\d+(?:\.\d+)?)% fee is deducted from PEPE received and credited to the admin balance\.$/i)
   if (match) return `Односторонний внутренний обмен по курсу 1:1. Комиссия ${match[1]}% удерживается из получаемой суммы PEPE и зачисляется на баланс администратора.`
 
   match = value.match(/^(\d+(?:\.\d+)?)% exchange fee$/i)
