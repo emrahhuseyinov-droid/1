@@ -140,6 +140,7 @@ export function AdsLabPtcTaskList({
   const [clickId, setClickId] = useState<string | null>(null)
   const [deadline, setDeadline] = useState<number | null>(null)
   const [now, setNow] = useState(() => Date.now())
+  const [isDocumentVisible, setIsDocumentVisible] = useState(true)
   const [startingKey, setStartingKey] = useState<string | null>(null)
   const [claiming, setClaiming] = useState(false)
   const [awaitingPostback, setAwaitingPostback] = useState(false)
@@ -151,6 +152,9 @@ export function AdsLabPtcTaskList({
   const claimAttemptedRef = useRef(false)
   const deferredPollingRef = useRef(false)
   const postbackWaitStartedAtRef = useRef<number | null>(null)
+  const pausedAtRef = useRef<number | null>(null)
+  const nowRef = useRef(now)
+  nowRef.current = now
   const secondsRemaining = deadline === null ? 0 : Math.max(0, Math.ceil((deadline - now) / 1000))
 
   useEffect(() => {
@@ -178,17 +182,44 @@ export function AdsLabPtcTaskList({
   }, [clickId, data])
 
   useEffect(() => {
-    if (deadline === null) return
+    const updateVisibility = () => setIsDocumentVisible(document.visibilityState === 'visible')
+    updateVisibility()
+    document.addEventListener('visibilitychange', updateVisibility)
+    return () => document.removeEventListener('visibilitychange', updateVisibility)
+  }, [])
+
+  useEffect(() => {
+    if (deadline === null) {
+      pausedAtRef.current = null
+      return
+    }
+
+    const shouldPauseCountdown = isDocumentVisible && Boolean(activeTask) && !awaitingPostback
+    if (shouldPauseCountdown) {
+      if (pausedAtRef.current === null) {
+        pausedAtRef.current = Date.now()
+        setNow(pausedAtRef.current)
+      }
+      return
+    }
+
+    if (pausedAtRef.current !== null) {
+      const pausedDuration = Date.now() - pausedAtRef.current
+      pausedAtRef.current = null
+      setDeadline((current) => current === null ? null : current + pausedDuration)
+    }
+
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 250)
     return () => window.clearInterval(timer)
-  }, [deadline])
+  }, [activeTask, awaitingPostback, deadline, isDocumentVisible])
 
   useEffect(() => {
     if (!clickId || deadline === null) return
     const activeClickId = clickId
     const timer = window.setInterval(() => {
       const taskWindow = targetWindowRef.current
-      if (!taskWindow?.closed || awaitingPostback || Date.now() >= deadline) return
+      if (!taskWindow?.closed || awaitingPostback || nowRef.current >= deadline) return
 
       void fetch('/api/adslab/ptc/start', {
         method: 'DELETE',
@@ -364,7 +395,7 @@ export function AdsLabPtcTaskList({
     if (activeTask || startingKey) return
     const taskWindow = window.open('about:blank', '_blank')
     if (!taskWindow || taskWindow.closed) {
-      setErrorMessage(isRussian ? 'Разрешите всплывающие окна, чтобы открыть задание.' : 'Allow pop-ups to open the task.')
+      setErrorMessage(isRussian ? 'Раз��ешите всплывающие окна, чтобы открыть задание.' : 'Allow pop-ups to open the task.')
       return
     }
 

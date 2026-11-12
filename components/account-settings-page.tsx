@@ -142,7 +142,7 @@ export function AccountSettingsPage({ name, email, avatarSrc, onAvatarChange }: 
                 <PepeCasaAvatar size={48} src={avatarSrc} className="border-2 border-blue-500/30 shadow-md shadow-blue-950/10" />
               </div>
 
-              <div role="group" aria-label="Choose your avatar" aria-busy={savingAvatar} className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+              <div role="group" aria-label="Choose your avatar" aria-busy={savingAvatar} className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 xl:grid-cols-8">
                 {PROFILE_AVATARS.map((avatar) => {
                   const selected = avatarSrc === avatar.src
                   return (
