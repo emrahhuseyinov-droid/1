@@ -64,9 +64,9 @@ async function postJson<T>(url: string, payload: unknown): Promise<T> {
 }
 
 function parseUsdCents(value: string) {
-  const match = /^(\d{1,9})(?:\.(\d{1,2}))?$/.exec(value.trim())
+  const match = /^(\d{1,9})(?:([.,])(\d{1,2}))?$/.exec(value.trim())
   if (!match) return null
-  const cents = BigInt(match[1]) * 100n + BigInt((match[2] ?? '').padEnd(2, '0') || '0')
+  const cents = BigInt(match[1]) * 100n + BigInt((match[3] ?? '').padEnd(2, '0') || '0')
   return cents >= 1n ? cents : null
 }
 
@@ -111,6 +111,8 @@ export function AdvertiserDepositPage() {
   const [activeCheckout, setActiveCheckout] = useState<CheckoutFields | null>(null)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const requestKeyRef = useRef<{ amountUsd: string; key: string } | null>(null)
+  const invoiceRef = useRef<HTMLElement | null>(null)
+  const checkoutButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const quote = useSWR<PepeQuote>('/api/pepe-price', getJson, { refreshInterval: 35_000, revalidateOnFocus: true })
   const deposits = useSWR<DepositListResponse>('/api/advertiser/deposits', getJson, { refreshInterval: 5_000, revalidateOnFocus: true })
@@ -163,6 +165,10 @@ export function AdvertiserDepositPage() {
       setActiveDepositId(result.deposit.id)
       setActiveCheckout(result.checkout)
       await deposits.mutate()
+      requestAnimationFrame(() => {
+        invoiceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        checkoutButtonRef.current?.focus({ preventScroll: true })
+      })
       setFeedback({
         type: 'success',
         message: result.deposit.status === 'pending'
@@ -314,7 +320,7 @@ export function AdvertiserDepositPage() {
           {feedback.type === 'error' ? <CircleAlert /> : <BadgeCheck />}<AlertDescription className="text-sm font-semibold leading-6 text-current">{feedback.message}</AlertDescription>
         </Alert>}
 
-        {selectedDeposit && <section aria-labelledby="active-deposit-title" className="relative mt-6 rounded-[26px] border-2 border-[#f0d58d] bg-[#fff5dc] p-5 text-[#17324a] shadow-[0_7px_0_rgba(7,23,40,0.14)] sm:p-6">
+        {selectedDeposit && <section ref={invoiceRef} aria-labelledby="active-deposit-title" className="relative mt-6 rounded-[26px] border-2 border-[#f0d58d] bg-[#fff5dc] p-5 text-[#17324a] shadow-[0_7px_0_rgba(7,23,40,0.14)] sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="inline-flex rounded-full bg-[#f5df9c] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[#725d2f]">{isRussian ? 'Текущий счёт' : 'Current invoice'}</p>
@@ -336,7 +342,7 @@ export function AdvertiserDepositPage() {
             <input type="hidden" name="success_url" value={selectedCheckout.successUrl} />
             <input type="hidden" name="cancel_url" value={selectedCheckout.cancelUrl} />
             <p className="max-w-lg text-sm leading-6 text-[#5e7286]">{isRussian ? 'После оплаты вернитесь сюда. Статус обновится автоматически после проверки FaucetPay.' : 'Return here after payment. The status updates automatically after FaucetPay verifies it.'}</p>
-            <Button type="submit" size="lg" variant="outline" className="min-h-12 shrink-0 rounded-2xl border-2 border-[#a6cdaa] bg-white px-5 text-sm font-extrabold text-[#173b43] hover:bg-[#eef8e9]">{isRussian ? 'Перейти в FaucetPay' : 'Continue to FaucetPay'}<ExternalLink data-icon="inline-end" /></Button>
+            <Button ref={checkoutButtonRef} type="submit" size="lg" variant="outline" className="min-h-12 shrink-0 rounded-2xl border-2 border-[#a6cdaa] bg-white px-5 text-sm font-extrabold text-[#173b43] hover:bg-[#eef8e9]">{isRussian ? 'Оплатить в FaucetPay' : 'Pay in FaucetPay'}<ExternalLink data-icon="inline-end" /></Button>
           </form>}
 
           {selectedDeposit.status === 'underpaid' && <p className="mt-4 rounded-2xl bg-amber-100 px-4 py-3 text-sm leading-6 text-amber-950">{isRussian ? 'Подтверждённая сумма ниже суммы счёта и не зачислена. Обратитесь в поддержку с ID счёта.' : 'The verified payment was below the invoice amount and was not credited. Contact support with this invoice ID.'}</p>}

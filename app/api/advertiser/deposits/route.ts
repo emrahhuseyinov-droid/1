@@ -33,15 +33,15 @@ type CheckoutFields = {
 
 function parseUsdCents(value: unknown) {
   if (typeof value !== 'string') return null
-  const match = /^(\d{1,9})(?:\.(\d{1,2}))?$/.exec(value.trim())
+  const match = /^(\d{1,9})(?:([.,])(\d{1,2}))?$/.exec(value.trim())
   if (!match) return null
 
-  const cents = BigInt(match[1]) * 100n + BigInt((match[2] ?? '').padEnd(2, '0') || '0')
+  const cents = BigInt(match[1]) * 100n + BigInt((match[3] ?? '').padEnd(2, '0') || '0')
   if (cents < 1n) return null
 
   return {
     cents,
-    formatted: `${match[1]}.${(match[2] ?? '').padEnd(2, '0')}`,
+    formatted: `${match[1]}.${(match[3] ?? '').padEnd(2, '0')}`,
   }
 }
 
