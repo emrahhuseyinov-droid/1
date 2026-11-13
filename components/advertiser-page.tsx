@@ -25,6 +25,7 @@ import {
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { TokenLogo } from '@/components/token-logo'
 import { YoutubeCampaignForm } from '@/components/youtube-campaign-form'
+import { AdvertiserDepositPage } from '@/components/advertiser-deposit-page'
 import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
 import {
   CAMPAIGN_COMMISSION_ATOMIC,
@@ -41,7 +42,7 @@ import {
 } from '@/lib/pepe-amount'
 
 type CampaignStatus = 'active' | 'paused' | 'completed' | 'cancelled'
-export type AdvertiserPageView = 'fund' | 'create' | 'youtube' | 'campaigns' | 'activity'
+export type AdvertiserPageView = 'deposit' | 'fund' | 'create' | 'youtube' | 'campaigns' | 'activity'
 
 type AdvertiserCampaign = {
   id: string
@@ -163,6 +164,7 @@ function getStatusLabel(status: CampaignStatus, isRussian: boolean) {
 
 function getActivityLabel(source: string, isRussian: boolean) {
   const labels: Record<string, { en: string; ru: string }> = {
+    advertiser_wallet_faucetpay_deposit: { en: 'FaucetPay top-up', ru: 'Пополнение через FaucetPay' },
     advertiser_wallet_transfer_in: { en: 'Funds received from Earner', ru: 'Средства получены от Исполнителя' },
     advertiser_wallet_campaign_charge: { en: 'Campaign budget reserved', ru: 'Зарезервирован бюджет кампании' },
     advertiser_wallet_campaign_refund: { en: 'Unused campaign budget returned', ru: 'Возвращён неиспользованный бюджет' },
@@ -249,7 +251,7 @@ function CampaignCard({
   )
 }
 
-export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView }) {
+function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) {
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
   const wallet = useSWR<AdvertiserWalletSnapshot>('/api/advertiser/wallet', getJson, {
@@ -727,4 +729,9 @@ export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView })
       </main>
     </LocalizedTree>
   )
+}
+
+export function AdvertiserPage({ view = 'fund' }: { view?: AdvertiserPageView }) {
+  if (view === 'deposit') return <AdvertiserDepositPage />
+  return <AdvertiserWalletPage view={view} />
 }

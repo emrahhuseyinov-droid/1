@@ -284,6 +284,35 @@ export const advertiserCampaigns = pgTable('earnpepe_advertiser_campaigns', {
   check('earnpepe_advertiser_campaigns_promotion_window_check', sql`(${table.promotionStartedAt} is null and ${table.promotionExpiresAt} is null) or (${table.promotionStartedAt} is not null and ${table.promotionExpiresAt} is not null and ${table.promotionExpiresAt} > ${table.promotionStartedAt})`),
 ])
 
+export type AdvertiserDepositStatus = 'pending' | 'paid' | 'underpaid' | 'review'
+
+export const advertiserDeposits = pgTable('earnpepe_advertiser_deposits', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull(),
+  guestId: uuid('guest_id').notNull(),
+  provider: text('provider').$type<'faucetpay'>().notNull(),
+  requestKey: text('request_key').notNull(),
+  amountUsd: numeric('amount_usd', { precision: 18, scale: 2, mode: 'string' }).notNull(),
+  pepeUsdPrice: numeric('pepe_usd_price', { precision: 24, scale: 18, mode: 'string' }).notNull(),
+  amountAtomic: bigint('amount_atomic', { mode: 'number' }).notNull(),
+  actualAmountAtomic: bigint('actual_amount_atomic', { mode: 'bigint' }),
+  providerTransactionId: text('provider_transaction_id'),
+  status: text('status').$type<AdvertiserDepositStatus>().notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  paidAt: timestamp('paid_at', { withTimezone: true }),
+}, (table) => [
+  unique('earnpepe_advertiser_deposits_user_request_unique').on(table.userId, table.requestKey),
+  unique('earnpepe_advertiser_deposits_provider_transaction_unique').on(table.provider, table.providerTransactionId),
+  index('earnpepe_advertiser_deposits_user_created_idx').on(table.userId, table.createdAt.desc()),
+  check('earnpepe_advertiser_deposits_provider_check', sql`${table.provider} = 'faucetpay'`),
+  check('earnpepe_advertiser_deposits_amount_usd_check', sql`${table.amountUsd} >= 5`),
+  check('earnpepe_advertiser_deposits_price_check', sql`${table.pepeUsdPrice} > 0`),
+  check('earnpepe_advertiser_deposits_amount_check', sql`${table.amountAtomic} > 0`),
+  check('earnpepe_advertiser_deposits_actual_amount_check', sql`${table.actualAmountAtomic} is null or ${table.actualAmountAtomic} > 0`),
+  check('earnpepe_advertiser_deposits_status_check', sql`${table.status} in ('pending', 'paid', 'underpaid', 'review')`),
+])
+
 export type WithdrawalRequestStatus = 'pending' | 'paid' | 'rejected'
 
 export const withdrawalRequests = pgTable('earnpepe_withdrawal_requests', {
