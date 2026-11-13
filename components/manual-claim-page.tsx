@@ -169,6 +169,8 @@ export function ManualClaimPage({ initialSection, email, name, initialAvatarUrl,
     PEPE: balancesAtomic.PEPE / atomicUnitsPerToken,
   }
   const balance = walletBalances[activeCoin]
+  const exactActiveBalance = balance.toFixed(8)
+  const displayedActiveBalance = exactActiveBalance.replace(/\.?0+$/, '')
   const [notice, setNotice] = useState('')
 
   async function handleSignOut() {
@@ -274,7 +276,7 @@ export function ManualClaimPage({ initialSection, email, name, initialAvatarUrl,
           <button type="button" aria-label="Open navigation menu" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"><Menu size={19} /></button>
           {isAdvertiserMode && <p className="hidden text-xs font-extrabold text-slate-500 dark:text-slate-300 sm:block">Advertiser wallet</p>}
         </div>
-        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-4">
           {isAdvertiserMode && <Link
             href="/advertiser/fund"
             aria-label={isRussian ? 'Баланс рекламодателя PEPE — пополнить кошелёк' : 'Advertiser PEPE balance — open wallet top-up'}
@@ -286,11 +288,11 @@ export function ManualClaimPage({ initialSection, email, name, initialAvatarUrl,
             <span className="min-w-0 truncate">{formatAtomicBalance(advertiserWallet.data?.advertiserBalanceAtomic, language)}</span>
             <span className="shrink-0 text-[9px] font-black text-emerald-100/75">PEPE</span>
           </Link>}
-          {!isAdvertiserMode && <div className="relative">
-            <button type="button" onClick={() => setCoinMenuOpen((open) => !open)} aria-label="Select active coin" aria-expanded={coinMenuOpen} className="flex w-[clamp(7rem,35vw,14rem)] min-w-0 items-center justify-between gap-2 rounded-2xl border-2 border-violet-200 bg-white px-2.5 py-2 shadow-sm shadow-violet-950/5 dark:border-violet-300/25 dark:bg-[#222d58] sm:w-56">
-              <span className="flex min-w-0 items-center gap-2">
+          {!isAdvertiserMode && <div className="relative min-w-0 w-full max-w-56 flex-1 sm:flex-none">
+            <button type="button" onClick={() => setCoinMenuOpen((open) => !open)} aria-label={isRussian ? `Выбрать активную валюту. Баланс ${exactActiveBalance} ${activeCoin}` : `Select active coin. Balance ${exactActiveBalance} ${activeCoin}`} title={`${exactActiveBalance} ${activeCoin}`} aria-expanded={coinMenuOpen} className="flex w-full min-w-0 items-center justify-between gap-1.5 rounded-2xl border-2 border-violet-200 bg-white px-2 py-2 shadow-sm shadow-violet-950/5 dark:border-violet-300/25 dark:bg-[#222d58] sm:gap-2 sm:px-2.5">
+              <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <TokenLogo symbol={activeCoin} size={20} />
-                <span className="inline-flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap font-mono text-[10px] font-bold sm:text-xs"><span className="truncate">{walletBalances[activeCoin].toFixed(8)}</span><span className="shrink-0 text-slate-500 dark:text-slate-300">{activeCoin}</span></span>
+                <span className="inline-flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap font-mono text-[10px] font-bold sm:text-xs"><span className="truncate">{displayedActiveBalance}</span><span className="shrink-0 text-slate-500 dark:text-slate-300">{activeCoin}</span></span>
               </span>
               <ChevronDown size={12} className={`shrink-0 text-slate-400 transition-transform ${coinMenuOpen ? 'rotate-180' : ''}`} />
             </button>
