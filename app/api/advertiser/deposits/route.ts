@@ -37,7 +37,7 @@ function parseUsdCents(value: unknown) {
   if (!match) return null
 
   const cents = BigInt(match[1]) * 100n + BigInt((match[2] ?? '').padEnd(2, '0') || '0')
-  if (cents < 500n) return null
+  if (cents < 1n) return null
 
   return {
     cents,
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
     ? input.requestKey.toLowerCase()
     : null
   if (!parsedUsd || !requestKey) {
-    return NextResponse.json({ error: 'The minimum top-up is $5.00. Enter an amount with up to two decimal places.' }, { status: 400, headers: noStoreHeaders })
+    return NextResponse.json({ error: 'The minimum top-up is $0.01. Enter an amount with up to two decimal places.' }, { status: 400, headers: noStoreHeaders })
   }
 
   const merchantUsername = process.env.FAUCETPAY_MERCHANT_USERNAME?.trim()
