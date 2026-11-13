@@ -67,7 +67,7 @@ function parseUsdCents(value: string) {
   const match = /^(\d{1,9})(?:\.(\d{1,2}))?$/.exec(value.trim())
   if (!match) return null
   const cents = BigInt(match[1]) * 100n + BigInt((match[2] ?? '').padEnd(2, '0') || '0')
-  return cents >= 500n ? cents : null
+  return cents >= 1n ? cents : null
 }
 
 function formatAtomic(value: string, language: 'en' | 'ru') {
@@ -105,7 +105,7 @@ function statusClasses(status: DepositStatus) {
 export function AdvertiserDepositPage() {
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
-  const [amountUsd, setAmountUsd] = useState('5.00')
+  const [amountUsd, setAmountUsd] = useState('0.01')
   const [activeDepositId, setActiveDepositId] = useState<string | null>(null)
   const [createdDeposit, setCreatedDeposit] = useState<DepositSummary | null>(null)
   const [activeCheckout, setActiveCheckout] = useState<CheckoutFields | null>(null)
@@ -132,7 +132,7 @@ export function AdvertiserDepositPage() {
 
   const parsedCents = parseUsdCents(amountUsd)
   const amountNumber = parsedCents === null ? null : Number(parsedCents) / 100
-  const minimumPepe = quote.data?.pepeUsd ? estimatePepe(5, quote.data.pepeUsd, language) : null
+  const minimumPepe = quote.data?.pepeUsd ? estimatePepe(0.01, quote.data.pepeUsd, language) : null
   const estimatedPepe = amountNumber !== null && quote.data?.pepeUsd
     ? estimatePepe(amountNumber, quote.data.pepeUsd, language)
     : null
@@ -234,14 +234,14 @@ export function AdvertiserDepositPage() {
                       setAmountUsd(event.target.value)
                       setActiveCheckout(null)
                     }}
-                    placeholder="5.00"
+                    placeholder="0.01"
                     aria-describedby="advertiser-deposit-minimum advertiser-deposit-estimate"
                     aria-invalid={amountUsd.length > 0 && parsedCents === null}
                     className="h-16 rounded-[20px] border-2 border-[#d9e0c8] bg-white pl-12 pr-4 font-mono text-2xl font-black tracking-tight text-[#17324a] placeholder:text-[#9aabba] focus-visible:border-[#55b991] focus-visible:ring-[#55b991]/20"
                   />
                 </div>
                 <FieldDescription id="advertiser-deposit-minimum" className="mt-1 text-sm leading-6 text-[#587084]">
-                  {isRussian ? <>Минимум — <strong className="font-mono text-[#17324a]">$5.00</strong>{minimumPepe ? <> · примерно <strong className="font-mono text-[#1b8067]">{minimumPepe} PEPE</strong></> : null}</> : <>Minimum <strong className="font-mono text-[#17324a]">$5.00</strong>{minimumPepe ? <> · about <strong className="font-mono text-[#1b8067]">{minimumPepe} PEPE</strong></> : null}</>}
+                  {isRussian ? <>Минимум — <strong className="font-mono text-[#17324a]">$0.01</strong>{minimumPepe ? <> · примерно <strong className="font-mono text-[#1b8067]">{minimumPepe} PEPE</strong></> : null}</> : <>Minimum <strong className="font-mono text-[#17324a]">$0.01</strong>{minimumPepe ? <> · about <strong className="font-mono text-[#1b8067]">{minimumPepe} PEPE</strong></> : null}</>}
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -365,7 +365,7 @@ export function AdvertiserDepositPage() {
               {deposit.status === 'pending' && <Button type="button" size="sm" variant="outline" onClick={() => selectDeposit(deposit)} aria-label={isRussian ? `Открыть счёт ${deposit.id}` : `Open invoice ${deposit.id}`} className="min-h-9 rounded-full border-[#bfd2d0] bg-white px-4 font-bold text-[#17324a] hover:bg-[#eef8e9]">{isRussian ? 'Открыть' : 'Open'}</Button>}
             </div>
           </li>)}
-        </ul> : !deposits.isLoading && <div className="rounded-[22px] border-2 border-dashed border-[#cfdbbd] bg-[#f2f8e8] px-4 py-10 text-center text-sm leading-6 text-[#587084]">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $5.00.' : 'No top-ups yet. The minimum amount is $5.00.'}</div>}
+        </ul> : !deposits.isLoading && <div className="rounded-[22px] border-2 border-dashed border-[#cfdbbd] bg-[#f2f8e8] px-4 py-10 text-center text-sm leading-6 text-[#587084]">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $0.01.' : 'No top-ups yet. The minimum amount is $0.01.'}</div>}
       </section>
     </main>
   )
