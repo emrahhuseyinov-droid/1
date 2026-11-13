@@ -306,7 +306,7 @@ export const advertiserDeposits = pgTable('earnpepe_advertiser_deposits', {
   unique('earnpepe_advertiser_deposits_provider_transaction_unique').on(table.provider, table.providerTransactionId),
   index('earnpepe_advertiser_deposits_user_created_idx').on(table.userId, table.createdAt.desc()),
   check('earnpepe_advertiser_deposits_provider_check', sql`${table.provider} = 'faucetpay'`),
-  check('earnpepe_advertiser_deposits_amount_usd_check', sql`${table.amountUsd} >= 5`),
+  check('earnpepe_advertiser_deposits_amount_usd_check', sql`${table.amountUsd} >= 0.01`),
   check('earnpepe_advertiser_deposits_price_check', sql`${table.pepeUsdPrice} > 0`),
   check('earnpepe_advertiser_deposits_amount_check', sql`${table.amountAtomic} > 0`),
   check('earnpepe_advertiser_deposits_actual_amount_check', sql`${table.actualAmountAtomic} is null or ${table.actualAmountAtomic} > 0`),
