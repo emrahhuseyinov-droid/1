@@ -247,7 +247,7 @@ export function ManualClaimPage({ initialSection, email, name, initialAvatarUrl,
                   >
                     <span aria-hidden="true" className={`${navEdgeClassName} left-0.5`} />
                     <span aria-hidden="true" className={`${navEdgeClassName} right-0.5`} />
-                    <span className="relative flex items-center gap-3"><Icon size={15} /><span>{label === 'Swap' ? 'TOKEN EXCHANGE' : label === 'Transfers' && isRussian ? 'Переводы' : label}</span></span>
+                    <span className="relative flex items-center gap-3"><Icon size={15} /><span>{label === 'Swap' ? 'TOKEN EXCHANGE' : label === 'Add funds' && isRussian ? 'Пополнить баланс' : label === 'Transfers' && isRussian ? 'Переводы' : label}</span></span>
                     {badge && <span className={`relative rounded-md px-1.5 py-0.5 text-[9px] font-bold transition-colors group-hover:bg-amber-300/15 ${badge === 'return' || badge === '10%' || /^[0-9]+$/.test(badge) ? 'bg-amber-300 text-indigo-950' : 'bg-cyan-300 text-indigo-950'}`}>{badge}</span>}
                   </Link>
                 })}
