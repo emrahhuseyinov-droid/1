@@ -1011,7 +1011,7 @@ const ruPhrases = new Map<string, string>([
   ['Select active coin', 'Выберите активную монету'],
   ['Contact support', 'Связаться с поддержкой'],
   ['Support', 'Поддержка'],
-  ['Advertiser workspace', 'Кабинет рекламодателя'],
+  ['Advertiser workspace', 'Перейти в кабинет рекламодателя'],
   ['Advertiser wallet', 'Кошелёк рекламодателя'],
   ['Could not load advertiser balance.', 'Не у��алось загрузить баланс рекламодателя.'],
   ['Could not sign out. Please try again.', 'Не удалось выйти из аккаунта. Попробуйте ещё раз.'],
