@@ -6,11 +6,13 @@ import { ArrowRight, Check, Gift, LoaderCircle, Sparkles } from 'lucide-react'
 import { atomicUnitsPerDoge, dailyBonusRewardsAtomic, getDailyBonusRewardAtomic } from '@/lib/daily-bonus'
 import type { DashboardOverview } from '@/lib/dashboard-types'
 import { LocalizedTree } from '@/components/site-language-provider'
+import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 
 type DailyBonusStatus = DashboardOverview['dailyBonus']
 
 type ClaimResponse = {
   error?: string
+  code?: string
   claimed?: boolean
   alreadyClaimed?: boolean
   rewardAtomic?: number
@@ -19,6 +21,17 @@ type ClaimResponse = {
   energyAdded?: number
   energyGranted?: boolean
   energyCap?: number
+}
+
+type CaptchaChallenge = {
+  solveUrl: string
+  challengeToken: string | null
+  captchaSessionId: string
+}
+
+type CaptchaStatusResponse = {
+  error?: string
+  status?: string
 }
 
 function formatRewardAtomic(amountAtomic: number) {
@@ -34,6 +47,8 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
   const [isClaiming, setIsClaiming] = useState(false)
   const [claim, setClaim] = useState<{ rewardAtomic: number; streak: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [captchaChallenge, setCaptchaChallenge] = useState<CaptchaChallenge | null>(null)
+  const [captchaStatusMessage, setCaptchaStatusMessage] = useState<string | null>(null)
 
   const claimedToday = dailyBonus.claimedToday || claim !== null
   const streak = claim?.streak ?? dailyBonus.streak
@@ -45,29 +60,120 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
     claimedToday ? Math.max(0, dailyBonus.streak - 1) : dailyBonus.streak,
   )
 
-  async function handleClaim() {
+  async function creditDailyBonus(captchaSessionId: string) {
+    const response = await fetch('/api/referrals/daily-bonus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ captchaSessionId }),
+    })
+    const data = await response.json().catch(() => null) as ClaimResponse | null
+
+    if (
+      !response.ok ||
+      !data ||
+      (!data.claimed && !data.alreadyClaimed) ||
+      !Number.isSafeInteger(data.rewardAtomic) ||
+      !Number.isSafeInteger(data.streak)
+    ) {
+      if (data?.code === 'captcha_required') {
+        setCaptchaChallenge(null)
+        setCaptchaStatusMessage(null)
+      }
+      throw new Error(data?.error ?? 'Could not claim your Daily Bonus. Please try again.')
+    }
+
+    setClaim({ rewardAtomic: data.rewardAtomic as number, streak: data.streak as number })
+    setCaptchaChallenge(null)
+    setCaptchaStatusMessage(null)
+    router.refresh()
+  }
+
+  async function checkCaptcha(captchaSessionId: string) {
+    if (isClaiming) return
     setIsClaiming(true)
     setError(null)
+    setCaptchaStatusMessage('Checking verification…')
 
     try {
-      const response = await fetch('/api/referrals/daily-bonus', { method: 'POST' })
-      const data = await response.json().catch(() => null) as ClaimResponse | null
+      const response = await fetch(
+        `/api/wheel/captcha/status?state=${encodeURIComponent(captchaSessionId)}&purpose=daily_bonus`,
+        { cache: 'no-store' },
+      )
+      const data = await response.json().catch(() => null) as CaptchaStatusResponse | null
 
-      if (!response.ok || !data || !Number.isSafeInteger(data.rewardAtomic) || !Number.isSafeInteger(data.streak)) {
-        throw new Error(data?.error ?? 'Could not claim your Daily Bonus. Please try again.')
+      if (!response.ok || !data || typeof data.status !== 'string') {
+        throw new Error(data?.error ?? 'Could not check CAPTCHA verification.')
       }
 
-      setClaim({ rewardAtomic: data.rewardAtomic as number, streak: data.streak as number })
-      router.refresh()
+      if (data.status === 'verified') {
+        await creditDailyBonus(captchaSessionId)
+        return
+      }
+
+      if (data.status === 'pending') {
+        setCaptchaStatusMessage('The CAPTCHA is still being verified. You can check again in a moment.')
+        return
+      }
+
+      setCaptchaChallenge(null)
+      setCaptchaStatusMessage(null)
+      setError('CAPTCHA was not confirmed. Start a new verification to try again.')
     } catch (claimError) {
-      setError(claimError instanceof Error ? claimError.message : 'Could not claim your Daily Bonus.')
+      const message = claimError instanceof Error ? claimError.message : 'Could not check CAPTCHA verification.'
+      setError(message)
+      if (captchaChallenge) setCaptchaStatusMessage(message)
     } finally {
       setIsClaiming(false)
     }
   }
 
+  async function startCaptcha() {
+    if (isClaiming || claimedToday) return
+    setIsClaiming(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/wheel/captcha/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ purpose: 'daily_bonus' }),
+      })
+      const data = await response.json().catch(() => null) as {
+        error?: string
+        solveUrl?: string
+        challengeToken?: string | null
+        captchaSessionId?: string
+      } | null
+
+      if (!response.ok || !data || typeof data.solveUrl !== 'string' || typeof data.captchaSessionId !== 'string') {
+        throw new Error(data?.error ?? 'Could not start CAPTCHA verification. Please try again.')
+      }
+
+      setCaptchaChallenge({
+        solveUrl: data.solveUrl,
+        challengeToken: typeof data.challengeToken === 'string' ? data.challengeToken : null,
+        captchaSessionId: data.captchaSessionId,
+      })
+      setCaptchaStatusMessage(null)
+    } catch (claimError) {
+      setError(claimError instanceof Error ? claimError.message : 'Could not start CAPTCHA verification.')
+    } finally {
+      setIsClaiming(false)
+    }
+  }
+
+  async function handleClaim() {
+    if (isClaiming || claimedToday) return
+    if (captchaChallenge) {
+      await checkCaptcha(captchaChallenge.captchaSessionId)
+      return
+    }
+    await startCaptcha()
+  }
+
   return (
     <LocalizedTree>
+    <>
     <section aria-labelledby="daily-bonus-title" className="relative isolate flex min-h-[340px] flex-col justify-between overflow-hidden rounded-[26px] border border-amber-300/20 bg-gradient-to-br from-[#211c19] via-[#171a25] to-[#0d1422] p-5 shadow-xl shadow-amber-950/10 sm:p-6">
       <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 -z-10 size-56 rounded-full bg-amber-400/10 blur-3xl" />
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-10 -z-10 size-48 rounded-full bg-orange-400/[0.07] blur-3xl" />
@@ -133,13 +239,29 @@ export function DailyRewardCard({ dailyBonus }: { dailyBonus: DailyBonusStatus }
           className="group inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-300 via-yellow-300 to-orange-300 px-4 py-3 text-xs font-extrabold text-slate-950 shadow-lg shadow-amber-950/20 transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171a25] disabled:cursor-not-allowed disabled:from-emerald-400/15 disabled:via-emerald-400/15 disabled:to-emerald-400/15 disabled:text-emerald-200 disabled:shadow-none"
         >
           {isClaiming ? <LoaderCircle size={15} className="animate-spin" aria-hidden="true" /> : claimedToday ? <Check size={15} aria-hidden="true" /> : <Gift size={15} aria-hidden="true" />}
-          {isClaiming ? 'Adding bonus…' : claimedToday ? 'Collected today' : 'Claim Daily Bonus'}
+          {isClaiming ? captchaChallenge ? 'Checking verification…' : 'Starting verification…' : claimedToday ? 'Collected today' : captchaChallenge ? 'Check CAPTCHA status' : 'Claim Daily Bonus'}
           {!claimedToday && !isClaiming && <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
         </button>
         {error && <p role="alert" className="mt-2 text-[10px] font-semibold text-rose-300">{error}</p>}
-        <p className="mt-2 text-center text-[9px] text-slate-500">One claim each UTC day · credited to your internal ledger</p>
       </div>
     </section>
+    <AdsLabCaptchaModal
+      solveUrl={captchaChallenge?.solveUrl ?? null}
+      challengeToken={captchaChallenge?.challengeToken ?? null}
+      captchaSessionId={captchaChallenge?.captchaSessionId ?? null}
+      purpose="daily_bonus"
+      statusMessage={captchaStatusMessage}
+      checking={isClaiming}
+      onReturned={(sessionId) => void checkCaptcha(sessionId)}
+      onCheckStatus={() => {
+        if (captchaChallenge) void checkCaptcha(captchaChallenge.captchaSessionId)
+      }}
+      onClose={() => {
+        setCaptchaChallenge(null)
+        setCaptchaStatusMessage(null)
+      }}
+    />
+    </>
     </LocalizedTree>
   )
 }

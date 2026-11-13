@@ -57,8 +57,9 @@ export async function POST(request: NextRequest) {
 
       const [captcha] = await transaction.update(wheelCaptchaSessions).set({ status: 'consumed', consumedAt: now }).where(and(
         eq(wheelCaptchaSessions.id, captchaSessionId),
-        eq(wheelCaptchaSessions.guestId, account.profile.id),
-        eq(wheelCaptchaSessions.status, 'verified'),
+  eq(wheelCaptchaSessions.guestId, account.profile.id),
+  eq(wheelCaptchaSessions.purpose, 'wheel'),
+  eq(wheelCaptchaSessions.status, 'verified'),
         gt(wheelCaptchaSessions.expiresAt, now),
       )).returning({ id: wheelCaptchaSessions.id })
       if (!captcha) return { status: 'captcha_required' as const }

@@ -45,6 +45,16 @@ export async function POST(request: NextRequest) {
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
 
+  const body: unknown = await request.json().catch(() => null)
+  const input = isRecord(body) ? body : {}
+  const requestedPurpose = input.purpose
+  const purpose = requestedPurpose === undefined || requestedPurpose === 'wheel'
+    ? 'wheel'
+    : requestedPurpose === 'daily_bonus'
+      ? 'daily_bonus'
+      : null
+  if (!purpose) return NextResponse.json({ error: 'A valid CAPTCHA purpose is required.' }, { status: 400, headers: noStoreHeaders })
+
   const apiKey = process.env.ADSLAB_PUBLISHER_API_KEY?.trim()
   if (!apiKey) {
     return NextResponse.json({ error: 'CAPTCHA verification is not configured.' }, { status: 503, headers: noStoreHeaders })
@@ -53,6 +63,7 @@ export async function POST(request: NextRequest) {
   const captchaSessionId = randomUUID()
   const returnUrl = new URL('/api/wheel/captcha/return', request.url)
   returnUrl.searchParams.set('state', captchaSessionId)
+  returnUrl.searchParams.set('purpose', purpose)
 
   try {
     const response = await fetch(`${adsLabApiOrigin}/api/v1/captcha/init`, {
@@ -77,6 +88,7 @@ export async function POST(request: NextRequest) {
     await db.insert(wheelCaptchaSessions).values({
       id: captchaSessionId,
       guestId: account.profile.id,
+      purpose,
       status: 'pending',
       createdAt: now,
       expiresAt: new Date(now.getTime() + captchaSessionTtlMs),

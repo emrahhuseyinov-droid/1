@@ -313,12 +313,13 @@ export function WheelOfFortunePage() {
                       {wheelSectors.map((sector, index) => {
                         const angle = index * 45
                         const radians = angle * Math.PI / 180
+                        const isEnergyReward = sector.rewardType === 'energy'
+                        const labelRadius = isEnergyReward ? 34 : 36
                         const labelStyle: CSSProperties = {
-                          left: `${50 + Math.sin(radians) * 36}%`,
-                          top: `${50 - Math.cos(radians) * 36}%`,
+                          left: `${50 + Math.sin(radians) * labelRadius}%`,
+                          top: `${50 - Math.cos(radians) * labelRadius}%`,
                           transform: 'translate(-50%, -50%)',
                         }
-                        const isEnergyReward = sector.rewardType === 'energy'
                         const labelClassName = isEnergyReward
                           ? `wheel-energy-label ${sector.key === 'arcade-energy' ? 'wheel-energy-label--green' : 'wheel-energy-label--blue'}`
                           : 'max-w-[88px] rounded-lg border border-white/15 bg-[#111831]/70 px-2 py-1 text-center text-[11px] font-black leading-tight shadow-lg backdrop-blur-[2px] sm:max-w-[112px] sm:text-[13px] 2xl:text-[15px]'
@@ -327,11 +328,11 @@ export function WheelOfFortunePage() {
                           <span key={sector.key} style={labelStyle} className={`wheel-sector-label absolute z-10 ${labelClassName}`}>
                             {isEnergyReward ? (
                               <>
-                                <span className="wheel-energy-icon"><Zap size={11} strokeWidth={2.8} aria-hidden="true" /></span>
                                 <span className="wheel-energy-copy">
+                                  <span className="wheel-energy-icon"><Zap size={10} strokeWidth={2.8} aria-hidden="true" /></span>
                                   <span className="wheel-energy-amount">+{sector.rewardQuantity}</span>
-                                  <span className="wheel-energy-unit">energy</span>
                                 </span>
+                                <span className="wheel-energy-unit">energy</span>
                               </>
                             ) : sector.shortLabel}
                           </span>

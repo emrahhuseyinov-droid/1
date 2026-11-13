@@ -444,11 +444,13 @@ export const wheelSpins = pgTable('earnpepe_wheel_spins', {
   check('earnpepe_wheel_spins_claimed_check', sql`${table.claimedAt} is null or ${table.claimedAt} >= ${table.createdAt}`),
 ])
 
+export type WheelCaptchaSessionPurpose = 'wheel' | 'daily_bonus'
 export type WheelCaptchaSessionStatus = 'pending' | 'verified' | 'consumed' | 'failed' | 'expired'
 
 export const wheelCaptchaSessions = pgTable('earnpepe_wheel_captcha_sessions', {
   id: uuid('id').primaryKey(),
   guestId: uuid('guest_id').notNull(),
+  purpose: text('purpose').$type<WheelCaptchaSessionPurpose>().notNull().default('wheel'),
   status: text('status').$type<WheelCaptchaSessionStatus>().notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
@@ -456,6 +458,7 @@ export const wheelCaptchaSessions = pgTable('earnpepe_wheel_captcha_sessions', {
   consumedAt: timestamp('consumed_at', { withTimezone: true }),
 }, (table) => [
   index('earnpepe_wheel_captcha_sessions_guest_created_idx').on(table.guestId, table.createdAt.desc()),
+  check('earnpepe_wheel_captcha_sessions_purpose_check', sql`${table.purpose} in ('wheel', 'daily_bonus')`),
   check('earnpepe_wheel_captcha_sessions_status_check', sql`${table.status} in ('pending', 'verified', 'consumed', 'failed', 'expired')`),
   check('earnpepe_wheel_captcha_sessions_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
   check('earnpepe_wheel_captcha_sessions_state_check', sql`(${table.status} = 'pending' and ${table.verifiedAt} is null and ${table.consumedAt} is null) or (${table.status} = 'verified' and ${table.verifiedAt} is not null and ${table.consumedAt} is null) or (${table.status} = 'consumed' and ${table.verifiedAt} is not null and ${table.consumedAt} is not null) or (${table.status} in ('failed', 'expired') and ${table.consumedAt} is null)`),

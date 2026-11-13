@@ -50,16 +50,17 @@ export async function getWheelState(guestId: string, now = new Date()) {
 export async function startWheelSpin(guestId: string, captchaSessionId: string, now = new Date()) {
   return db.transaction(async (transaction) => {
     const [captchaSession] = await transaction
-      .select({ status: wheelCaptchaSessions.status, expiresAt: wheelCaptchaSessions.expiresAt })
+      .select({ status: wheelCaptchaSessions.status, expiresAt: wheelCaptchaSessions.expiresAt, purpose: wheelCaptchaSessions.purpose })
       .from(wheelCaptchaSessions)
       .where(and(
         eq(wheelCaptchaSessions.id, captchaSessionId),
         eq(wheelCaptchaSessions.guestId, guestId),
+    eq(wheelCaptchaSessions.purpose, 'wheel'),
       ))
       .for('update')
       .limit(1)
 
-    if (!captchaSession || captchaSession.status !== 'verified' || captchaSession.expiresAt <= now) {
+    if (!captchaSession || captchaSession.purpose !== 'wheel' || captchaSession.status !== 'verified' || captchaSession.expiresAt <= now) {
       throw new WheelServiceError('The CAPTCHA has not been confirmed yet.', 403, 'captcha_required')
     }
 
@@ -92,6 +93,7 @@ export async function startWheelSpin(guestId: string, captchaSessionId: string, 
       .where(and(
         eq(wheelCaptchaSessions.id, captchaSessionId),
         eq(wheelCaptchaSessions.guestId, guestId),
+    eq(wheelCaptchaSessions.purpose, 'wheel'),
         eq(wheelCaptchaSessions.status, 'verified'),
       ))
       .returning({ id: wheelCaptchaSessions.id })

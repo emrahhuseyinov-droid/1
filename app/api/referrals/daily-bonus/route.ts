@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, gt } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { db } from '@/lib/db'
-import { arcadeProfiles, earningEvents, guestProfiles } from '@/lib/db/schema'
+import { arcadeProfiles, earningEvents, guestProfiles, wheelCaptchaSessions } from '@/lib/db/schema'
 import { dailyBonusRewardsAtomic, getDailyBonusRewardAtomic, getStreakFromDate, getUtcDateKey } from '@/lib/daily-bonus'
 import { ARCADE_ENERGY_CAP } from '@/lib/arcade-gameplay'
 import { lockArcadeProfile } from '@/lib/arcade-service'
@@ -12,6 +12,11 @@ import { isTrustedRequestOrigin } from '@/lib/request-origin'
 export const runtime = 'nodejs'
 
 const noStoreHeaders = { 'Cache-Control': 'no-store' }
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 export async function POST(request: NextRequest) {
   if (!isTrustedRequestOrigin(request)) {
@@ -21,8 +26,30 @@ export async function POST(request: NextRequest) {
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
 
+  const body: unknown = await request.json().catch(() => null)
+  const captchaSessionId = isRecord(body) && typeof body.captchaSessionId === 'string' ? body.captchaSessionId.toLowerCase() : ''
+  if (!uuidPattern.test(captchaSessionId)) {
+    return NextResponse.json({ error: 'A valid CAPTCHA session is required.', code: 'captcha_required' }, { status: 400, headers: noStoreHeaders })
+  }
+
   try {
     const result = await db.transaction(async (transaction) => {
+      const now = new Date()
+      const [captchaSession] = await transaction
+        .select({ id: wheelCaptchaSessions.id })
+        .from(wheelCaptchaSessions)
+        .where(and(
+          eq(wheelCaptchaSessions.id, captchaSessionId),
+          eq(wheelCaptchaSessions.guestId, account.profile.id),
+          eq(wheelCaptchaSessions.purpose, 'daily_bonus'),
+          eq(wheelCaptchaSessions.status, 'verified'),
+          gt(wheelCaptchaSessions.expiresAt, now),
+        ))
+        .for('update')
+        .limit(1)
+
+      if (!captchaSession) return { status: 'captcha_required' as const }
+
       const [lockedProfile] = await transaction
         .select({ id: guestProfiles.id })
         .from(guestProfiles)
@@ -32,7 +59,20 @@ export async function POST(request: NextRequest) {
 
       if (!lockedProfile) return { status: 'not_found' as const }
 
-      const now = new Date()
+      const [consumedCaptcha] = await transaction
+        .update(wheelCaptchaSessions)
+        .set({ status: 'consumed', consumedAt: now })
+        .where(and(
+          eq(wheelCaptchaSessions.id, captchaSessionId),
+          eq(wheelCaptchaSessions.guestId, account.profile.id),
+          eq(wheelCaptchaSessions.purpose, 'daily_bonus'),
+          eq(wheelCaptchaSessions.status, 'verified'),
+          gt(wheelCaptchaSessions.expiresAt, now),
+        ))
+        .returning({ id: wheelCaptchaSessions.id })
+
+      if (!consumedCaptcha) return { status: 'captcha_required' as const }
+
       const today = getUtcDateKey(0, now)
       const yesterday = getUtcDateKey(-1, now)
       const recentBonuses = await transaction
@@ -99,6 +139,10 @@ export async function POST(request: NextRequest) {
 
       return { status: 'claimed' as const, rewardAtomic, streak, energyGranted: energyAdded > 0, energyAdded, energy }
     })
+
+    if (result.status === 'captcha_required') {
+      return NextResponse.json({ error: 'CAPTCHA was not confirmed. Start a new verification to try again.', code: 'captcha_required' }, { status: 409, headers: noStoreHeaders })
+    }
 
     if (result.status === 'not_found') {
       return NextResponse.json({ error: 'Account profile not found.' }, { status: 404, headers: noStoreHeaders })

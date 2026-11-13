@@ -20,6 +20,11 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get('token'),
   ]
   const sessionId = candidates.find((value) => value && uuidPattern.test(value))?.toLowerCase() ?? null
+  const purpose = request.nextUrl.searchParams.get('purpose') === 'daily_bonus' ? 'daily_bonus' : 'wheel'
+  const channelPrefix = purpose === 'daily_bonus' ? 'adslab-daily-bonus-captcha' : 'adslab-wheel-captcha'
+  const serializedChannelPrefix = JSON.stringify(channelPrefix).replace(/</g, '\\u003c')
+  const returnPageName = purpose === 'daily_bonus' ? 'Daily Bonus page' : 'wheel page'
+  const serializedReturnPageName = JSON.stringify(returnPageName).replace(/</g, '\\u003c')
   const serializedSessionId = JSON.stringify(sessionId).replace(/</g, '\\u003c')
 
   const html = `<!doctype html>
@@ -31,7 +36,7 @@ export async function GET(request: NextRequest) {
     const sessionId = ${serializedSessionId};
     const status = document.getElementById('status');
     if (!sessionId) {
-      status.textContent = 'A recognizable session ID was not received. Return to the wheel and try again.';
+      status.textContent = 'A recognizable session ID was not received. Return to the ' + ${serializedReturnPageName} + ' and try again.';
     } else {
       const message = { type: 'adslab-captcha-return', captchaSessionId: sessionId };
       let notified = false;
@@ -45,15 +50,15 @@ export async function GET(request: NextRequest) {
           notified = true;
         }
         if (typeof BroadcastChannel !== 'undefined') {
-          const channel = new BroadcastChannel('adslab-wheel-captcha:' + sessionId);
+          const channel = new BroadcastChannel(${serializedChannelPrefix} + ':' + sessionId);
           channel.postMessage(message);
           channel.close();
           notified = true;
         }
       } catch {}
       status.textContent = notified
-        ? 'Your session is ready. The wheel page is verifying it now.'
-        : 'Return to the wheel page to continue verification.';
+        ? 'Your session is ready. The ' + ${serializedReturnPageName} + ' is verifying it now.'
+        : 'Return to the ' + ${serializedReturnPageName} + ' to continue verification.';
       history.replaceState(null, '', window.location.pathname);
       if (notified) window.close();
     }
