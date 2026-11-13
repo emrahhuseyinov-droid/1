@@ -1,13 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { BadgeCheck, CircleAlert, Clock3, ExternalLink, LoaderCircle, RefreshCw, Sparkles, Wallet, type LucideIcon } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
@@ -106,15 +105,20 @@ function statusClasses(status: DepositStatus) {
   return 'border-sky-300/20 bg-sky-300/10 text-sky-100'
 }
 
+const cwalletPaymentLinks = [
+  { amountUsd: 5, url: 'https://cwallet.com/t/K2Y733H7' },
+  { amountUsd: 10, url: 'https://cwallet.com/t/YQWVABNQ' },
+  { amountUsd: 25, url: 'https://cwallet.com/t/EM6PWKIP' },
+  { amountUsd: 50, url: 'https://cwallet.com/t/FQDXIZR1' },
+] as const
+
 function PaymentMethodCard({
-  href,
   icon: Icon,
   title,
   description,
   badge,
   selected = false,
 }: {
-  href?: string
   icon: LucideIcon
   title: string
   description: string
@@ -122,28 +126,72 @@ function PaymentMethodCard({
   selected?: boolean
 }) {
   const className = cn(
-    'relative flex min-h-[104px] items-center gap-3 rounded-[20px] border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70',
-    selected ? 'border-emerald-200/50 bg-emerald-200/[0.08] shadow-[inset_0_0_0_1px_rgba(124,233,204,0.08)]' : 'border-white/10 bg-[#0d1531] hover:border-emerald-200/30 hover:bg-emerald-200/[0.04]',
+    'relative flex min-h-[104px] items-center gap-3 rounded-[20px] border p-4 text-left transition',
+    selected ? 'border-emerald-200/50 bg-emerald-200/[0.08] shadow-[inset_0_0_0_1px_rgba(124,233,204,0.08)]' : 'border-white/10 bg-[#0d1531]',
   )
-  const content = (
-    <>
-      <span aria-hidden="true" className={cn('grid size-11 shrink-0 place-items-center rounded-2xl', selected ? 'bg-emerald-200/10 text-emerald-100' : 'bg-white/[0.06] text-slate-300')}>
+
+  return (
+    <div aria-current={selected ? 'true' : undefined} className={className}>
+      <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-200/10 text-emerald-100">
         <Icon size={20} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-extrabold text-white">{title}</span>
-          <span className={cn('rounded-full border px-2 py-0.5 text-[9px] font-bold', selected ? 'border-emerald-200/20 bg-emerald-200/10 text-emerald-100' : 'border-white/10 bg-white/[0.04] text-slate-300')}>{badge}</span>
+          <Badge variant="outline" className="border-emerald-200/20 bg-emerald-200/10 text-[9px] font-bold text-emerald-100">{badge}</Badge>
         </span>
         <span className="mt-1 block text-[11px] leading-5 text-slate-400">{description}</span>
       </span>
-      {selected ? <BadgeCheck aria-hidden="true" className="size-5 shrink-0 text-emerald-200" /> : <ExternalLink aria-hidden="true" className="size-4 shrink-0 text-slate-400" />}
-    </>
+      <BadgeCheck aria-hidden="true" className="size-5 shrink-0 text-emerald-200" />
+    </div>
   )
+}
 
-  return href
-    ? <Link href={href} className={className}>{content}</Link>
-    : <div aria-current="true" className={className}>{content}</div>
+function CwalletPaymentMethodCard({ isRussian, language }: { isRussian: boolean; language: 'en' | 'ru' }) {
+  return (
+    <section aria-labelledby="cwallet-payment-title" className="flex flex-col gap-3 rounded-[20px] border border-white/10 bg-[#0d1531] p-4">
+      <header className="flex items-start gap-3">
+        <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-2xl bg-white/[0.06] text-slate-300">
+          <Wallet size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 id="cwallet-payment-title" className="text-sm font-extrabold text-white">Cwallet</h3>
+            <Badge variant="secondary">{isRussian ? 'Фиксированные суммы' : 'Fixed amounts'}</Badge>
+          </div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-400">
+            {isRussian ? 'Выберите готовую ссылку на оплату:' : 'Choose a fixed-amount payment link:'}
+          </p>
+        </div>
+      </header>
+      <div className="grid grid-cols-2 gap-2">
+        {cwalletPaymentLinks.map(({ amountUsd, url }) => {
+          const amountLabel = formatUsd(String(amountUsd), language)
+          return (
+            <a
+              key={amountUsd}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={isRussian ? `Оплатить ${amountLabel} через Cwallet в новой вкладке` : `Pay ${amountLabel} with Cwallet in a new tab`}
+              className={buttonVariants({ variant: 'outline', size: 'sm', className: 'min-h-10 w-full justify-between rounded-xl' })}
+            >
+              {amountLabel}
+              <ExternalLink data-icon="inline-end" aria-hidden="true" />
+            </a>
+          )
+        })}
+      </div>
+      <Alert role="note" className="items-start rounded-xl border-amber-300/20 bg-amber-300/[0.08] px-3 py-2 text-amber-100">
+        <CircleAlert aria-hidden="true" />
+        <AlertDescription className="text-[11px] leading-5 text-amber-100">
+          {isRussian
+            ? 'Сумма в ссылке фиксированная. Cwallet не подтверждает оплату автоматически: сохраните чек и обратитесь в поддержку для ручного зачисления.'
+            : 'The link amount is fixed. Cwallet payments are not confirmed automatically: keep your receipt and contact support for manual credit.'}
+        </AlertDescription>
+      </Alert>
+    </section>
+  )
 }
 
 export function AdvertiserDepositPage() {
@@ -246,7 +294,7 @@ export function AdvertiserDepositPage() {
               {isRussian ? 'Пополнить баланс' : 'Add funds'}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-              {isRussian ? 'Пополняй баланс в PEPE и запускай новые кампании. Средства зачисляются после подтверждения платежа FaucetPay.' : 'Top up in PEPE and get your next campaign moving. Funds are credited after FaucetPay confirms the payment.'}
+              {isRussian ? 'Пополняйте баланс в PEPE и запускайте кампании. FaucetPay подтверждается автоматически; платежи Cwallet требуют ручного зачисления.' : 'Top up in PEPE and launch campaigns. FaucetPay is confirmed automatically; Cwallet payments require manual credit.'}
             </p>
           </div>
           <aside aria-label={isRussian ? 'Баланс рекламного кошелька' : 'Advertiser wallet balance'} className="flex w-fit items-center gap-3 rounded-[20px] border border-emerald-200/20 bg-[#111a35] px-4 py-3 shadow-lg shadow-black/10">
@@ -265,14 +313,15 @@ export function AdvertiserDepositPage() {
                 <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-emerald-300 text-[12px] font-black text-[#10213a]">1</span>
                 <h2 id="deposit-method-title" className="text-sm font-black text-white">{isRussian ? 'Выберите способ пополнения' : 'Select payment method'}</h2>
               </div>
-              <div role="group" aria-label={isRussian ? 'Способ пополнения' : 'Payment method'} className="grid max-w-xl gap-3">
+              <div role="group" aria-label={isRussian ? 'Способы пополнения' : 'Payment methods'} className="grid gap-3">
                 <PaymentMethodCard
                   icon={Wallet}
                   title="FaucetPay"
-                  description={isRussian ? 'Оплата счёта в PEPE' : 'Pay an invoice in PEPE'}
-                  badge={isRussian ? 'Рекомендуем' : 'Recommended'}
+                  description={isRussian ? 'Оплата счёта в PEPE с автоматической проверкой' : 'Pay a PEPE invoice with automatic verification'}
+                  badge={isRussian ? 'Автоматически' : 'Automatic'}
                   selected
                 />
+                <CwalletPaymentMethodCard isRussian={isRussian} language={language} />
               </div>
             </section>
 
