@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { ArrowDownUp, BadgeCheck, CircleAlert, Clock3, ExternalLink, LoaderCircle, RefreshCw, Sparkles, Wallet, type LucideIcon } from 'lucide-react'
+import { BadgeCheck, CircleAlert, Clock3, ExternalLink, LoaderCircle, RefreshCw, Sparkles, Wallet, type LucideIcon } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -265,20 +265,13 @@ export function AdvertiserDepositPage() {
                 <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-emerald-300 text-[12px] font-black text-[#10213a]">1</span>
                 <h2 id="deposit-method-title" className="text-sm font-black text-white">{isRussian ? 'Выберите способ пополнения' : 'Select payment method'}</h2>
               </div>
-              <div role="group" aria-label={isRussian ? 'Способ пополнения' : 'Payment method'} className="grid gap-3 sm:grid-cols-2">
+              <div role="group" aria-label={isRussian ? 'Способ пополнения' : 'Payment method'} className="grid max-w-xl gap-3">
                 <PaymentMethodCard
                   icon={Wallet}
-                  title={isRussian ? 'FaucetPay' : 'FaucetPay'}
+                  title="FaucetPay"
                   description={isRussian ? 'Оплата счёта в PEPE' : 'Pay an invoice in PEPE'}
                   badge={isRussian ? 'Рекомендуем' : 'Recommended'}
                   selected
-                />
-                <PaymentMethodCard
-                  href="/advertiser/fund"
-                  icon={ArrowDownUp}
-                  title={isRussian ? 'Перевод из заработка' : 'Transfer from earnings'}
-                  description={isRussian ? 'Перевести PEPE с баланса Исполнителя' : 'Move PEPE from your Earner balance'}
-                  badge={isRussian ? 'Без комиссии' : 'No fee'}
                 />
               </div>
             </section>
