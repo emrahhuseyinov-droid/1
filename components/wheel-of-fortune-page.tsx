@@ -314,7 +314,7 @@ export function WheelOfFortunePage() {
                         const angle = index * 45
                         const radians = angle * Math.PI / 180
                         const isEnergyReward = sector.rewardType === 'energy'
-                        const labelRadius = isEnergyReward ? 34 : 36
+                        const labelRadius = 39
                         const labelStyle: CSSProperties = {
                           left: `${50 + Math.sin(radians) * labelRadius}%`,
                           top: `${50 - Math.cos(radians) * labelRadius}%`,

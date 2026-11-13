@@ -876,6 +876,24 @@ dialog.adslab-captcha-dialog[open] {
   }
 }
 
+@media (max-width: 360px) {
+  .wheel-sector-label.wheel-energy-label {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    min-height: 32px;
+  }
+
+  .wheel-energy-icon {
+    width: 10px;
+    height: 10px;
+  }
+
+  .wheel-energy-amount {
+    font-size: 9px;
+  }
+}
+
 .wheel-spin-button {
   background-image: linear-gradient(100deg, #ffd166 0%, #ffb36f 52%, #ff8fa3 100%);
   box-shadow: 0 12px 28px rgb(255 155 112 / 0.2), inset 0 2px 0 rgb(255 255 255 / 0.5);
