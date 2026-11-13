@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const bannerScriptUrl = 'https://serve.adslab.me/api/banner/js'
 
@@ -12,6 +12,15 @@ type AdsLabBannerProps = {
   onClick?: () => void
 }
 
+const bannerDimensions = {
+  compact: { width: 320, height: 50 },
+  'medium-banner': { width: 468, height: 60 },
+  'medium-rectangle': { width: 300, height: 250 },
+  'large-rectangle': { width: 336, height: 280 },
+  leaderboard: { width: 728, height: 90 },
+  skyscraper: { width: 160, height: 600 },
+} satisfies Record<NonNullable<AdsLabBannerProps['format']>, { width: number; height: number }>
+
 declare global {
   interface Window {
     adslab_banners?: Array<{ id: string; container: string }>
@@ -20,7 +29,27 @@ declare global {
 }
 
 export function AdsLabBanner({ id, container: containerId, alignment = 'right', format = 'compact', onClick }: AdsLabBannerProps) {
+  const viewportRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [bannerScale, setBannerScale] = useState(1)
+  const { width: formatWidth, height: formatHeight } = bannerDimensions[format]
+
+  useEffect(() => {
+    const viewportElement = viewportRef.current
+    if (!viewportElement) return
+
+    const updateScale = () => {
+      const availableWidth = viewportElement.getBoundingClientRect().width
+      if (availableWidth <= 0) return
+      const nextScale = Math.min(1, availableWidth / formatWidth)
+      setBannerScale((currentScale) => Math.abs(currentScale - nextScale) < 0.001 ? currentScale : nextScale)
+    }
+
+    updateScale()
+    const observer = new ResizeObserver(updateScale)
+    observer.observe(viewportElement)
+    return () => observer.disconnect()
+  }, [formatWidth])
 
   useEffect(() => {
     const containerElement = containerRef.current
@@ -73,21 +102,24 @@ export function AdsLabBanner({ id, container: containerId, alignment = 'right', 
           ? 'flex w-full max-w-full shrink-0 justify-center lg:w-[160px] lg:justify-end'
           : 'flex w-full max-w-full shrink-0 justify-center lg:w-[320px] lg:justify-end'
     : 'flex w-full justify-center'
-  const sizeClass = format === 'leaderboard'
-    ? 'h-[90px] w-[728px] max-w-full overflow-hidden'
-    : format === 'medium-banner'
-      ? 'h-[60px] w-[468px] max-w-full overflow-hidden'
-      : format === 'skyscraper'
-        ? 'h-[600px] w-[160px] max-w-full overflow-hidden'
-        : format === 'large-rectangle'
-          ? 'h-[280px] w-[336px] max-w-full overflow-hidden'
-          : format === 'medium-rectangle'
-            ? 'h-[250px] w-[300px] max-w-full overflow-hidden'
-            : 'h-[50px] w-[320px] max-w-full overflow-hidden'
-
   return (
     <aside aria-label="Advertisement" className={alignmentClass} onClickCapture={() => onClick?.()}>
-      <div ref={containerRef} id={containerId} className={sizeClass} />
+      <div
+        ref={viewportRef}
+        className="w-full overflow-hidden"
+        style={{ maxWidth: formatWidth, height: Math.ceil(formatHeight * bannerScale) }}
+      >
+        <div
+          ref={containerRef}
+          id={containerId}
+          style={{
+            width: formatWidth,
+            height: formatHeight,
+            transform: `scale(${bannerScale})`,
+            transformOrigin: 'top left',
+          }}
+        />
+      </div>
     </aside>
   )
 }
