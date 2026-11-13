@@ -6,6 +6,11 @@ import type { AdvertiserPageView } from '@/components/advertiser-page'
 import { normalizeReferralCode } from '@/lib/referrals'
 
 const advertiserPages: Record<string, { view: AdvertiserPageView; title: { ru: string; en: string }; description: { ru: string; en: string } }> = {
+  deposit: {
+    view: 'deposit',
+    title: { ru: 'Пополнить баланс PEPE', en: 'Add PEPE funds' },
+    description: { ru: 'Пополняйте рекламный кошелёк PEPE через FaucetPay по актуальному курсу.', en: 'Top up your advertiser PEPE wallet through FaucetPay at the current market rate.' },
+  },
   fund: {
     view: 'fund',
     title: { ru: 'Пополнение кошелька рекламодателя', en: 'Fund advertiser wallet' },
