@@ -288,8 +288,8 @@ export function ManualClaimPage({ initialSection, email, name, initialAvatarUrl,
             <span className="min-w-0 truncate">{formatAtomicBalance(advertiserWallet.data?.advertiserBalanceAtomic, language)}</span>
             <span className="shrink-0 text-[9px] font-black text-emerald-100/75">PEPE</span>
           </Link>}
-          {!isAdvertiserMode && <div className="relative min-w-0 w-full max-w-56 flex-1 sm:flex-none">
-            <button type="button" onClick={() => setCoinMenuOpen((open) => !open)} aria-label={isRussian ? `Выбрать активную валюту. Баланс ${exactActiveBalance} ${activeCoin}` : `Select active coin. Balance ${exactActiveBalance} ${activeCoin}`} title={`${exactActiveBalance} ${activeCoin}`} aria-expanded={coinMenuOpen} className="flex w-full min-w-0 items-center justify-between gap-1.5 rounded-2xl border-2 border-violet-200 bg-white px-2 py-2 shadow-sm shadow-violet-950/5 dark:border-violet-300/25 dark:bg-[#222d58] sm:gap-2 sm:px-2.5">
+          {!isAdvertiserMode && <div className="relative min-w-0 w-fit max-w-[42vw] sm:w-56 sm:max-w-none sm:flex-none">
+            <button type="button" onClick={() => setCoinMenuOpen((open) => !open)} aria-label={isRussian ? `Выбрать активную валюту. Баланс ${exactActiveBalance} ${activeCoin}` : `Select active coin. Balance ${exactActiveBalance} ${activeCoin}`} title={`${exactActiveBalance} ${activeCoin}`} aria-expanded={coinMenuOpen} className="flex w-fit max-w-full min-w-0 items-center justify-between gap-1.5 rounded-2xl border-2 border-violet-200 bg-white px-2 py-2 shadow-sm shadow-violet-950/5 dark:border-violet-300/25 dark:bg-[#222d58] sm:w-full sm:gap-2 sm:px-2.5">
               <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                 <TokenLogo symbol={activeCoin} size={20} />
                 <span className="inline-flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap font-mono text-[10px] font-bold sm:text-xs"><span className="truncate">{displayedActiveBalance}</span><span className="shrink-0 text-slate-500 dark:text-slate-300">{activeCoin}</span></span>
