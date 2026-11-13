@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { BadgeCheck, CircleAlert, Clock3, ExternalLink, LoaderCircle, RefreshCw, Wallet } from 'lucide-react'
+import { BadgeCheck, CircleAlert, Clock3, ExternalLink, LoaderCircle, RefreshCw, Sparkles, Wallet } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -96,9 +97,9 @@ function statusLabel(status: DepositStatus, isRussian: boolean) {
 }
 
 function statusClasses(status: DepositStatus) {
-  if (status === 'paid') return 'border-emerald-200/20 bg-emerald-300/10 text-emerald-100'
-  if (status === 'underpaid' || status === 'review') return 'border-amber-200/20 bg-amber-300/10 text-amber-100'
-  return 'border-cyan-200/20 bg-cyan-300/10 text-cyan-100'
+  if (status === 'paid') return 'border-emerald-700/15 bg-emerald-100 text-emerald-900'
+  if (status === 'underpaid' || status === 'review') return 'border-amber-700/15 bg-amber-100 text-amber-950'
+  return 'border-sky-700/15 bg-sky-100 text-sky-950'
 }
 
 export function AdvertiserDepositPage() {
@@ -180,28 +181,48 @@ export function AdvertiserDepositPage() {
   }
 
   return (
-    <main className="space-y-5">
-      <section aria-labelledby="advertiser-deposit-title" className="relative overflow-hidden rounded-[26px] border border-cyan-200/15 bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-6">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-br from-cyan-400/[0.09] via-indigo-400/[0.05] to-transparent" />
-        <header className="relative flex flex-col gap-4 border-b border-white/[0.07] pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3.5">
-            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl border border-cyan-200/15 bg-cyan-300/10 text-cyan-100"><Wallet size={20} /></span>
+    <main className="mx-auto w-full max-w-6xl space-y-6 px-1 pb-8 sm:px-2">
+      <section aria-labelledby="advertiser-deposit-title" className="relative isolate overflow-hidden rounded-[32px] border-2 border-[#365579] bg-[#10213a] p-4 text-white shadow-[0_18px_50px_rgba(6,18,34,0.25)] sm:p-7">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-96 rounded-full bg-[#55d6a3]/10 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-20 size-72 rounded-full bg-[#f5cd65]/10 blur-3xl" />
+
+        <header className="relative flex flex-col gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-[20px] border-2 border-[#e8f6ba] bg-[#c7ec72] text-[#16334a] shadow-[0_5px_0_#8ea952]">
+              <Wallet size={24} />
+            </span>
             <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-200/75">{isRussian ? 'Рекламный кошелёк' : 'Advertiser wallet'}</p>
-              <h1 id="advertiser-deposit-title" className="mt-1 text-xl font-black tracking-tight text-white sm:text-2xl">{isRussian ? 'Пополнить баланс' : 'Add funds'}</h1>
-              <p className="mt-1 max-w-2xl text-[10px] leading-5 text-slate-300 sm:text-xs">{isRussian ? 'Оплата через FaucetPay в PEPE. Зачисление выполняется только после серверного подтверждения транзакции.' : 'Pay in PEPE through FaucetPay. Funds are credited only after server-side payment verification.'}</p>
+              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#80ddbd]/25 bg-[#80ddbd]/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em] text-[#a8efd4]">
+                <Sparkles size={13} aria-hidden="true" />
+                {isRussian ? 'Рекламный кошелёк' : 'Advertiser wallet'}
+              </p>
+              <h1 id="advertiser-deposit-title" className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                {isRussian ? 'Пополнить баланс' : 'Add funds'}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#c7d7e6]">
+                {isRussian ? 'Пополняй баланс в PEPE и запускай новые кампании. Зачисление — после подтверждения платежа FaucetPay.' : 'Top up in PEPE and get your next campaign moving. Funds are credited after FaucetPay confirms the payment.'}
+              </p>
             </div>
           </div>
-          <Badge variant="outline" className="h-8 w-fit gap-2 rounded-full border-emerald-200/15 bg-emerald-300/[0.07] px-3 text-[10px] font-extrabold text-emerald-100"><BadgeCheck data-icon="inline-start" />FaucetPay · PEPE</Badge>
+          <a
+            href="https://faucetpay.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={isRussian ? 'Открыть FaucetPay в новой вкладке' : 'Open FaucetPay in a new tab'}
+            className="inline-flex w-fit items-center gap-3 self-end rounded-[20px] border border-white/15 bg-[#183451] px-4 py-3 shadow-[0_5px_0_rgba(4,16,31,0.2)] transition hover:-translate-y-0.5 hover:bg-[#204365] sm:self-auto"
+          >
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#b6cadb]">{isRussian ? 'Оплата через' : 'Powered by'}</span>
+            <img src="https://faucetpay.io/logo.svg" alt="FaucetPay" width="124" height="30" className="h-6 w-auto" />
+          </a>
         </header>
 
-        <div className="relative mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.8fr)]">
-          <form onSubmit={handleCreatePayment} className="flex flex-col gap-4 rounded-[22px] border border-white/[0.07] bg-[#111a35]/85 p-4 sm:p-5">
-            <FieldGroup className="gap-2">
+        <div className="relative mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(19rem,0.9fr)]">
+          <form onSubmit={handleCreatePayment} className="flex flex-col gap-5 rounded-[28px] border-2 border-[#ffe7a3] bg-[#fff7df] p-5 text-[#17324a] shadow-[0_8px_0_rgba(7,23,40,0.18)] sm:p-6">
+            <FieldGroup className="gap-3">
               <Field data-invalid={amountUsd.length > 0 && parsedCents === null}>
-                <FieldLabel htmlFor="advertiser-deposit-usd" className="text-xs font-extrabold text-slate-100">{isRussian ? 'Сумма пополнения, USD' : 'Top-up amount, USD'}</FieldLabel>
-                <div className="relative">
-                  <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-mono text-xl font-black text-slate-400">$</span>
+                <FieldLabel htmlFor="advertiser-deposit-usd" className="text-sm font-black text-[#17324a]">{isRussian ? 'Сумма пополнения, USD' : 'Top-up amount, USD'}</FieldLabel>
+                <div className="relative mt-1">
+                  <span aria-hidden="true" className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 font-mono text-2xl font-black text-[#5a7286]">$</span>
                   <Input
                     id="advertiser-deposit-usd"
                     type="text"
@@ -216,62 +237,96 @@ export function AdvertiserDepositPage() {
                     placeholder="5.00"
                     aria-describedby="advertiser-deposit-minimum advertiser-deposit-estimate"
                     aria-invalid={amountUsd.length > 0 && parsedCents === null}
-                    className="h-[4.25rem] rounded-[18px] border-white/10 bg-[#141e3d] pl-10 pr-4 font-mono text-2xl font-black tracking-tight text-white placeholder:text-slate-500 focus-visible:border-cyan-200/60 focus-visible:ring-cyan-200/10"
+                    className="h-16 rounded-[20px] border-2 border-[#d9e0c8] bg-white pl-12 pr-4 font-mono text-2xl font-black tracking-tight text-[#17324a] placeholder:text-[#9aabba] focus-visible:border-[#55b991] focus-visible:ring-[#55b991]/20"
                   />
                 </div>
-                <FieldDescription id="advertiser-deposit-minimum" className="text-[10px] leading-5 text-slate-400">{isRussian ? <>Минимум — <strong className="font-mono text-white">$5.00</strong>{minimumPepe ? <> · примерно <strong className="font-mono text-cyan-100">{minimumPepe} PEPE</strong></> : null}</> : <>Minimum <strong className="font-mono text-white">$5.00</strong>{minimumPepe ? <> · about <strong className="font-mono text-cyan-100">{minimumPepe} PEPE</strong></> : null}</>}</FieldDescription>
+                <FieldDescription id="advertiser-deposit-minimum" className="mt-1 text-sm leading-6 text-[#587084]">
+                  {isRussian ? <>Минимум — <strong className="font-mono text-[#17324a]">$5.00</strong>{minimumPepe ? <> · примерно <strong className="font-mono text-[#1b8067]">{minimumPepe} PEPE</strong></> : null}</> : <>Minimum <strong className="font-mono text-[#17324a]">$5.00</strong>{minimumPepe ? <> · about <strong className="font-mono text-[#1b8067]">{minimumPepe} PEPE</strong></> : null}</>}
+                </FieldDescription>
               </Field>
             </FieldGroup>
 
-            <div id="advertiser-deposit-estimate" className="flex items-center justify-between gap-4 rounded-2xl border border-cyan-200/10 bg-cyan-300/[0.045] p-3.5">
+            <div id="advertiser-deposit-estimate" className="flex items-center justify-between gap-4 rounded-[22px] border-2 border-[#a8d878] bg-[#e4f7c3] p-4">
               <div>
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-cyan-100/70">{isRussian ? 'К оплате в FaucetPay' : 'FaucetPay amount'}</p>
-                <p className="mt-1 font-mono text-lg font-black text-white">{estimatedPepe ?? '—'} <span className="text-xs text-cyan-100">PEPE</span></p>
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#52733c]">{isRussian ? 'К оплате в FaucetPay' : 'Pay through FaucetPay'}</p>
+                <p className="mt-1 font-mono text-2xl font-black tracking-tight text-[#173b43]">{estimatedPepe ?? '—'} <span className="text-sm text-[#386a5e]">PEPE</span></p>
               </div>
-              <TokenLogo symbol="PEPE" size={28} />
+              <span className="grid size-12 shrink-0 place-items-center rounded-full border-2 border-white bg-white shadow-sm">
+                <TokenLogo symbol="PEPE" size={34} />
+              </span>
             </div>
 
-            <Button type="submit" size="lg" disabled={!quote.data?.pepeUsd || parsedCents === null || isMutating} className="min-h-12 w-full rounded-[16px] text-xs font-black">
+            <Button type="submit" size="lg" disabled={!quote.data?.pepeUsd || parsedCents === null || isMutating} className="min-h-14 w-full rounded-[18px] text-sm font-black shadow-[0_5px_0_rgba(19,53,88,0.22)] transition hover:-translate-y-0.5">
               {isMutating ? <LoaderCircle data-icon="inline-start" className="animate-spin" /> : <Wallet data-icon="inline-start" />}
-              {isMutating ? isRussian ? 'Создаём счёт…' : 'Creating invoice…' : isRussian ? 'Создать счёт FaucetPay' : 'Create FaucetPay invoice'}
+              {isMutating ? isRussian ? 'Создаём счёт…' : 'Creating invoice…' : isRussian ? 'Создать счёт' : 'Create invoice'}
             </Button>
-            <p className="flex items-start gap-2 text-[10px] leading-5 text-slate-400"><BadgeCheck size={14} className="mt-0.5 shrink-0 text-emerald-200" />{isRussian ? 'Курс PEPE фиксируется при создании счёта. Не отправляйте сумму, отличную от указанной FaucetPay.' : 'The PEPE quote is locked when the invoice is created. Pay the exact amount shown by FaucetPay.'}</p>
+            <p className="flex items-start gap-2.5 text-xs leading-5 text-[#597084]">
+              <BadgeCheck size={17} className="mt-0.5 shrink-0 text-[#26886c]" aria-hidden="true" />
+              {isRussian ? 'Курс PEPE фиксируется при создании счёта. Отправляйте только точную сумму, указанную FaucetPay.' : 'Your PEPE quote is locked when the invoice is created. Send only the exact amount shown by FaucetPay.'}
+            </p>
           </form>
 
-          <aside className="flex flex-col gap-3 rounded-[22px] border border-white/[0.07] bg-gradient-to-br from-[#152347] to-[#121a34] p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{isRussian ? 'Курс PEPE / USD' : 'PEPE / USD rate'}</p>
-                <p className="mt-1 font-mono text-xl font-black text-white">{quote.data?.pepeUsd ? `$${quote.data.pepeUsd.toPrecision(6)}` : '—'}</p>
+          <aside className="relative isolate flex min-h-[19rem] flex-col overflow-hidden rounded-[28px] border-2 border-[#a6d9ae] bg-[#dff4df] p-5 text-[#17324a] shadow-[0_8px_0_rgba(7,23,40,0.14)] sm:p-6">
+            <Image
+              src="/images/topup-frog-mascot.png"
+              alt=""
+              aria-hidden="true"
+              width={220}
+              height={220}
+              priority
+              className="pointer-events-none absolute -bottom-5 -right-5 z-0 hidden size-52 object-contain mix-blend-multiply sm:block lg:size-56"
+            />
+            <div className="relative z-10 flex h-full flex-col gap-5 sm:max-w-[68%] sm:pr-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#547d65]">{isRussian ? 'Курс PEPE / USD' : 'PEPE / USD rate'}</p>
+                  <p className="mt-2 font-mono text-3xl font-black tracking-tight text-[#173b43] sm:text-4xl">{quote.data?.pepeUsd ? `$${quote.data.pepeUsd.toPrecision(6)}` : '—'}</p>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  aria-label={isRussian ? 'Обновить курс' : 'Refresh exchange rate'}
+                  disabled={quote.isValidating}
+                  onClick={() => void quote.mutate()}
+                  className="shrink-0 rounded-full border-2 border-[#a6cdaa] bg-white/80 text-[#1d4c57] hover:bg-white"
+                >
+                  {quote.isLoading ? <LoaderCircle data-icon="inline-start" className="animate-spin" /> : <RefreshCw data-icon="inline-start" />}
+                </Button>
               </div>
-              <span className="grid size-10 place-items-center rounded-xl border border-cyan-200/10 bg-cyan-300/[0.07] text-cyan-100">{quote.isLoading ? <LoaderCircle size={16} className="animate-spin" /> : <RefreshCw size={16} />}</span>
+              <dl className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-2xl border border-white/70 bg-white/55 p-3">
+                  <dt className="text-[#617b84]">{isRussian ? 'Источник курса' : 'Rate source'}</dt>
+                  <dd className="mt-1 font-extrabold text-[#173b43]">{quote.data?.source ?? 'DEX Screener'}</dd>
+                </div>
+                <div className="rounded-2xl border border-white/70 bg-white/55 p-3">
+                  <dt className="text-[#617b84]">{isRussian ? 'Сеть' : 'Network'}</dt>
+                  <dd className="mt-1 font-extrabold text-[#173b43]">{quote.data?.network ?? 'Ethereum'}</dd>
+                </div>
+              </dl>
+              <p className="max-w-md text-xs leading-5 text-[#55716e]">{isRussian ? 'Эквивалент PEPE рассчитывается по рыночному курсу и округляется вверх до 8 знаков после запятой.' : 'PEPE is calculated from the live market quote and rounded up to 8 decimal places.'}</p>
             </div>
-            <div className="h-px bg-white/[0.07]" />
-            <dl className="grid grid-cols-2 gap-3 text-[10px]">
-              <div><dt className="text-slate-400">{isRussian ? 'Источник' : 'Source'}</dt><dd className="mt-1 font-bold text-slate-100">{quote.data?.source ?? 'DEX Screener'}</dd></div>
-              <div><dt className="text-slate-400">{isRussian ? 'Сеть курса' : 'Quote network'}</dt><dd className="mt-1 font-bold text-slate-100">{quote.data?.network ?? 'Ethereum'}</dd></div>
-            </dl>
-            <p className="text-[10px] leading-5 text-slate-400">{isRussian ? 'Эквивалент в PEPE рассчитывается по ликвидной рыночной паре и округляется вверх до 8 знаков после запятой.' : 'The PEPE equivalent uses the most liquid market pair and rounds up to 8 decimal places.'}</p>
+            <p className="relative z-10 mt-auto pt-5 text-[11px] font-extrabold text-[#417363]">{isRussian ? 'Курс обновляется автоматически' : 'Rate updates automatically'}</p>
           </aside>
         </div>
 
-        {feedback && <Alert role={feedback.type === 'error' ? 'alert' : 'status'} className={`relative mt-4 items-start rounded-xl px-3.5 py-3 text-[10px] font-semibold leading-5 ${feedback.type === 'error' ? 'border-rose-200/15 bg-rose-300/[0.06] text-rose-100' : 'border-emerald-200/15 bg-emerald-300/[0.06] text-emerald-100'}`}>
-          {feedback.type === 'error' ? <CircleAlert /> : <BadgeCheck />}<AlertDescription className="text-[10px] font-semibold leading-5 text-current">{feedback.message}</AlertDescription>
+        {feedback && <Alert role={feedback.type === 'error' ? 'alert' : 'status'} className={`relative mt-5 items-start rounded-2xl px-4 py-3 text-sm font-semibold leading-6 ${feedback.type === 'error' ? 'border-rose-200/20 bg-rose-300/10 text-rose-100' : 'border-emerald-200/20 bg-emerald-300/10 text-emerald-100'}`}>
+          {feedback.type === 'error' ? <CircleAlert /> : <BadgeCheck />}<AlertDescription className="text-sm font-semibold leading-6 text-current">{feedback.message}</AlertDescription>
         </Alert>}
 
-        {selectedDeposit && <section aria-labelledby="active-deposit-title" className="relative mt-5 rounded-[22px] border border-cyan-200/15 bg-[#101a35]/90 p-4 sm:p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400">{isRussian ? 'Текущий счёт' : 'Selected invoice'}</p>
-              <h2 id="active-deposit-title" className="mt-1 text-sm font-black text-white">{formatUsd(selectedDeposit.amountUsd, language)} · {formatAtomic(selectedDeposit.amountAtomic, language)} PEPE</h2>
-              <p className="mt-1 break-all font-mono text-[9px] text-slate-500">{selectedDeposit.id}</p>
+        {selectedDeposit && <section aria-labelledby="active-deposit-title" className="relative mt-6 rounded-[26px] border-2 border-[#f0d58d] bg-[#fff5dc] p-5 text-[#17324a] shadow-[0_7px_0_rgba(7,23,40,0.14)] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="inline-flex rounded-full bg-[#f5df9c] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[#725d2f]">{isRussian ? 'Текущий счёт' : 'Current invoice'}</p>
+              <h2 id="active-deposit-title" className="mt-3 text-lg font-black tracking-tight text-[#17324a] sm:text-xl">{formatUsd(selectedDeposit.amountUsd, language)} · {formatAtomic(selectedDeposit.amountAtomic, language)} PEPE</h2>
+              <p className="mt-1 break-all font-mono text-xs text-[#62758a]">{selectedDeposit.id}</p>
             </div>
-            <Badge variant="outline" className={`h-6 w-fit gap-1.5 rounded-full px-2.5 text-[9px] font-extrabold ${statusClasses(selectedDeposit.status)}`}>
+            <Badge variant="outline" className={`h-8 w-fit shrink-0 gap-1.5 rounded-full px-3 text-xs font-extrabold ${statusClasses(selectedDeposit.status)}`}>
               {selectedDeposit.status === 'paid' ? <BadgeCheck data-icon="inline-start" /> : selectedDeposit.status === 'pending' ? <Clock3 data-icon="inline-start" /> : <CircleAlert data-icon="inline-start" />}{statusLabel(selectedDeposit.status, isRussian)}
             </Badge>
           </div>
 
-          {selectedDeposit.status === 'pending' && selectedCheckout && <form action={selectedCheckout.actionUrl} method="post" target="_blank" rel="noopener noreferrer" className="mt-4 flex flex-col gap-2 border-t border-white/[0.07] pt-4 sm:flex-row sm:items-center sm:justify-between">
+          {selectedDeposit.status === 'pending' && selectedCheckout && <form action={selectedCheckout.actionUrl} method="post" target="_blank" rel="noopener noreferrer" className="mt-5 flex flex-col gap-4 border-t border-[#e8dcb9] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <input type="hidden" name="merchant_username" value={selectedCheckout.merchantUsername} />
             <input type="hidden" name="item_description" value={selectedCheckout.itemDescription} />
             <input type="hidden" name="amount1" value={selectedCheckout.amount1} />
@@ -280,37 +335,37 @@ export function AdvertiserDepositPage() {
             <input type="hidden" name="callback_url" value={selectedCheckout.callbackUrl} />
             <input type="hidden" name="success_url" value={selectedCheckout.successUrl} />
             <input type="hidden" name="cancel_url" value={selectedCheckout.cancelUrl} />
-            <p className="max-w-lg text-[10px] leading-5 text-slate-400">{isRussian ? 'После оплаты вернитесь на эту страницу. Статус обновляется автоматически после проверки FaucetPay.' : 'Return to this page after checkout. Status updates automatically after FaucetPay verification.'}</p>
-            <Button type="submit" size="lg" variant="outline" className="min-h-10 shrink-0 rounded-xl border-emerald-200/20 bg-emerald-300/10 text-[10px] font-extrabold text-emerald-100 hover:bg-emerald-300/15">{isRussian ? 'Продолжить в FaucetPay' : 'Continue to FaucetPay'}<ExternalLink data-icon="inline-end" /></Button>
+            <p className="max-w-lg text-sm leading-6 text-[#5e7286]">{isRussian ? 'После оплаты вернитесь сюда. Статус обновится автоматически после проверки FaucetPay.' : 'Return here after payment. The status updates automatically after FaucetPay verifies it.'}</p>
+            <Button type="submit" size="lg" variant="outline" className="min-h-12 shrink-0 rounded-2xl border-2 border-[#a6cdaa] bg-white px-5 text-sm font-extrabold text-[#173b43] hover:bg-[#eef8e9]">{isRussian ? 'Перейти в FaucetPay' : 'Continue to FaucetPay'}<ExternalLink data-icon="inline-end" /></Button>
           </form>}
 
-          {selectedDeposit.status === 'underpaid' && <p className="mt-3 text-[10px] leading-5 text-amber-100">{isRussian ? 'Подтверждённая сумма ниже суммы счёта и не зачислена. Обратитесь в поддержку, указав ID счёта.' : 'The verified payment was below the invoice amount and was not credited. Contact support with this invoice ID.'}</p>}
-          {selectedDeposit.status === 'review' && <p className="mt-3 text-[10px] leading-5 text-amber-100">{isRussian ? 'Платёж подтверждён, но его нельзя автоматически зачислить. Обратитесь в поддержку с ID счёта.' : 'The payment is verified but could not be credited automatically. Contact support with this invoice ID.'}</p>}
-          {selectedDeposit.status === 'paid' && <p className="mt-3 text-[10px] leading-5 text-emerald-100">{isRussian ? 'PEPE зачислены в рекламный кошелёк.' : 'PEPE has been credited to your advertiser wallet.'}</p>}
+          {selectedDeposit.status === 'underpaid' && <p className="mt-4 rounded-2xl bg-amber-100 px-4 py-3 text-sm leading-6 text-amber-950">{isRussian ? 'Подтверждённая сумма ниже суммы счёта и не зачислена. Обратитесь в поддержку с ID счёта.' : 'The verified payment was below the invoice amount and was not credited. Contact support with this invoice ID.'}</p>}
+          {selectedDeposit.status === 'review' && <p className="mt-4 rounded-2xl bg-amber-100 px-4 py-3 text-sm leading-6 text-amber-950">{isRussian ? 'Платёж подтверждён, но его нельзя зачислить автоматически. Обратитесь в поддержку с ID счёта.' : 'The payment is verified but could not be credited automatically. Contact support with this invoice ID.'}</p>}
+          {selectedDeposit.status === 'paid' && <p className="mt-4 rounded-2xl bg-emerald-100 px-4 py-3 text-sm leading-6 text-emerald-950">{isRussian ? 'PEPE зачислены в рекламный кошелёк.' : 'PEPE has been credited to your advertiser wallet.'}</p>}
         </section>}
       </section>
 
-      <section aria-labelledby="deposit-history-title" className="rounded-[26px] border border-white/[0.07] bg-[#0d142c] p-4 shadow-lg shadow-black/10 sm:p-5">
-        <header className="mb-4 flex items-center justify-between gap-3">
+      <section aria-labelledby="deposit-history-title" className="rounded-[30px] border-2 border-[#385879] bg-[#fff8e8] p-5 text-[#17324a] shadow-[0_12px_34px_rgba(6,18,34,0.18)] sm:p-6">
+        <header className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-200/75">{isRussian ? 'Платежи' : 'Payments'}</p>
-            <h2 id="deposit-history-title" className="mt-1 text-base font-black text-white">{isRussian ? 'История пополнений' : 'Top-up history'}</h2>
+            <p className="inline-flex rounded-full bg-[#d9f2cf] px-3 py-1 text-[11px] font-black uppercase tracking-[0.13em] text-[#39725d]">{isRussian ? 'Платежи' : 'Payments'}</p>
+            <h2 id="deposit-history-title" className="mt-2 text-xl font-black tracking-tight text-[#17324a]">{isRussian ? 'История пополнений' : 'Top-up history'}</h2>
           </div>
-          {deposits.isLoading && <span role="status" className="inline-flex items-center gap-1.5 text-[9px] font-semibold text-slate-400"><LoaderCircle size={13} className="animate-spin" />{isRussian ? 'Загрузка' : 'Loading'}</span>}
+          {deposits.isLoading && <span role="status" className="inline-flex items-center gap-2 text-sm font-semibold text-[#63788b]"><LoaderCircle size={16} className="animate-spin" />{isRussian ? 'Загрузка' : 'Loading'}</span>}
         </header>
-        {deposits.error && <p role="alert" className="mb-3 rounded-xl border border-rose-200/15 bg-rose-300/[0.05] px-3 py-2 text-[10px] text-rose-100">{deposits.error.message}</p>}
-        {deposits.data?.deposits.length ? <ul className="flex flex-col gap-2">
-          {deposits.data.deposits.map((deposit) => <li key={deposit.id} className="flex flex-col gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.025] p-3 sm:flex-row sm:items-center sm:justify-between">
+        {deposits.error && <p role="alert" className="mb-4 rounded-2xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-800">{deposits.error.message}</p>}
+        {deposits.data?.deposits.length ? <ul className="flex flex-col gap-3">
+          {deposits.data.deposits.map((deposit) => <li key={deposit.id} className="flex flex-col gap-3 rounded-[22px] border border-[#e7dec4] bg-white/80 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="font-mono text-xs font-extrabold text-white">{formatUsd(deposit.amountUsd, language)} · {formatAtomic(deposit.amountAtomic, language)} PEPE</p>
-              <p className="mt-1 truncate font-mono text-[9px] text-slate-500">{new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(deposit.createdAt))} · {deposit.id}</p>
+              <p className="font-mono text-sm font-black text-[#17324a]">{formatUsd(deposit.amountUsd, language)} · {formatAtomic(deposit.amountAtomic, language)} PEPE</p>
+              <p className="mt-1 truncate font-mono text-xs text-[#718396]">{new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(deposit.createdAt))} · {deposit.id}</p>
             </div>
             <div className="flex items-center gap-2 self-start sm:self-auto">
-              <Badge variant="outline" className={`h-6 rounded-full px-2.5 text-[8px] font-extrabold ${statusClasses(deposit.status)}`}>{statusLabel(deposit.status, isRussian)}</Badge>
-              {deposit.status === 'pending' && <button type="button" onClick={() => selectDeposit(deposit)} className="min-h-7 rounded-lg border border-white/10 px-2 text-[8px] font-bold text-slate-200 transition hover:bg-white/[0.06]">{isRussian ? 'Открыть' : 'Open'}</button>}
+              <Badge variant="outline" className={`h-8 rounded-full px-3 text-xs font-extrabold ${statusClasses(deposit.status)}`}>{statusLabel(deposit.status, isRussian)}</Badge>
+              {deposit.status === 'pending' && <Button type="button" size="sm" variant="outline" onClick={() => selectDeposit(deposit)} aria-label={isRussian ? `Открыть счёт ${deposit.id}` : `Open invoice ${deposit.id}`} className="min-h-9 rounded-full border-[#bfd2d0] bg-white px-4 font-bold text-[#17324a] hover:bg-[#eef8e9]">{isRussian ? 'Открыть' : 'Open'}</Button>}
             </div>
           </li>)}
-        </ul> : !deposits.isLoading && <div className="rounded-2xl border border-dashed border-white/[0.08] px-4 py-8 text-center text-[10px] leading-5 text-slate-400">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $5.00.' : 'No top-ups yet. The minimum amount is $5.00.'}</div>}
+        </ul> : !deposits.isLoading && <div className="rounded-[22px] border-2 border-dashed border-[#cfdbbd] bg-[#f2f8e8] px-4 py-10 text-center text-sm leading-6 text-[#587084]">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $5.00.' : 'No top-ups yet. The minimum amount is $5.00.'}</div>}
       </section>
     </main>
   )
