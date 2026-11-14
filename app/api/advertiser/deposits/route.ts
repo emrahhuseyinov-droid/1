@@ -15,6 +15,12 @@ export const runtime = 'nodejs'
 const noStoreHeaders = { 'Cache-Control': 'no-store' }
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const faucetPayCheckoutUrl = 'https://faucetpay.io/merchant/webscr'
+const cwalletPaymentOptions = {
+  '500': { amountUsd: '5.00', url: 'https://cwallet.com/t/K2Y733H7' },
+  '1000': { amountUsd: '10.00', url: 'https://cwallet.com/t/YQWVABNQ' },
+  '2500': { amountUsd: '25.00', url: 'https://cwallet.com/t/EM6PWKIP' },
+  '5000': { amountUsd: '50.00', url: 'https://cwallet.com/t/FQDXIZR1' },
+} as const
 const maxSafeAtomic = BigInt(Number.MAX_SAFE_INTEGER)
 
 type DepositRecord = typeof advertiserDeposits.$inferSelect
@@ -61,6 +67,7 @@ function pepeAtomicForUsdCents(cents: bigint, price: number) {
 function serializeDeposit(deposit: DepositRecord) {
   return {
     id: deposit.id,
+    provider: deposit.provider,
     status: deposit.status,
     amountUsd: deposit.amountUsd,
     pepeUsdPrice: deposit.pepeUsdPrice,
@@ -111,7 +118,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       deposits: rows.map((deposit) => ({
         ...serializeDeposit(deposit),
-        checkout: deposit.status === 'pending' && merchantUsername
+        checkout: deposit.provider === 'faucetpay' && deposit.status === 'pending' && merchantUsername
           ? buildCheckoutFields(deposit, request, merchantUsername)
           : null,
       })),
@@ -137,15 +144,28 @@ export async function POST(request: NextRequest) {
 
   const input = body as Record<string, unknown>
   const parsedUsd = parseUsdCents(input.amountUsd)
+  const provider = input.provider === undefined || input.provider === 'faucetpay'
+    ? 'faucetpay'
+    : input.provider === 'cwallet'
+      ? 'cwallet'
+      : null
   const requestKey = typeof input.requestKey === 'string' && uuidPattern.test(input.requestKey)
     ? input.requestKey.toLowerCase()
     : null
-  if (!parsedUsd || !requestKey) {
-    return NextResponse.json({ error: 'The minimum top-up is $0.01. Enter an amount with up to two decimal places.' }, { status: 400, headers: noStoreHeaders })
+  if (!parsedUsd || !requestKey || !provider) {
+    return NextResponse.json({ error: 'Enter a valid top-up amount and payment method.' }, { status: 400, headers: noStoreHeaders })
   }
 
+  const cwalletOption = provider === 'cwallet'
+    ? cwalletPaymentOptions[parsedUsd.cents.toString() as keyof typeof cwalletPaymentOptions]
+    : null
+  if (provider === 'cwallet' && !cwalletOption) {
+    return NextResponse.json({ error: 'Choose one of the available Cwallet amounts.' }, { status: 400, headers: noStoreHeaders })
+  }
+
+  const amountUsd = cwalletOption?.amountUsd ?? parsedUsd.formatted
   const merchantUsername = process.env.FAUCETPAY_MERCHANT_USERNAME?.trim()
-  if (!merchantUsername || merchantUsername.length > 80) {
+  if (provider === 'faucetpay' && (!merchantUsername || merchantUsername.length > 80)) {
     return NextResponse.json({ error: 'FaucetPay merchant username is not configured.' }, { status: 503, headers: noStoreHeaders })
   }
 
@@ -181,7 +201,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
 
     if (existing) {
-      if (existing.amountUsd !== parsedUsd.formatted) return { status: 'idempotency_conflict' as const }
+      if (existing.provider !== provider || existing.amountUsd !== amountUsd) return { status: 'idempotency_conflict' as const }
       return { status: 'ready' as const, deposit: existing, created: false }
     }
 
@@ -199,11 +219,12 @@ export async function POST(request: NextRequest) {
       id: randomUUID(),
       userId: account.session.user.id,
       guestId: account.profile.id,
-      provider: 'faucetpay',
+      provider,
       requestKey,
-      amountUsd: parsedUsd.formatted,
+      amountUsd,
       pepeUsdPrice: priceString,
       amountAtomic: Number(amountAtomic),
+      checkoutUrl: cwalletOption?.url ?? null,
       status: 'pending',
       createdAt: now,
       updatedAt: now,
@@ -216,11 +237,12 @@ export async function POST(request: NextRequest) {
   if (result.status === 'idempotency_conflict') return NextResponse.json({ error: 'This request ID was already used for a different amount.' }, { status: 409, headers: noStoreHeaders })
   if (result.status === 'balance_limit') return NextResponse.json({ error: 'This payment would exceed the supported advertiser wallet balance.' }, { status: 409, headers: noStoreHeaders })
 
-  const checkout = result.deposit.status === 'pending'
+  const checkout = result.deposit.status === 'pending' && provider === 'faucetpay' && merchantUsername
     ? buildCheckoutFields(result.deposit, request, merchantUsername)
     : null
   return NextResponse.json({
     deposit: serializeDeposit(result.deposit),
     checkout,
+    paymentUrl: provider === 'cwallet' ? result.deposit.checkoutUrl : null,
   }, { status: result.created ? 201 : 200, headers: noStoreHeaders })
 }
