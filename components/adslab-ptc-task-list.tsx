@@ -425,7 +425,7 @@ export function AdsLabPtcTaskList({
     if (activeTask || startingKey) return
     const taskWindow = window.open('about:blank', '_blank')
     if (!taskWindow || taskWindow.closed) {
-      setErrorMessage(isRussian ? 'Раз��ешите всплывающие окна, чтобы открыть задание.' : 'Allow pop-ups to open the task.')
+      setErrorMessage(isRussian ? 'Разрешите всплывающие окна, чтобы открыть задание.' : 'Allow pop-ups to open the task.')
       return
     }
 
@@ -548,7 +548,7 @@ export function AdsLabPtcTaskList({
         </li>
       ) : visibleTasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-8 text-center text-xs text-dashboard-muted">
-          {isRussian ? 'По этим условиям заданий не най��ено.' : 'No tasks match these filters.'}
+          {isRussian ? 'По этим условиям заданий не найдено.' : 'No tasks match these filters.'}
         </li>
       ) : visibleTasks.map((task) => {
         const isPro = task.isPro === true

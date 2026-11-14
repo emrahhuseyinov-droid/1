@@ -73,7 +73,7 @@ function parseUsdCents(value: string) {
   const match = /^(\d{1,9})(?:([.,])(\d{1,2}))?$/.exec(value.trim())
   if (!match) return null
   const cents = BigInt(match[1]) * 100n + BigInt((match[3] ?? '').padEnd(2, '0') || '0')
-  return cents >= 1n ? cents : null
+  return cents >= 50n ? cents : null
 }
 
 function formatAtomic(value: string, language: 'en' | 'ru') {
@@ -162,7 +162,7 @@ function PaymentMethodSelector({
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
                 <span className="text-base font-bold tracking-tight text-white">FaucetPay</span>
-                <Badge variant="outline" className="border-emerald-200/20 bg-emerald-200/[0.08] text-[9px] font-bold text-emerald-100">{isRussian ? 'Авто��атически' : 'Automatic'}</Badge>
+                <Badge variant="outline" className="border-emerald-200/20 bg-emerald-200/[0.08] text-[9px] font-bold text-emerald-100">{isRussian ? 'Автоматически' : 'Automatic'}</Badge>
               </span>
             </span>
             <BadgeCheck aria-hidden="true" className="size-5 shrink-0 text-emerald-200 opacity-0 transition-opacity group-data-[pressed]:opacity-100" />
@@ -292,12 +292,10 @@ export function AdvertiserDepositPage() {
 
   const parsedCents = parseUsdCents(amountUsd)
   const amountNumber = parsedCents === null ? null : Number(parsedCents) / 100
-  const minimumPepe = quote.data?.pepeUsd ? estimatePepe(0.01, quote.data.pepeUsd, language) : null
+  const minimumPepe = quote.data?.pepeUsd ? estimatePepe(0.5, quote.data.pepeUsd, language) : null
   const estimatedPepe = amountNumber !== null && quote.data?.pepeUsd
     ? estimatePepe(amountNumber, quote.data.pepeUsd, language)
     : null
-  const amountPresets = ['5', '10', '50', '100', '500']
-  const selectedPreset = amountPresets.find((preset) => parsedCents === BigInt(preset) * 100n) ?? ''
 
   async function handleCreatePayment(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -437,30 +435,17 @@ export function AdvertiserDepositPage() {
                       required
                       value={amountUsd}
                       onChange={(event) => setAmountUsd(event.target.value)}
-                      placeholder="0.01"
+                      placeholder="0.50"
                       aria-describedby="advertiser-deposit-minimum advertiser-deposit-estimate"
                       aria-invalid={amountUsd.length > 0 && parsedCents === null}
                       className="h-[5.5rem] rounded-[20px] border border-white/10 bg-[#0d1531] pl-12 pr-4 font-mono text-3xl font-black tracking-tight text-white placeholder:text-slate-500 focus-visible:border-emerald-200/50 focus-visible:ring-emerald-200/15"
                     />
                   </div>
                   <FieldDescription id="advertiser-deposit-minimum" className="mt-1 text-xs leading-5 text-slate-400">
-                    {isRussian ? <>Минимум — <strong className="font-mono text-slate-200">$0.01</strong>{minimumPepe ? <> · примерно <strong className="font-mono text-emerald-100">{minimumPepe} PEPE</strong></> : null}</> : <>Minimum <strong className="font-mono text-slate-200">$0.01</strong>{minimumPepe ? <> · about <strong className="font-mono text-emerald-100">{minimumPepe} PEPE</strong></> : null}</>}
+                    {isRussian ? <>Минимум — <strong className="font-mono text-slate-200">$0.50</strong>{minimumPepe ? <> · примерно <strong className="font-mono text-emerald-100">{minimumPepe} PEPE</strong></> : null}</> : <>Minimum <strong className="font-mono text-slate-200">$0.50</strong>{minimumPepe ? <> · about <strong className="font-mono text-emerald-100">{minimumPepe} PEPE</strong></> : null}</>}
                   </FieldDescription>
                 </Field>
               </FieldGroup>
-
-              <ToggleGroup
-                aria-label={isRussian ? 'Быстрый выбор суммы в долларах' : 'Quick-select amount in US dollars'}
-                value={selectedPreset ? [selectedPreset] : []}
-                onValueChange={(value) => {
-                  const selected = value[0]
-                  if (!selected) return
-                  setAmountUsd(`${selected}.00`)
-                }}
-                className="grid w-full grid-cols-3 gap-2 sm:grid-cols-5"
-              >
-                {amountPresets.map((preset) => <ToggleGroupItem key={preset} value={preset} aria-label={`${preset} USD`} className="h-10 w-full rounded-xl border border-white/10 bg-[#0d1531] px-2 text-[11px] font-extrabold text-slate-300 hover:border-emerald-200/30 hover:bg-emerald-200/[0.05] hover:text-white data-[pressed]:border-emerald-200/50 data-[pressed]:bg-emerald-200/10 data-[pressed]:text-emerald-100 focus-visible:ring-emerald-200/40">{preset} USD</ToggleGroupItem>)}
-              </ToggleGroup>
 
               <p className="flex items-start gap-2.5 text-xs leading-5 text-slate-400">
                 <BadgeCheck size={17} className="mt-0.5 shrink-0 text-emerald-200" aria-hidden="true" />
@@ -540,7 +525,7 @@ export function AdvertiserDepositPage() {
               <Badge variant="outline" className={cn('h-8 rounded-full px-3 text-xs font-extrabold', statusClasses(deposit.status))}>{statusLabel(deposit.status, isRussian, deposit.provider)}</Badge>
             </div>
           </li>)}
-        </ul> : !deposits.isLoading && <div className="rounded-[22px] border border-dashed border-white/15 bg-[#0d1531] px-4 py-10 text-center text-sm leading-6 text-slate-400">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $0.01.' : 'No top-ups yet. The minimum amount is $0.01.'}</div>}
+        </ul> : !deposits.isLoading && <div className="rounded-[22px] border border-dashed border-white/15 bg-[#0d1531] px-4 py-10 text-center text-sm leading-6 text-slate-400">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $0.50.' : 'No top-ups yet. The minimum amount is $0.50.'}</div>}
       </section>
     </main>
   )

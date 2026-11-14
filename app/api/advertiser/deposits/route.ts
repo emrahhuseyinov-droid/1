@@ -155,6 +155,9 @@ export async function POST(request: NextRequest) {
   if (!parsedUsd || !requestKey || !provider) {
     return NextResponse.json({ error: 'Enter a valid top-up amount and payment method.' }, { status: 400, headers: noStoreHeaders })
   }
+  if (parsedUsd.cents < 50n) {
+    return NextResponse.json({ error: 'The minimum top-up amount is $0.50.' }, { status: 400, headers: noStoreHeaders })
+  }
 
   const cwalletOption = provider === 'cwallet'
     ? cwalletPaymentOptions[parsedUsd.cents.toString() as keyof typeof cwalletPaymentOptions]

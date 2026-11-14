@@ -573,7 +573,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
                 <div className="flex flex-col gap-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="advertiser-campaign-title" className="text-[10px] font-extrabold text-slate-200">{isRussian ? 'Название кампании' : 'Campaign name'}</label>
+                      <label htmlFor="advertiser-campaign-title" className="text-[10px] font-extrabold text-slate-200">{isRussian ? 'Название' : 'Campaign name'}</label>
                       <input id="advertiser-campaign-title" required minLength={3} maxLength={80} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={isRussian ? 'Название объявления' : 'Campaign name'} disabled={creatingCampaign || !hasCampaignsData} className="min-h-12 rounded-[17px] border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50" />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -678,7 +678,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
             </div>
               : <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-5 text-center">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-200"><Megaphone size={18} /></span>
-                <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока ��ет' : 'No campaigns yet'}</p>
+                <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока нет' : 'No campaigns yet'}</p>
                 <p className="mt-1 max-w-sm text-[10px] leading-5 text-slate-400">{isRussian ? 'Создайте PTC- или YouTube-кампанию, чтобы она появилась в разделе заданий для исполнителей.' : 'Create a PTC or YouTube campaign to make it available to performers.'}</p>
               </div>}
         </section>}
