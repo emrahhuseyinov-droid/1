@@ -139,7 +139,7 @@ const ruPhrases = new Map<string, string>([
   ['One spin every 2 hours', 'Одно вращение каждые 2 часа'],
   ['SPIN THE WHEEL · FREE', 'КРУТИТЬ КОЛЕСО · БЕСПЛАТНО'],
   ['A reward is waiting to be collected.', 'Награда ждёт получения.'],
-  ['Show my reward', 'Показать ��аграду'],
+  ['Show my reward', 'Показать награду'],
   ['Published odds', 'Опубликованные вероятности'],
   ['Every sector, every chance', 'Все секторы и их вероятности'],
   ['100% total', 'Всего 100%'],
@@ -298,7 +298,7 @@ const ruPhrases = new Map<string, string>([
   ['Already verified?', 'Уже подтвердили?'],
   ['Your account remains protected until your email is verified.', 'Ваш аккаунт защищён до подтверждения почты.'],
   ['Need to start over?', 'Хотите начать заново?'],
-  ['Account recovery', 'Вос��тановление аккаунта'],
+  ['Account recovery', 'Восстановление аккаунта'],
   ['Reset your password', 'Сброс пароля'],
   ["We'll email you a one-time code so you can choose a new password.", 'Мы отправим одноразовый код на почту, чтобы вы могли установить новый пароль.'],
   ['If an account matches this address, a reset code has been sent.', 'Если аккаунт с таким адр��сом существует, код для сброса пароля отправлен.'],
@@ -455,7 +455,7 @@ const ruPhrases = new Map<string, string>([
   ['Pending and paid requests count toward that day’s limit. The requested PEPE is reserved while the transfer is being processed.', 'Заявки в обработке и выполненные заявки учитываются в дневном лимите. Запрошенные PEPE резервируются на время перевода.'],
   ['If FaucetPay rejects a request, the PEPE is returned to your balance. If the status is pending, do not submit the same withdrawal again; the balance remains reserved to prevent a duplicate transfer.', 'Если FaucetPay отклонит заявку, PEPE вернутся на баланс. Пока заявка обрабатывается, не отправляйте её повторно: сумма остаётся в резерве, чтобы избежать дублирующего перевода.'],
   ['Balances are not all the same', 'Балансы имеют разные назначения'],
-  ['PEPE and HOMERO are recorded separately in your account. The withdrawal form sends PEPE only. HOMERO remains an in-platform balance; if an exchange option is available to you, its current rate and fee are shown before you confirm.', 'PEPE и HOMERO учитываются в аккаунте отдельно. Форма вывода отправляет только PEPE. HOMERO остаётся внутрен��им балансом платформы; если обмен доступен, курс и комиссия будут показаны до подтверждения.'],
+  ['PEPE and HOMERO are recorded separately in your account. The withdrawal form sends PEPE only. HOMERO remains an in-platform balance; if an exchange option is available to you, its current rate and fee are shown before you confirm.', 'PEPE и HOMERO учитываются в аккаунте отдельно. Форма вывода отправляет только PEPE. HOMERO остаётся внутренним балансом платформы; если обмен доступен, курс и комиссия будут показаны до подтверждения.'],
   ['PEPE is a crypto asset, so its market value can change. pepe.casa does not promise a fixed fiat value or guaranteed earnings.', 'PEPE — криптоактив, его ры��очная стоимость может меняться. pepe.casa не гарантирует фиксированную стоимость в фиатной валюте или доход.'],
   ['Ready to get started?', 'Готовы начать?'],
   ['See available activities and the current terms in your account.', 'Посмотрите доступные задания и актуальные условия в аккаунте.'],
@@ -520,7 +520,7 @@ const ruPhrases = new Map<string, string>([
   ['No recorded activity', 'Операций пока нет'],
   ['Daily Bonus and eligible View Ads tasks can add internal HOMERO credits. One-way HOMERO to PEPE swaps are available; valid PEPE withdrawals are sent automatically.', 'Ежедневный бонус и доступные рекламные задания начисляют HOMERO на внутренний счёт. Обмен доступен только из HOMERO в PEPE; подтверждённые заявки на вывод PEPE отправляются автоматически.'],
   ['View Earner ads', 'Смотреть рекламу для заработка'],
-  ['Ledger values are off-chain. HOMERO to PEPE swaps are available internally; valid PEPE withdrawals are sent automatically through FaucetPay.', 'Бал��нс ведётся во внутреннем реестре. Обмен доступен из HOMERO в PEPE; подтверждённые заявки на вывод PEPE автоматически отправляются через FaucetPay.'],
+  ['Ledger values are off-chain. HOMERO to PEPE swaps are available internally; valid PEPE withdrawals are sent automatically through FaucetPay.', 'Баланс ведётся во внутреннем реестре. Обмен HOMERO на PEPE доступен внутри платформы; подтверждённые заявки на вывод PEPE автоматически отправляются через FaucetPay.'],
   ['Total referrals', 'Всего рефералов'],
   ['Rewarded referrals', 'Рефералы с наградами'],
   ['Commission events', 'Начисления комиссии'],
@@ -601,7 +601,7 @@ const ruPhrases = new Map<string, string>([
   ['Request received', 'Заявка получена'],
   ['Your PEPE is reserved and the request is added to your payout history.', 'PEPE зарезервированы, заявка добавлена в историю выплат.'],
   ['Automatic FaucetPay transfer', 'Автоматический перевод через FaucetPay'],
-  ['The app sends PEPE to the verified FaucetPay email you entered.', 'Приложение отправит PEPE н�� указанный вами подтверждённый адрес FaucetPay.'],
+  ['The app sends PEPE to the verified FaucetPay email you entered.', 'Приложение отправляет PEPE на указанный вами подтверждённый адрес FaucetPay.'],
   ['Status appears in your history', 'Статус появится в истории'],
   ['FaucetPay confirms successful payouts automatically. If it declines a payout, the PEPE returns to your available balance.', 'FaucetPay автоматически подтверждает успешные выплаты. Если выплата отклонена, PEPE возвращаются в доступный баланс.'],
   ['If FaucetPay does not return a clear result, the balance stays reserved and the app will not retry automatically, preventing an accidental duplicate transfer.', 'Если FaucetPay не вернёт однозначный результат, сумма останется в резерве. Приложение не будет повторять перевод автоматически, чтобы избежать дублирования.'],
@@ -1016,7 +1016,7 @@ const ruPhrases = new Map<string, string>([
   ['Could not load advertiser balance.', 'Не у��алось загрузить баланс рекламодателя.'],
   ['Could not sign out. Please try again.', 'Не удалось выйти из аккаунта. Попробуйте ещё раз.'],
   ['Create and manage campaigns', 'Создавайте кампании и управляйте ими'],
-  ['Each view lasts 30 seconds and rewards the performer 150 PEPE. The platform charges a separate 25 PEPE commission per completed view.', 'Каждый просмотр длится 30 секунд и приносит исполнителю 150 PEPE. Платформа отдельно взимает комиссию 25 PEPE за каждый завершённый просмотр.'],
+  ['Each view lasts 30 seconds and rewards the performer 135 PEPE. The platform charges a 30% commission per completed view.', 'Каждый просмотр длится 30 секунд и приносит исполнителю 135 PEPE. Платформа взимает комиссию 30% за каждый завершённый просмотр.'],
   ['Fund wallet', 'Пополнить кошелёк'],
   ['Create campaign', 'Создать кампанию'],
   ['Create PTC', 'Создать PTC'],
@@ -1453,7 +1453,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Подтверждённое рекламное задание выполнено за последние ${match[1]} дн.${match[2] ? ` Последняя активность: ${match[2]}.` : ''} Погашение промокодов приостановлено до настройки финансируемых кампаний.`
 
   match = value.match(/^Complete at least one verified View Ads task in the previous (\d+) days to meet the promo-code activity requirement\. Promo redemptions remain paused until funded campaigns are configured\.$/i)
-  if (match) return `Выполните хотя бы одно подтверждённое рекламное задание за ��оследние ${match[1]} дн., чтобы выполнить требование активности для промокода. Погашение промокодов приостановлено до настройки финансируемых кампаний.`
+  if (match) return `Выполните хотя бы одно подтверждённое рекламное задание за последние ${match[1]} дн., чтобы выполнить требование активности для промокода. Погашение промокодов приостановлено до настройки финансируемых кампаний.`
 
   match = value.match(/^(.+) will be added when you send that category\.$/i)
   if (match) return `Раздел «${match[1]}» появится после добавления этой категории.`

@@ -164,7 +164,8 @@ export function WheelOfFortunePage() {
       const result = await postJson<SpinResult>('/api/wheel/spin', { captchaSessionId: verifiedCaptchaSessionId })
       setActiveSpin(result)
       const currentMod = ((rotation % 360) + 360) % 360
-      const targetAngle = result.sectorIndex * 45
+      const sectorAngle = 360 / wheelSectors.length
+      const targetAngle = ((wheelSectors.length - result.sectorIndex) % wheelSectors.length) * sectorAngle
       const deltaToSector = (targetAngle - currentMod + 360) % 360
       const nextRotation = rotation + 360 * 7 + deltaToSector
       const nextSpinDurationMs = 4000 + Math.floor(Math.random() * 3001)

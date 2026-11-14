@@ -538,11 +538,16 @@ dialog.adslab-captcha-dialog[open] {
 }
 
 .ptc-task-card.ptc-task-card-pro {
-  border-color: rgb(255 209 102 / 0.78);
+  border-color: rgb(181 197 160 / 0.78);
   background-image:
-    radial-gradient(circle at 94% 8%, rgb(255 209 102 / 0.2), transparent 8rem),
-    linear-gradient(145deg, #2a355e 0%, #1e294f 58%, #302645 100%);
-  box-shadow: 0 16px 38px rgb(3 8 30 / 0.32), 0 0 0 1px rgb(255 209 102 / 0.16), inset 0 2px 0 rgb(255 255 255 / 0.08);
+    radial-gradient(circle at 94% 8%, rgb(202 175 216 / 0.24), transparent 8rem),
+    radial-gradient(circle at 8% 92%, rgb(78 165 135 / 0.16), transparent 11rem),
+    linear-gradient(145deg, #1c302d 0%, #172936 48%, #292238 100%);
+  box-shadow: 0 16px 38px rgb(3 8 30 / 0.34), 0 0 0 1px rgb(181 197 160 / 0.16), inset 0 2px 0 rgb(255 255 255 / 0.08);
+}
+
+.ptc-task-card.ptc-task-card-pro::before {
+  border-color: rgb(202 175 216 / 0.14);
 }
 
 .ptc-task-card:hover {
@@ -552,8 +557,8 @@ dialog.adslab-captcha-dialog[open] {
 }
 
 .ptc-task-card.ptc-task-card-pro:hover {
-  border-color: rgb(255 224 150 / 0.94);
-  box-shadow: 0 20px 42px rgb(68 47 14 / 0.3), 0 0 0 1px rgb(255 209 102 / 0.24), inset 0 2px 0 rgb(255 255 255 / 0.1);
+  border-color: rgb(220 216 177 / 0.96);
+  box-shadow: 0 20px 42px rgb(34 69 57 / 0.34), 0 0 0 1px rgb(202 175 216 / 0.24), inset 0 2px 0 rgb(255 255 255 / 0.12);
 }
 
 .cartoon-auth-shell {

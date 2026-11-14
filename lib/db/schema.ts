@@ -256,7 +256,7 @@ export const advertiserCampaigns = pgTable('earnpepe_advertiser_campaigns', {
   description: text('description').notNull().default(''),
   targetUrl: text('target_url').notNull(),
   rewardPerTaskAtomic: bigint('reward_per_task_atomic', { mode: 'number' }).notNull(),
-  commissionPerTaskAtomic: bigint('commission_per_task_atomic', { mode: 'number' }).notNull().default(2_500_000_000),
+  commissionPerTaskAtomic: bigint('commission_per_task_atomic', { mode: 'number' }).notNull().default(4_050_000_000),
   commissionCollectedAtomic: bigint('commission_collected_atomic', { mode: 'number' }).notNull().default(0),
   promotionFeeAtomic: bigint('promotion_fee_atomic', { mode: 'number' }).notNull().default(0),
   promotionStartedAt: timestamp('promotion_started_at', { withTimezone: true }),

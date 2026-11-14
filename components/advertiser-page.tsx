@@ -29,8 +29,7 @@ import { AdvertiserDepositPage } from '@/components/advertiser-deposit-page'
 import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
 import {
   CAMPAIGN_COMMISSION_ATOMIC,
-  CAMPAIGN_COMMISSION_PEPE,
-  CAMPAIGN_DURATION_SECONDS,
+  CAMPAIGN_COMMISSION_RATE_PERCENT,
   CAMPAIGN_PROMOTION_DURATION_HOURS,
   CAMPAIGN_PROMOTION_FEE_ATOMIC,
   CAMPAIGN_PROMOTION_FEE_PEPE,
@@ -567,10 +566,6 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3 rounded-[18px] border border-cyan-200/20 bg-[#0d142c]/85 px-4 py-3">
-                <span className="grid size-10 place-items-center rounded-xl border border-cyan-200/15 bg-cyan-300/10"><TokenLogo symbol="PEPE" size={22} /></span>
-                <span><span className="block text-[9px] font-extrabold text-cyan-100/75">{isRussian ? 'НАГРАДА ЗА ПРОСМОТР' : 'REWARD PER VIEW'}</span><span className="mt-0.5 block font-mono text-lg font-black leading-none text-white">{CAMPAIGN_REWARD_PEPE} PEPE</span><span className="mt-1 block text-[9px] font-semibold text-slate-300">{CAMPAIGN_DURATION_SECONDS}s</span></span>
-              </div>
             </header>
 
             <form onSubmit={handleCreateCampaign} className="relative mt-5 flex flex-col gap-4">
@@ -618,8 +613,8 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
                   </div>
                   <div className="relative mt-4 flex flex-col gap-3">
                     <div className="flex items-center justify-between gap-3 text-[10px]"><span className="text-slate-300">{isRussian ? 'Награда исполнителю' : 'Performer reward'}</span><span className="font-mono font-extrabold text-cyan-100">{CAMPAIGN_REWARD_PEPE} PEPE</span></div>
-                    <div className="flex items-center justify-between gap-3 text-[10px]"><span className="text-slate-300">{isRussian ? 'Комиссия платформы' : 'Platform commission'}</span><span className="font-mono font-extrabold text-slate-200">{CAMPAIGN_COMMISSION_PEPE} PEPE</span></div>
-                    <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-[10px]"><span className="font-extrabold text-white">{isRussian ? 'За один просмотр всего' : 'Total per view'}</span><span className="font-mono text-sm font-black text-white">{CAMPAIGN_REWARD_PEPE + CAMPAIGN_COMMISSION_PEPE} PEPE</span></div>
+                    <div className="flex items-center justify-between gap-3 text-[10px]"><span className="text-slate-300">{isRussian ? 'Комиссия платформы' : 'Platform commission'}</span><span className="font-mono font-extrabold text-slate-200">{CAMPAIGN_COMMISSION_RATE_PERCENT}%</span></div>
+                    <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3 text-[10px]"><span className="font-extrabold text-white">{isRussian ? 'За один просмотр всего' : 'Total per view'}</span><span className="font-mono text-sm font-black text-white">{formatAtomic(BigInt(CAMPAIGN_REWARD_PEPE_ATOMIC) + BigInt(CAMPAIGN_COMMISSION_ATOMIC), language)} PEPE</span></div>
                   </div>
                 </aside>
               </div>
@@ -628,7 +623,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-cyan-200/20 bg-cyan-300/10 text-cyan-100"><BadgeCheck size={17} /></span>
-                    <div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/75">{isRussian ? 'Сводка бюджета' : 'Budget summary'}</p><p className="mt-1 text-[10px] leading-5 text-slate-300">{isRussian ? `${CAMPAIGN_REWARD_PEPE} PEPE награда + ${CAMPAIGN_COMMISSION_PEPE} PEPE комиссия за просмотр` : `${CAMPAIGN_REWARD_PEPE} PEPE reward + ${CAMPAIGN_COMMISSION_PEPE} PEPE commission per view`}</p></div>
+                    <div><p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/75">{isRussian ? 'Сводка бюджета' : 'Budget summary'}</p><p className="mt-1 text-[10px] leading-5 text-slate-300">{isRussian ? `${CAMPAIGN_REWARD_PEPE} PEPE награда + комиссия ${CAMPAIGN_COMMISSION_RATE_PERCENT}% за просмотр` : `${CAMPAIGN_REWARD_PEPE} PEPE reward + ${CAMPAIGN_COMMISSION_RATE_PERCENT}% commission per view`}</p></div>
                   </div>
                   <div className="sm:text-right"><p className="font-mono text-xl font-black tracking-tight text-white sm:text-2xl">{isTaskCountValid ? formatAtomic(campaignCostAtomic, language) : '—'} PEPE</p><p className="text-[9px] font-semibold text-slate-400">{isRussian ? 'итого к оплате' : 'total charged'}</p></div>
                 </div>
