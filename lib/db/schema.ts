@@ -284,7 +284,7 @@ export const advertiserCampaigns = pgTable('earnpepe_advertiser_campaigns', {
   check('earnpepe_advertiser_campaigns_promotion_window_check', sql`(${table.promotionStartedAt} is null and ${table.promotionExpiresAt} is null) or (${table.promotionStartedAt} is not null and ${table.promotionExpiresAt} is not null and ${table.promotionExpiresAt} > ${table.promotionStartedAt})`),
 ])
 
-export type AdvertiserDepositStatus = 'pending' | 'paid' | 'underpaid' | 'review'
+export type AdvertiserDepositStatus = 'pending' | 'paid' | 'underpaid' | 'review' | 'cancelled'
 
 export const advertiserDeposits = pgTable('earnpepe_advertiser_deposits', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -311,7 +311,7 @@ export const advertiserDeposits = pgTable('earnpepe_advertiser_deposits', {
   check('earnpepe_advertiser_deposits_price_check', sql`${table.pepeUsdPrice} > 0`),
   check('earnpepe_advertiser_deposits_amount_check', sql`${table.amountAtomic} > 0`),
   check('earnpepe_advertiser_deposits_actual_amount_check', sql`${table.actualAmountAtomic} is null or ${table.actualAmountAtomic} > 0`),
-  check('earnpepe_advertiser_deposits_status_check', sql`${table.status} in ('pending', 'paid', 'underpaid', 'review')`),
+  check('earnpepe_advertiser_deposits_status_check', sql`${table.status} in ('pending', 'paid', 'underpaid', 'review', 'cancelled')`),
 ])
 
 export type WithdrawalRequestStatus = 'pending' | 'paid' | 'rejected'
