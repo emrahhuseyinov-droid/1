@@ -17,6 +17,7 @@ import { useSiteLanguage } from '@/components/site-language-provider'
 import { cn } from '@/lib/utils'
 
 type DepositStatus = 'pending' | 'paid' | 'underpaid' | 'review' | 'cancelled'
+type PaymentMethod = 'faucetpay' | 'cwallet'
 type CheckoutFields = {
   actionUrl: string
   merchantUsername: string
@@ -30,6 +31,7 @@ type CheckoutFields = {
 }
 type DepositSummary = {
   id: string
+  provider: PaymentMethod
   status: DepositStatus
   amountUsd: string
   pepeUsdPrice: string
@@ -40,9 +42,9 @@ type DepositSummary = {
   checkout?: CheckoutFields | null
 }
 type DepositListResponse = { deposits: DepositSummary[] }
-type CreateDepositResponse = { deposit: DepositSummary; checkout: CheckoutFields | null }
+type CreateDepositResponse = { deposit: DepositSummary; checkout: CheckoutFields | null; paymentUrl: string | null }
 type ApiErrorResponse = { error?: string }
-type CreateDepositPayload = { amountUsd: string; requestKey: string }
+type CreateDepositPayload = { amountUsd: string; requestKey: string; provider: PaymentMethod }
 type PepeQuote = { pepeUsd: number; source?: string; network?: string; updatedAt?: string }
 type AdvertiserWalletBalance = { advertiserBalanceAtomic: string }
 
@@ -93,7 +95,8 @@ function formatUsd(value: string, language: 'en' | 'ru') {
   return new Intl.NumberFormat(language === 'ru' ? 'ru-RU' : 'en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)
 }
 
-function statusLabel(status: DepositStatus, isRussian: boolean) {
+function statusLabel(status: DepositStatus, isRussian: boolean, provider: PaymentMethod) {
+  if (status === 'pending' && provider === 'cwallet') return isRussian ? 'Ожидает оплаты Cwallet' : 'Awaiting Cwallet payment'
   if (status === 'paid') return isRussian ? 'Зачислено' : 'Credited'
   if (status === 'cancelled') return isRussian ? 'Отменено' : 'Cancelled'
   if (status === 'underpaid') return isRussian ? 'Сумма ниже счёта' : 'Underpaid'
@@ -108,13 +111,11 @@ function statusClasses(status: DepositStatus) {
   return 'border-sky-300/20 bg-sky-300/10 text-sky-100'
 }
 
-type PaymentMethod = 'faucetpay' | 'cwallet'
-
 const cwalletPaymentLinks = [
-  { amountUsd: 5, url: 'https://cwallet.com/t/K2Y733H7' },
-  { amountUsd: 10, url: 'https://cwallet.com/t/YQWVABNQ' },
-  { amountUsd: 25, url: 'https://cwallet.com/t/EM6PWKIP' },
-  { amountUsd: 50, url: 'https://cwallet.com/t/FQDXIZR1' },
+  { amountUsd: 5 },
+  { amountUsd: 10 },
+  { amountUsd: 25 },
+  { amountUsd: 50 },
 ] as const
 
 function PaymentMethodSelector({
@@ -191,7 +192,13 @@ function PaymentMethodSelector({
   )
 }
 
-function CwalletPaymentPanel({ isRussian, language }: { isRussian: boolean; language: 'en' | 'ru' }) {
+function CwalletPaymentPanel({ isRussian, language, onPay, isPending, pendingAmount }: {
+  isRussian: boolean
+  language: 'en' | 'ru'
+  onPay: (amountUsd: number) => void
+  isPending: boolean
+  pendingAmount: number | null
+}) {
   return (
     <section aria-labelledby="cwallet-panel-title" className="overflow-hidden rounded-[28px] border border-sky-200/20 bg-[#111a35] text-white shadow-xl shadow-black/10">
       <header className="border-b border-sky-200/10 bg-gradient-to-r from-sky-200/[0.08] via-sky-200/[0.03] to-transparent p-5 sm:p-7">
@@ -218,24 +225,26 @@ function CwalletPaymentPanel({ isRussian, language }: { isRussian: boolean; lang
 
       <div className="flex flex-col gap-5 p-5 sm:p-7">
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          {cwalletPaymentLinks.map(({ amountUsd, url }) => {
+          {cwalletPaymentLinks.map(({ amountUsd }) => {
             const amountLabel = formatUsd(String(amountUsd), language)
             return (
-              <a
+              <button
                 key={amountUsd}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
+                type="button"
+                disabled={isPending}
+                onClick={() => onPay(amountUsd)}
                 aria-label={isRussian ? `Оплатить ${amountLabel} через Cwallet в новой вкладке` : `Pay ${amountLabel} with Cwallet in a new tab`}
-                className="group flex min-h-32 flex-col justify-between rounded-[22px] border border-sky-200/15 bg-[#0d1531] p-4 text-left transition hover:-translate-y-0.5 hover:border-sky-200/40 hover:bg-sky-200/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/60"
+                className="group flex min-h-32 flex-col justify-between rounded-[22px] border border-sky-200/15 bg-[#0d1531] p-4 text-left transition hover:-translate-y-0.5 hover:border-sky-200/40 hover:bg-sky-200/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200/60 disabled:cursor-wait disabled:opacity-60"
               >
                 <span className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
                   {isRussian ? 'Фиксированный платёж' : 'Fixed payment'}
-                  <ExternalLink data-icon="inline-end" aria-hidden="true" className="text-sky-100 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  {pendingAmount === amountUsd
+                    ? <LoaderCircle data-icon="inline-end" aria-hidden="true" className="animate-spin text-sky-100" />
+                    : <ExternalLink data-icon="inline-end" aria-hidden="true" className="text-sky-100 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />}
                 </span>
                 <span className="mt-4 font-mono text-3xl font-black tracking-tight text-white">{amountLabel}</span>
                 <span className="mt-2 text-xs font-semibold text-sky-100">{isRussian ? 'Открыть Cwallet' : 'Open Cwallet'}</span>
-              </a>
+              </button>
             )
           })}
         </div>
@@ -244,8 +253,8 @@ function CwalletPaymentPanel({ isRussian, language }: { isRussian: boolean; lang
           <CircleAlert aria-hidden="true" />
           <AlertDescription className="text-xs leading-5 text-amber-100">
             {isRussian
-              ? 'Эти ссылки не привязаны к вашему профилю. Сохраните чек или ID транзакции и обратитесь в поддержку: Cwallet не сообщает об оплате автоматически, поэтому баланс будет зачислен после ручной сверки.'
-              : 'These links are not tied to your profile. Keep the receipt or transaction ID and contact support: Cwallet does not notify us automatically, so your balance is credited only after manual review.'}
+              ? 'Каждый начатый платёж появится в истории пополнений. После оплаты сохраните чек или ID транзакции и обратитесь в поддержку для ручной сверки и зачисления.'
+              : 'Each started payment will appear in your top-up history. After paying, keep the receipt or transaction ID and contact support for manual review and credit.'}
           </AlertDescription>
         </Alert>
       </div>
@@ -259,7 +268,8 @@ export function AdvertiserDepositPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('faucetpay')
   const [amountUsd, setAmountUsd] = useState('10.00')
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
-  const requestKeyRef = useRef<{ amountUsd: string; key: string } | null>(null)
+  const [pendingCwalletAmount, setPendingCwalletAmount] = useState<number | null>(null)
+  const requestKeyRef = useRef<{ provider: PaymentMethod; amountUsd: string; key: string } | null>(null)
 
   const quote = useSWR<PepeQuote>('/api/pepe-price', getJson, { refreshInterval: 35_000, revalidateOnFocus: true })
   const wallet = useSWR<AdvertiserWalletBalance>('/api/advertiser/wallet', getJson, { refreshInterval: 15_000, revalidateOnFocus: true })
@@ -296,11 +306,11 @@ export function AdvertiserDepositPage() {
 
     const normalizedAmount = (Number(parsedCents) / 100).toFixed(2)
     const existing = requestKeyRef.current
-    const requestKey = existing?.amountUsd === normalizedAmount ? existing.key : crypto.randomUUID()
-    requestKeyRef.current = { amountUsd: normalizedAmount, key: requestKey }
+    const requestKey = existing?.provider === 'faucetpay' && existing.amountUsd === normalizedAmount ? existing.key : crypto.randomUUID()
+    requestKeyRef.current = { provider: 'faucetpay', amountUsd: normalizedAmount, key: requestKey }
 
     try {
-      const result = await createDeposit({ amountUsd: normalizedAmount, requestKey })
+      const result = await createDeposit({ amountUsd: normalizedAmount, requestKey, provider: 'faucetpay' })
       if (!result.checkout) {
         setFeedback({ type: 'error', message: isRussian ? 'Не удалось подготовить страницу оплаты FaucetPay. Попробуйте ещё раз.' : 'Could not prepare the FaucetPay checkout. Please try again.' })
         return
@@ -332,6 +342,35 @@ export function AdvertiserDepositPage() {
       checkoutForm.submit()
     } catch (error) {
       setFeedback({ type: 'error', message: error instanceof Error ? error.message : isRussian ? 'Не удалось создать счёт FaucetPay.' : 'Could not create the FaucetPay invoice.' })
+    }
+  }
+
+  async function handleCwalletPayment(amount: number) {
+    setFeedback(null)
+    const paymentWindow = window.open('about:blank', '_blank')
+    if (!paymentWindow) {
+      setFeedback({ type: 'error', message: isRussian ? 'Разрешите всплывающие окна, чтобы открыть Cwallet.' : 'Allow pop-ups to open Cwallet.' })
+      return
+    }
+    paymentWindow.opener = null
+    setPendingCwalletAmount(amount)
+
+    const normalizedAmount = amount.toFixed(2)
+    const existing = requestKeyRef.current
+    const requestKey = existing?.provider === 'cwallet' && existing.amountUsd === normalizedAmount ? existing.key : crypto.randomUUID()
+    requestKeyRef.current = { provider: 'cwallet', amountUsd: normalizedAmount, key: requestKey }
+
+    try {
+      const result = await createDeposit({ amountUsd: normalizedAmount, requestKey, provider: 'cwallet' })
+      if (!result.paymentUrl) throw new Error(isRussian ? 'Не удалось подготовить ссылку Cwallet.' : 'Could not prepare the Cwallet payment link.')
+      requestKeyRef.current = null
+      void deposits.mutate()
+      paymentWindow.location.replace(result.paymentUrl)
+    } catch (error) {
+      paymentWindow.close()
+      setFeedback({ type: 'error', message: error instanceof Error ? error.message : isRussian ? 'Не удалось создать платёж Cwallet.' : 'Could not create the Cwallet payment.' })
+    } finally {
+      setPendingCwalletAmount(null)
     }
   }
 
@@ -468,21 +507,21 @@ export function AdvertiserDepositPage() {
           </aside>
           </div>
         ) : (
-          <CwalletPaymentPanel isRussian={isRussian} language={language} />
+          <CwalletPaymentPanel
+            isRussian={isRussian}
+            language={language}
+            onPay={(amount) => { void handleCwalletPayment(amount) }}
+            isPending={isMutating}
+            pendingAmount={pendingCwalletAmount}
+          />
         )}
 
-        {paymentMethod === 'faucetpay' && (
-          <>
         {feedback && <Alert role={feedback.type === 'error' ? 'alert' : 'status'} className={cn('items-start rounded-2xl px-4 py-3 text-sm font-semibold leading-6', feedback.type === 'error' ? 'border-rose-300/20 bg-rose-300/[0.08] text-rose-100' : 'border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-100')}>
           {feedback.type === 'error' ? <CircleAlert /> : <BadgeCheck />}<AlertDescription className="text-sm font-semibold leading-6 text-current">{feedback.message}</AlertDescription>
         </Alert>}
-
-
-          </>
-        )}
       </section>
 
-      {paymentMethod === 'faucetpay' && <section aria-labelledby="deposit-history-title" className="rounded-[28px] border border-white/10 bg-[#111a35] p-5 text-white shadow-xl shadow-black/10 sm:p-6">
+      <section aria-labelledby="deposit-history-title" className="rounded-[28px] border border-white/10 bg-[#111a35] p-5 text-white shadow-xl shadow-black/10 sm:p-6">
         <header className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="inline-flex rounded-full border border-emerald-200/15 bg-emerald-200/[0.07] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-100">{isRussian ? 'Платежи' : 'Payments'}</p>
@@ -494,15 +533,15 @@ export function AdvertiserDepositPage() {
         {deposits.data?.deposits.length ? <ul className="flex flex-col gap-3">
           {deposits.data.deposits.map((deposit) => <li key={deposit.id} className="flex flex-col gap-3 rounded-[22px] border border-white/10 bg-[#0d1531] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="font-mono text-sm font-black text-white">{formatUsd(deposit.amountUsd, language)} · {formatAtomic(deposit.amountAtomic, language)} PEPE</p>
+              <p className="font-mono text-sm font-black text-white">{deposit.provider === 'cwallet' ? 'Cwallet' : 'FaucetPay'} · {formatUsd(deposit.amountUsd, language)} · {formatAtomic(deposit.amountAtomic, language)} PEPE</p>
               <p className="mt-1 truncate font-mono text-xs text-slate-400">{new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(deposit.createdAt))} · {deposit.id}</p>
             </div>
             <div className="self-start sm:self-auto">
-              <Badge variant="outline" className={cn('h-8 rounded-full px-3 text-xs font-extrabold', statusClasses(deposit.status))}>{statusLabel(deposit.status, isRussian)}</Badge>
+              <Badge variant="outline" className={cn('h-8 rounded-full px-3 text-xs font-extrabold', statusClasses(deposit.status))}>{statusLabel(deposit.status, isRussian, deposit.provider)}</Badge>
             </div>
           </li>)}
         </ul> : !deposits.isLoading && <div className="rounded-[22px] border border-dashed border-white/15 bg-[#0d1531] px-4 py-10 text-center text-sm leading-6 text-slate-400">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $0.01.' : 'No top-ups yet. The minimum amount is $0.01.'}</div>}
-      </section>}
+      </section>
     </main>
   )
 }
