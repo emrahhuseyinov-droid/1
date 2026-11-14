@@ -162,7 +162,7 @@ function PaymentMethodSelector({
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
                 <span className="text-base font-bold tracking-tight text-white">FaucetPay</span>
-                <Badge variant="outline" className="border-emerald-200/20 bg-emerald-200/[0.08] text-[9px] font-bold text-emerald-100">{isRussian ? 'Автоматически' : 'Automatic'}</Badge>
+                <Badge variant="outline" className="border-emerald-200/20 bg-emerald-200/[0.08] text-[9px] font-bold text-emerald-100">{isRussian ? 'Авто��атически' : 'Automatic'}</Badge>
               </span>
             </span>
             <BadgeCheck aria-hidden="true" className="size-5 shrink-0 text-emerald-200 opacity-0 transition-opacity group-data-[pressed]:opacity-100" />
@@ -412,7 +412,7 @@ export function AdvertiserDepositPage() {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-100/80">{isRussian ? 'Автоматическое зачисление' : 'Automatic credit'}</p>
                 <h2 className="mt-1 text-lg font-black tracking-tight text-white">FaucetPay</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-400">{isRussian ? 'Введите сумму и нажмите «Оплатить» — вы сразу перейдёте на страницу FaucetPay.' : 'Enter an amount and select Pay to go straight to FaucetPay.'}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">{isRussian ? 'Введите сумму и нажмите «Оплатить» — вы сразу перейдёте на страницу оплаты FaucetPay.' : 'Enter an amount and select Pay to go straight to FaucetPay.'}</p>
               </div>
               <Badge variant="outline" className="w-fit rounded-full border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-[10px] font-bold text-emerald-100">
                 <BadgeCheck data-icon="inline-start" />{isRussian ? 'Подтверждается автоматически' : 'Auto-verified'}
