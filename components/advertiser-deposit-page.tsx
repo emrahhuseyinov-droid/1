@@ -152,19 +152,16 @@ function PaymentMethodSelector({
         <ToggleGroupItem
           value="faucetpay"
           aria-label={isRussian ? 'Выбрать FaucetPay с автоматическим зачислением' : 'Choose FaucetPay with automatic credit'}
-          className="group h-auto min-h-32 w-full justify-start rounded-[24px] border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-emerald-200/30 focus-visible:ring-2 focus-visible:ring-emerald-200/50 data-[pressed]:border-emerald-200/50 data-[pressed]:bg-emerald-200/[0.08] sm:p-5"
+          className="group h-auto min-h-28 w-full justify-start rounded-3xl border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-emerald-200/30 focus-visible:ring-2 focus-visible:ring-emerald-200/50 data-[pressed]:border-emerald-200/50 data-[pressed]:bg-emerald-200/[0.08] sm:p-5"
         >
-          <span className="flex w-full items-start gap-4">
+          <span className="flex w-full items-center gap-5">
             <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center">
               <Image src="/payment-logos/faucetpay.png" alt="" width={40} height={40} className="size-10 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-black text-white">FaucetPay</span>
+                <span className="text-base font-bold tracking-tight text-white">FaucetPay</span>
                 <Badge variant="outline" className="border-emerald-200/20 bg-emerald-200/[0.08] text-[9px] font-bold text-emerald-100">{isRussian ? 'Автоматически' : 'Automatic'}</Badge>
-              </span>
-              <span className="mt-2 block text-xs leading-5 text-slate-400">
-                {isRussian ? 'Счёт в PEPE, подтверждение и зачисление через платёжный callback.' : 'A PEPE invoice with provider confirmation and automatic credit.'}
               </span>
             </span>
             <BadgeCheck aria-hidden="true" className="size-5 shrink-0 text-emerald-200 opacity-0 transition-opacity group-data-[pressed]:opacity-100" />
@@ -174,19 +171,16 @@ function PaymentMethodSelector({
         <ToggleGroupItem
           value="cwallet"
           aria-label={isRussian ? 'Выбрать Cwallet с ручной проверкой' : 'Choose Cwallet with manual review'}
-          className="group h-auto min-h-32 w-full justify-start rounded-[24px] border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-sky-200/30 focus-visible:ring-2 focus-visible:ring-sky-200/50 data-[pressed]:border-sky-200/50 data-[pressed]:bg-sky-200/[0.08] sm:p-5"
+          className="group h-auto min-h-28 w-full justify-start rounded-3xl border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-sky-200/30 focus-visible:ring-2 focus-visible:ring-sky-200/50 data-[pressed]:border-sky-200/50 data-[pressed]:bg-sky-200/[0.08] sm:p-5"
         >
-          <span className="flex w-full items-start gap-4">
+          <span className="flex w-full items-center gap-5">
             <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center">
               <Image src="/payment-logos/cwallet.svg" alt="" width={40} height={40} className="size-10 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-black text-white">Cwallet</span>
+                <span className="text-base font-bold tracking-tight text-white">Cwallet</span>
                 <Badge variant="outline" className="border-sky-200/20 bg-sky-200/[0.08] text-[9px] font-bold text-sky-100">{isRussian ? 'Ручное зачисление' : 'Manual credit'}</Badge>
-              </span>
-              <span className="mt-2 block text-xs leading-5 text-slate-400">
-                {isRussian ? 'Четыре отдельные ссылки на фиксированные суммы: $5, $10, $25 и $50.' : 'Four separate fixed-amount links: $5, $10, $25, and $50.'}
               </span>
             </span>
             <BadgeCheck aria-hidden="true" className="size-5 shrink-0 text-sky-100 opacity-0 transition-opacity group-data-[pressed]:opacity-100" />
