@@ -1,9 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
-import { BadgeCheck, CircleAlert, Clock3, CreditCard, ExternalLink, LoaderCircle, RefreshCw, Sparkles, Wallet } from 'lucide-react'
+import { BadgeCheck, CircleAlert, ExternalLink, LoaderCircle, RefreshCw, Sparkles, Wallet } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +16,7 @@ import { TokenLogo } from '@/components/token-logo'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { cn } from '@/lib/utils'
 
-type DepositStatus = 'pending' | 'paid' | 'underpaid' | 'review'
+type DepositStatus = 'pending' | 'paid' | 'underpaid' | 'review' | 'cancelled'
 type CheckoutFields = {
   actionUrl: string
   merchantUsername: string
@@ -94,6 +95,7 @@ function formatUsd(value: string, language: 'en' | 'ru') {
 
 function statusLabel(status: DepositStatus, isRussian: boolean) {
   if (status === 'paid') return isRussian ? 'Зачислено' : 'Credited'
+  if (status === 'cancelled') return isRussian ? 'Отменено' : 'Cancelled'
   if (status === 'underpaid') return isRussian ? 'Сумма ниже счёта' : 'Underpaid'
   if (status === 'review') return isRussian ? 'Нужна проверка' : 'Needs review'
   return isRussian ? 'Ожидает FaucetPay' : 'Awaiting FaucetPay'
@@ -101,6 +103,7 @@ function statusLabel(status: DepositStatus, isRussian: boolean) {
 
 function statusClasses(status: DepositStatus) {
   if (status === 'paid') return 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100'
+  if (status === 'cancelled') return 'border-slate-300/15 bg-slate-300/[0.06] text-slate-300'
   if (status === 'underpaid' || status === 'review') return 'border-amber-300/20 bg-amber-300/10 text-amber-100'
   return 'border-sky-300/20 bg-sky-300/10 text-sky-100'
 }
@@ -131,9 +134,6 @@ function PaymentMethodSelector({
           <h2 id="deposit-method-title" className="mt-1 text-lg font-black tracking-tight text-white">
             {isRussian ? 'Выберите один способ пополнения' : 'Choose one way to add funds'}
           </h2>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">
-            {isRussian ? 'Покажем только выбранный способ, чтобы не смешивать инструкции и действия.' : 'Only the selected payment flow is shown, so its instructions and actions stay separate.'}
-          </p>
         </div>
         <Badge variant="outline" className="w-fit rounded-full border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold text-slate-300">
           {isRussian ? '2 способа' : '2 methods'}
@@ -155,8 +155,8 @@ function PaymentMethodSelector({
           className="group h-auto min-h-32 w-full justify-start rounded-[24px] border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-emerald-200/30 focus-visible:ring-2 focus-visible:ring-emerald-200/50 data-[pressed]:border-emerald-200/50 data-[pressed]:bg-emerald-200/[0.08] sm:p-5"
         >
           <span className="flex w-full items-start gap-4">
-            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-emerald-200/[0.08] text-slate-300 transition-colors group-data-[pressed]:bg-emerald-200/15 group-data-[pressed]:text-emerald-100">
-              <CreditCard size={21} />
+            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-emerald-200/[0.08] transition-colors group-data-[pressed]:bg-emerald-200/15">
+              <Image src="/payment-logos/faucetpay.png" alt="" width={36} height={36} className="size-9 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
@@ -177,8 +177,8 @@ function PaymentMethodSelector({
           className="group h-auto min-h-32 w-full justify-start rounded-[24px] border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-sky-200/30 focus-visible:ring-2 focus-visible:ring-sky-200/50 data-[pressed]:border-sky-200/50 data-[pressed]:bg-sky-200/[0.08] sm:p-5"
         >
           <span className="flex w-full items-start gap-4">
-            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-sky-200/[0.08] text-slate-300 transition-colors group-data-[pressed]:bg-sky-200/15 group-data-[pressed]:text-sky-100">
-              <Wallet size={21} />
+            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-sky-200/[0.08] transition-colors group-data-[pressed]:bg-sky-200/15">
+              <Image src="/payment-logos/cwallet.svg" alt="" width={36} height={36} className="size-9 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
@@ -264,13 +264,8 @@ export function AdvertiserDepositPage() {
   const isRussian = language === 'ru'
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('faucetpay')
   const [amountUsd, setAmountUsd] = useState('10.00')
-  const [activeDepositId, setActiveDepositId] = useState<string | null>(null)
-  const [createdDeposit, setCreatedDeposit] = useState<DepositSummary | null>(null)
-  const [activeCheckout, setActiveCheckout] = useState<CheckoutFields | null>(null)
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const requestKeyRef = useRef<{ amountUsd: string; key: string } | null>(null)
-  const invoiceRef = useRef<HTMLElement | null>(null)
-  const checkoutButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const quote = useSWR<PepeQuote>('/api/pepe-price', getJson, { refreshInterval: 35_000, revalidateOnFocus: true })
   const wallet = useSWR<AdvertiserWalletBalance>('/api/advertiser/wallet', getJson, { refreshInterval: 15_000, revalidateOnFocus: true })
@@ -281,15 +276,15 @@ export function AdvertiserDepositPage() {
   )
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const depositId = params.get('deposit')
-    if (depositId && uuidPattern.test(depositId)) setActiveDepositId(depositId)
-    if (params.get('payment') === 'returned') {
+    const payment = new URLSearchParams(window.location.search).get('payment')
+    if (payment === 'returned') {
+      void deposits.mutate()
       setFeedback({ type: 'success', message: isRussian ? 'Возврат с FaucetPay получен. Проверяем оплату и обновим статус автоматически.' : 'Returned from FaucetPay. We are verifying the payment and will update its status automatically.' })
-    } else if (params.get('payment') === 'cancelled') {
-      setFeedback({ type: 'success', message: isRussian ? 'Оплата не завершена. Можно продолжить её ниже или создать новый счёт.' : 'Checkout was not completed. You can resume it below or create a new invoice.' })
+    } else if (payment === 'cancelled') {
+      void deposits.mutate()
+      setFeedback({ type: 'success', message: isRussian ? 'Оплата отменена. Вы можете создать новый платёж.' : 'Payment cancelled. You can start a new payment.' })
     }
-  }, [isRussian])
+  }, [deposits.mutate, isRussian])
 
   const parsedCents = parseUsdCents(amountUsd)
   const amountNumber = parsedCents === null ? null : Number(parsedCents) / 100
@@ -297,15 +292,6 @@ export function AdvertiserDepositPage() {
   const estimatedPepe = amountNumber !== null && quote.data?.pepeUsd
     ? estimatePepe(amountNumber, quote.data.pepeUsd, language)
     : null
-  const listedDeposit = deposits.data?.deposits.find((deposit) => deposit.id === activeDepositId)
-  const selectedDeposit = listedDeposit
-    ?? (activeDepositId === createdDeposit?.id ? createdDeposit : null)
-    ?? deposits.data?.deposits.find((deposit) => deposit.status === 'pending')
-    ?? deposits.data?.deposits[0]
-    ?? createdDeposit
-  const selectedCheckout = activeCheckout
-    ?? selectedDeposit?.checkout
-    ?? null
   const amountPresets = ['5', '10', '50', '100', '500']
   const selectedPreset = amountPresets.find((preset) => parsedCents === BigInt(preset) * 100n) ?? ''
 
@@ -321,30 +307,38 @@ export function AdvertiserDepositPage() {
 
     try {
       const result = await createDeposit({ amountUsd: normalizedAmount, requestKey })
+      if (!result.checkout) {
+        setFeedback({ type: 'error', message: isRussian ? 'Не удалось подготовить страницу оплаты FaucetPay. Попробуйте ещё раз.' : 'Could not prepare the FaucetPay checkout. Please try again.' })
+        return
+      }
+
       requestKeyRef.current = null
-      setCreatedDeposit(result.deposit)
-      setActiveDepositId(result.deposit.id)
-      setActiveCheckout(result.checkout)
-      await deposits.mutate()
-      requestAnimationFrame(() => {
-        invoiceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        checkoutButtonRef.current?.focus({ preventScroll: true })
-      })
-      setFeedback({
-        type: 'success',
-        message: result.deposit.status === 'pending'
-          ? isRussian ? 'Счёт создан. Продолжите оплату через FaucetPay ниже.' : 'Invoice created. Continue to FaucetPay below.'
-          : isRussian ? 'У этого запроса уже есть статус. Проверьте историю платежей ниже.' : 'This request already has a status. Check the payment history below.',
-      })
+      const checkoutForm = document.createElement('form')
+      checkoutForm.method = 'post'
+      checkoutForm.action = result.checkout.actionUrl
+      checkoutForm.hidden = true
+      const checkoutFields: Array<[string, string]> = [
+        ['merchant_username', result.checkout.merchantUsername],
+        ['item_description', result.checkout.itemDescription],
+        ['amount1', result.checkout.amount1],
+        ['currency1', result.checkout.currency1],
+        ['custom', result.checkout.custom],
+        ['callback_url', result.checkout.callbackUrl],
+        ['success_url', result.checkout.successUrl],
+        ['cancel_url', result.checkout.cancelUrl],
+      ]
+      for (const [name, value] of checkoutFields) {
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = name
+        input.value = value
+        checkoutForm.append(input)
+      }
+      document.body.append(checkoutForm)
+      checkoutForm.submit()
     } catch (error) {
       setFeedback({ type: 'error', message: error instanceof Error ? error.message : isRussian ? 'Не удалось создать счёт FaucetPay.' : 'Could not create the FaucetPay invoice.' })
     }
-  }
-
-  function selectDeposit(deposit: DepositSummary) {
-    setActiveDepositId(deposit.id)
-    setCreatedDeposit(deposit)
-    setActiveCheckout(deposit.checkout ?? null)
   }
 
   return (
@@ -359,9 +353,6 @@ export function AdvertiserDepositPage() {
             <h1 id="advertiser-deposit-title" className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
               {isRussian ? 'Пополнить баланс' : 'Add funds'}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-              {isRussian ? 'Пополняйте баланс в PEPE и запускайте кампании. FaucetPay подтверждается автоматически; платежи Cwallet требуют ручного зачисления.' : 'Top up in PEPE and launch campaigns. FaucetPay is confirmed automatically; Cwallet payments require manual credit.'}
-            </p>
           </div>
           <aside aria-label={isRussian ? 'Баланс рекламного кошелька' : 'Advertiser wallet balance'} className="flex w-fit items-center gap-3 rounded-[20px] border border-emerald-200/20 bg-[#111a35] px-4 py-3 shadow-lg shadow-black/10">
             <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-emerald-200/10 text-emerald-100"><Wallet size={19} /></span>
@@ -388,7 +379,7 @@ export function AdvertiserDepositPage() {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-100/80">{isRussian ? 'Автоматическое зачисление' : 'Automatic credit'}</p>
                 <h2 className="mt-1 text-lg font-black tracking-tight text-white">FaucetPay</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-400">{isRussian ? 'Создайте счёт в PEPE и оплатите его через FaucetPay.' : 'Create a PEPE invoice and complete it through FaucetPay.'}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">{isRussian ? 'Введите сумму и нажмите «Оплатить» — вы сразу перейдёте на страницу FaucetPay.' : 'Enter an amount and select Pay to go straight to FaucetPay.'}</p>
               </div>
               <Badge variant="outline" className="w-fit rounded-full border-emerald-200/20 bg-emerald-200/[0.08] px-3 py-1 text-[10px] font-bold text-emerald-100">
                 <BadgeCheck data-icon="inline-start" />{isRussian ? 'Подтверждается автоматически' : 'Auto-verified'}
@@ -412,10 +403,7 @@ export function AdvertiserDepositPage() {
                       autoComplete="off"
                       required
                       value={amountUsd}
-                      onChange={(event) => {
-                        setAmountUsd(event.target.value)
-                        setActiveCheckout(null)
-                      }}
+                      onChange={(event) => setAmountUsd(event.target.value)}
                       placeholder="0.01"
                       aria-describedby="advertiser-deposit-minimum advertiser-deposit-estimate"
                       aria-invalid={amountUsd.length > 0 && parsedCents === null}
@@ -435,7 +423,6 @@ export function AdvertiserDepositPage() {
                   const selected = value[0]
                   if (!selected) return
                   setAmountUsd(`${selected}.00`)
-                  setActiveCheckout(null)
                 }}
                 className="grid w-full grid-cols-3 gap-2 sm:grid-cols-5"
               >
@@ -478,7 +465,7 @@ export function AdvertiserDepositPage() {
             </div>
             <Button form="advertiser-deposit-form" type="submit" size="lg" disabled={!quote.data?.pepeUsd || parsedCents === null || isMutating} className="min-h-12 w-full rounded-[16px] bg-gradient-to-r from-[#7ce9cc] via-[#b5f0a1] to-[#ffd166] text-sm font-black text-[#1a2b3e] shadow-[0_5px_0_rgba(68,99,75,0.35)] transition hover:-translate-y-0.5 hover:saturate-125 hover:shadow-[0_7px_0_rgba(68,99,75,0.3)] disabled:hover:translate-y-0">
               {isMutating ? <LoaderCircle data-icon="inline-start" className="animate-spin" /> : <Wallet data-icon="inline-start" />}
-              {isMutating ? isRussian ? 'Создаём счёт…' : 'Creating invoice…' : isRussian ? 'Создать счёт' : 'Create invoice'}
+              {isMutating ? isRussian ? 'Переходим к оплате…' : 'Redirecting to payment…' : isRussian ? 'Оплатить' : 'Pay'}
             </Button>
             <div className="flex flex-col gap-2 text-[10px] leading-5 text-slate-400">
               <p className="flex items-center gap-2"><BadgeCheck size={14} className="text-emerald-200" aria-hidden="true" />{isRussian ? 'Безопасный платёж через FaucetPay' : 'Secure checkout through FaucetPay'}</p>
@@ -496,35 +483,7 @@ export function AdvertiserDepositPage() {
           {feedback.type === 'error' ? <CircleAlert /> : <BadgeCheck />}<AlertDescription className="text-sm font-semibold leading-6 text-current">{feedback.message}</AlertDescription>
         </Alert>}
 
-        {selectedDeposit && <section ref={invoiceRef} aria-labelledby="active-deposit-title" className="relative rounded-[26px] border border-white/10 bg-[#111a35] p-5 text-white shadow-xl shadow-black/10 sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <p className="inline-flex rounded-full border border-emerald-200/15 bg-emerald-200/[0.07] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100">{isRussian ? 'Текущий счёт' : 'Current invoice'}</p>
-              <h2 id="active-deposit-title" className="mt-3 text-lg font-black tracking-tight text-white sm:text-xl">{formatUsd(selectedDeposit.amountUsd, language)} · {formatAtomic(selectedDeposit.amountAtomic, language)} PEPE</h2>
-              <p className="mt-1 break-all font-mono text-xs text-slate-400">{selectedDeposit.id}</p>
-            </div>
-            <Badge variant="outline" className={cn('h-8 w-fit shrink-0 gap-1.5 rounded-full px-3 text-xs font-extrabold', statusClasses(selectedDeposit.status))}>
-              {selectedDeposit.status === 'paid' ? <BadgeCheck data-icon="inline-start" /> : selectedDeposit.status === 'pending' ? <Clock3 data-icon="inline-start" /> : <CircleAlert data-icon="inline-start" />}{statusLabel(selectedDeposit.status, isRussian)}
-            </Badge>
-          </div>
 
-          {selectedDeposit.status === 'pending' && selectedCheckout && <form action={selectedCheckout.actionUrl} method="post" target="_blank" rel="noopener noreferrer" className="mt-5 flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <input type="hidden" name="merchant_username" value={selectedCheckout.merchantUsername} />
-            <input type="hidden" name="item_description" value={selectedCheckout.itemDescription} />
-            <input type="hidden" name="amount1" value={selectedCheckout.amount1} />
-            <input type="hidden" name="currency1" value={selectedCheckout.currency1} />
-            <input type="hidden" name="custom" value={selectedCheckout.custom} />
-            <input type="hidden" name="callback_url" value={selectedCheckout.callbackUrl} />
-            <input type="hidden" name="success_url" value={selectedCheckout.successUrl} />
-            <input type="hidden" name="cancel_url" value={selectedCheckout.cancelUrl} />
-            <p className="max-w-lg text-sm leading-6 text-slate-300">{isRussian ? 'После оплаты вернитесь сюда. Статус обновится автоматически после проверки FaucetPay.' : 'Return here after payment. The status updates automatically after FaucetPay verifies it.'}</p>
-            <Button ref={checkoutButtonRef} type="submit" size="lg" className="min-h-12 shrink-0 rounded-2xl bg-gradient-to-r from-[#7ce9cc] via-[#b5f0a1] to-[#ffd166] px-5 text-sm font-black text-[#1a2b3e] hover:saturate-125">{isRussian ? 'Оплатить в FaucetPay' : 'Pay in FaucetPay'}<ExternalLink data-icon="inline-end" /></Button>
-          </form>}
-
-          {selectedDeposit.status === 'underpaid' && <p className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">{isRussian ? 'Подтверждённая сумма ниже суммы счёта и не зачислена. Обратитесь в поддержку с ID счёта.' : 'The verified payment was below the invoice amount and was not credited. Contact support with this invoice ID.'}</p>}
-          {selectedDeposit.status === 'review' && <p className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[0.08] px-4 py-3 text-sm leading-6 text-amber-100">{isRussian ? 'Платёж подтверждён, но его нельзя зачислить автоматически. Обратитесь в поддержку с ID счёта.' : 'The payment is verified but could not be credited automatically. Contact support with this invoice ID.'}</p>}
-          {selectedDeposit.status === 'paid' && <p className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.08] px-4 py-3 text-sm leading-6 text-emerald-100">{isRussian ? 'PEPE зачислены в рекламный кошелёк.' : 'PEPE has been credited to your advertiser wallet.'}</p>}
-        </section>}
           </>
         )}
       </section>
@@ -544,9 +503,8 @@ export function AdvertiserDepositPage() {
               <p className="font-mono text-sm font-black text-white">{formatUsd(deposit.amountUsd, language)} · {formatAtomic(deposit.amountAtomic, language)} PEPE</p>
               <p className="mt-1 truncate font-mono text-xs text-slate-400">{new Intl.DateTimeFormat(language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(deposit.createdAt))} · {deposit.id}</p>
             </div>
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="self-start sm:self-auto">
               <Badge variant="outline" className={cn('h-8 rounded-full px-3 text-xs font-extrabold', statusClasses(deposit.status))}>{statusLabel(deposit.status, isRussian)}</Badge>
-              {deposit.status === 'pending' && <Button type="button" size="sm" variant="outline" onClick={() => selectDeposit(deposit)} aria-label={isRussian ? `Открыть счёт ${deposit.id}` : `Open invoice ${deposit.id}`} className="min-h-9 rounded-full border-white/15 bg-white/[0.04] px-4 font-bold text-white hover:bg-white/[0.08]">{isRussian ? 'Открыть' : 'Open'}</Button>}
             </div>
           </li>)}
         </ul> : !deposits.isLoading && <div className="rounded-[22px] border border-dashed border-white/15 bg-[#0d1531] px-4 py-10 text-center text-sm leading-6 text-slate-400">{isRussian ? 'Пополнений пока нет. Минимальная сумма — $0.01.' : 'No top-ups yet. The minimum amount is $0.01.'}</div>}

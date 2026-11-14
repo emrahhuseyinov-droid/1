@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { createHmac, randomUUID } from 'node:crypto'
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
@@ -75,11 +75,11 @@ function buildCheckoutFields(deposit: DepositRecord, request: NextRequest, merch
   const origin = new URL(request.url).origin
   const callback = new URL('/api/payments/faucetpay/callback', origin)
   const success = new URL('/advertiser/deposit', origin)
-  const cancel = new URL('/advertiser/deposit', origin)
+  const cancel = new URL('/api/payments/faucetpay/cancel', origin)
   success.searchParams.set('payment', 'returned')
   success.searchParams.set('deposit', deposit.id)
-  cancel.searchParams.set('payment', 'cancelled')
   cancel.searchParams.set('deposit', deposit.id)
+  cancel.searchParams.set('signature', createHmac('sha256', deposit.requestKey).update(deposit.id).digest('hex'))
 
   return {
     actionUrl: faucetPayCheckoutUrl,

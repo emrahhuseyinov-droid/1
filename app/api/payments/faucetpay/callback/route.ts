@@ -98,7 +98,9 @@ export async function POST(request: Request) {
         .for('update')
         .limit(1)
       if (!deposit || deposit.provider !== 'faucetpay') return { status: 'not_found' as const }
-      if (deposit.status !== 'pending') return { status: deposit.status as 'paid' | 'underpaid' | 'review' }
+      if (deposit.status !== 'pending' && deposit.status !== 'cancelled') {
+        return { status: deposit.status as 'paid' | 'underpaid' | 'review' }
+      }
 
       const [usedTransaction] = await transaction.select({ id: advertiserDeposits.id })
         .from(advertiserDeposits)
