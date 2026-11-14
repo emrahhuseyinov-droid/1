@@ -442,7 +442,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
   async function handleCampaignStatusChange(campaign: AdvertiserCampaign, status: CampaignStatus) {
     if (status === 'cancelled') {
       const confirmed = window.confirm(isRussian
-        ? 'Отменить кампанию и вернуть неиспользованный бюджет заданий и оставшееся время продвижения?'
+        ? 'Отменить кампанию и вернуть неиспользованный бюджет заданий и оставшее��я время продвижения?'
         : 'Cancel this campaign and refund unused task budget and remaining promotion time?')
       if (!confirmed) return
     }
@@ -573,7 +573,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
                 <div className="flex flex-col gap-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="advertiser-campaign-title" className="text-[10px] font-extrabold text-slate-200">{isRussian ? 'Название кампании' : 'Campaign name'}</label>
+                      <label htmlFor="advertiser-campaign-title" className="text-[10px] font-extrabold text-slate-200">{isRussian ? 'Название' : 'Campaign name'}</label>
                       <input id="advertiser-campaign-title" required minLength={3} maxLength={80} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={isRussian ? 'Название объявления' : 'Campaign name'} disabled={creatingCampaign || !hasCampaignsData} className="min-h-12 rounded-[17px] border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10 disabled:opacity-50" />
                     </div>
                     <div className="flex flex-col gap-1.5">

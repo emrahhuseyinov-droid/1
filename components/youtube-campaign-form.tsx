@@ -78,7 +78,7 @@ export function YoutubeCampaignForm({
         <div className="flex flex-col gap-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="youtube-campaign-title" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Название кампании' : 'Campaign name'}</label>
+            <label htmlFor="youtube-campaign-title" className="text-[10px] font-bold text-slate-200">{isRussian ? 'Название' : 'Campaign name'}</label>
             <input id="youtube-campaign-title" required minLength={3} maxLength={80} value={title} onChange={(event) => onTitleChange(event.target.value)} placeholder={isRussian ? 'Название видео' : 'Video title'} disabled={submitting || !ready} className="min-h-10 rounded-xl border border-white/10 bg-[#111a35] px-3 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-red-300/50 focus:ring-2 focus:ring-red-300/10 disabled:opacity-50" />
           </div>
           <div className="flex flex-col gap-1.5">
