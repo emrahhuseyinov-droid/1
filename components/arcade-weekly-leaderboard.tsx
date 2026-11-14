@@ -46,6 +46,7 @@ function formatWeekStart(periodStart?: string, language: 'en' | 'ru' = 'en') {
 }
 
 function WeeklyResetCountdown({ periodEnd }: { periodEnd?: string }) {
+  const { language } = useSiteLanguage()
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null)
 
   useEffect(() => {
@@ -80,7 +81,7 @@ function WeeklyResetCountdown({ periodEnd }: { periodEnd?: string }) {
           <Clock3 aria-hidden="true" size={18} />
           <h3 id="weekly-reset-title" className="text-base font-extrabold">Weekly reset countdown</h3>
         </div>
-        <p id="weekly-reset-label" className="mt-2 text-sm text-white/75">Time until standings reset · Mondays at 17:38 Baku time</p>
+        <p id="weekly-reset-label" className="mt-2 text-sm text-white/75">{language === 'ru' ? 'До сброса рейтинга · каждые 7 дней' : 'Time until standings reset · every 7 days'}</p>
         <div role="timer" aria-live="off" aria-labelledby="weekly-reset-label" className="relative z-10 mt-4 grid grid-cols-4 gap-2">
           {countdownValues.map((value, index) => (
             <div key={countdownLabels[index]} className="min-w-0 rounded-[17px] border border-white/15 bg-gradient-to-b from-[#293756] to-[#11192d] px-1.5 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_5px_12px_rgba(0,0,0,0.18)] sm:px-2">

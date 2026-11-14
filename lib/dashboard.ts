@@ -18,38 +18,44 @@ const wheelRewardActivityTitles: Record<string, string> = {
 }
 
 export async function getDashboardBalancesAtomic(guestId: string): Promise<Record<WalletCoinSymbol, string>> {
-  const [balanceRows, commissionTotal] = await Promise.all([
+  const [balanceRows, bonusRows] = await Promise.all([
     db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
       .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
       .groupBy(earningEvents.tokenSymbol),
-    db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+    db.select({ tokenSymbol: referralCommissions.tokenSymbol, amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
       .from(referralCommissions)
-      .where(eq(referralCommissions.referrerId, guestId)),
+      .where(eq(referralCommissions.referrerId, guestId))
+      .groupBy(referralCommissions.tokenSymbol),
   ])
 
   const balancesAtomic: Record<WalletCoinSymbol, string> = { HOMERO: '0', PEPE: '0' }
   for (const row of balanceRows) balancesAtomic[row.tokenSymbol] = row.amount
-  balancesAtomic.HOMERO = (BigInt(balancesAtomic.HOMERO) + BigInt(commissionTotal[0]?.amount ?? '0')).toString()
+  for (const row of bonusRows) {
+    if (row.tokenSymbol === 'PEPE' || row.tokenSymbol === 'HOMERO') {
+      balancesAtomic[row.tokenSymbol] = (BigInt(balancesAtomic[row.tokenSymbol]) + BigInt(row.amount)).toString()
+    }
+  }
 
   return balancesAtomic
 }
 
 export async function getDashboardOverview(guestId: string): Promise<DashboardOverview> {
-  const [balanceRows, commissionTotal, earningRows, commissionRows, dailyRows] = await Promise.all([
+  const [balanceRows, bonusRows, earningRows, commissionRows, dailyRows] = await Promise.all([
     db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
       .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
       .groupBy(earningEvents.tokenSymbol),
-    db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+    db.select({ tokenSymbol: referralCommissions.tokenSymbol, amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
       .from(referralCommissions)
-      .where(eq(referralCommissions.referrerId, guestId)),
+      .where(eq(referralCommissions.referrerId, guestId))
+      .groupBy(referralCommissions.tokenSymbol),
     db.select({ id: earningEvents.id, source: earningEvents.source, sourceKey: earningEvents.sourceKey, itemId: earningEvents.itemId, tokenSymbol: earningEvents.tokenSymbol, amountAtomic: earningEvents.rewardAtomic, createdAt: earningEvents.createdAt })
       .from(earningEvents)
       .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
       .orderBy(desc(earningEvents.createdAt))
       .limit(8),
-    db.select({ id: referralCommissions.id, amountAtomic: referralCommissions.commissionAmountAtomic, createdAt: referralCommissions.createdAt })
+    db.select({ id: referralCommissions.id, amountAtomic: referralCommissions.commissionAmountAtomic, tokenSymbol: referralCommissions.tokenSymbol, createdAt: referralCommissions.createdAt })
       .from(referralCommissions)
       .where(eq(referralCommissions.referrerId, guestId))
       .orderBy(desc(referralCommissions.createdAt))
@@ -63,7 +69,9 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
 
   const balancesAtomic: WalletBalancesAtomic = { HOMERO: 0, PEPE: 0 }
   for (const row of balanceRows) balancesAtomic[row.tokenSymbol] = Number(row.amount)
-  balancesAtomic.HOMERO += Number(commissionTotal[0]?.amount ?? 0)
+  for (const row of bonusRows) {
+    if (row.tokenSymbol === 'PEPE' || row.tokenSymbol === 'HOMERO') balancesAtomic[row.tokenSymbol] += Number(row.amount)
+  }
 
   const today = getUtcDateKey()
   const dailyDateKeys = new Set(dailyRows.map((row) => row.sourceKey))
@@ -134,10 +142,10 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
     })),
     ...commissionRows.map((row) => ({
       id: row.id,
-      title: 'Referral commission',
+      title: 'Referral bonus',
       createdAt: row.createdAt.toISOString(),
       amountAtomic: row.amountAtomic,
-      tokenSymbol: 'HOMERO' as const,
+      tokenSymbol: row.tokenSymbol,
       kind: 'commission' as const,
     })),
   ]

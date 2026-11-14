@@ -16,6 +16,7 @@ import {
   arcadeSessions,
   earningEvents,
   guestProfiles,
+  referralCommissions,
   user,
 } from '@/lib/db/schema'
 import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
@@ -76,7 +77,14 @@ export async function getPublisherPepeBalance(transaction: ArcadeTransaction, gu
       eq(earningEvents.tokenSymbol, 'PEPE'),
       notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
     ))
-  return Number(balance?.amount ?? '0')
+  const [bonusBalance] = await transaction
+    .select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+    .from(referralCommissions)
+    .where(and(
+      eq(referralCommissions.referrerId, guestId),
+      eq(referralCommissions.tokenSymbol, 'PEPE'),
+    ))
+  return Number(BigInt(balance?.amount ?? '0') + BigInt(bonusBalance?.amount ?? '0'))
 }
 
 export async function grantArcadeEnergy(transaction: ArcadeTransaction, guestId: string, now = new Date(), energyReward = ARCADE_VIEW_AD_ENERGY_REWARD) {
@@ -540,7 +548,7 @@ export async function settlePreviousWeekAwards(now = new Date()) {
 export async function getArcadeState(guestId: string) {
   const now = new Date()
   const today = getArcadeDayKey(now)
-  const [profile, inventory, claims, balance, reserve, entitlements] = await Promise.all([
+  const [profile, inventory, claims, balance, bonusBalance, reserve, entitlements] = await Promise.all([
     db.select().from(arcadeProfiles).where(eq(arcadeProfiles.guestId, guestId)).limit(1),
     db.select().from(arcadeInventory).where(eq(arcadeInventory.guestId, guestId)),
     db.select().from(arcadeRewardClaims).where(eq(arcadeRewardClaims.guestId, guestId)).orderBy(asc(arcadeRewardClaims.createdAt)),
@@ -551,6 +559,9 @@ export async function getArcadeState(guestId: string) {
         eq(earningEvents.tokenSymbol, 'PEPE'),
         notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
       )),
+    db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+      .from(referralCommissions)
+      .where(and(eq(referralCommissions.referrerId, guestId), eq(referralCommissions.tokenSymbol, 'PEPE'))),
     db.select({ balanceAtomic: arcadeReserve.balanceAtomic }).from(arcadeReserve).where(eq(arcadeReserve.id, 1)).limit(1),
     db.select({ unlimitedEnergy: arcadeEntitlements.unlimitedEnergy })
       .from(arcadeEntitlements)
@@ -567,7 +578,7 @@ export async function getArcadeState(guestId: string) {
     dailyEnergyCap: ARCADE_DAILY_ENERGY_EARNED_CAP,
     bestDistanceM: profile[0]?.bestDistanceM ?? 0,
     totalRuns: profile[0]?.totalRuns ?? 0,
-    pepeBalanceAtomic: balance[0]?.amount ?? '0',
+    pepeBalanceAtomic: (BigInt(balance[0]?.amount ?? '0') + BigInt(bonusBalance[0]?.amount ?? '0')).toString(),
     reserveBalanceAtomic: String(reserve[0]?.balanceAtomic ?? 0),
     inventory: {
       jetpack: inventory.find((item) => item.boostCode === 'jetpack')?.quantity ?? 0,

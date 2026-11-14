@@ -233,7 +233,7 @@ export async function POST(request: NextRequest) {
       const [commissionBalance] = await transaction
         .select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
         .from(referralCommissions)
-        .where(eq(referralCommissions.referrerId, account.profile.id))
+        .where(and(eq(referralCommissions.referrerId, account.profile.id), eq(referralCommissions.tokenSymbol, 'HOMERO')))
 
       const spendableHomeroAtomic = BigInt(homeroBalance?.amount ?? '0') + BigInt(commissionBalance?.amount ?? '0')
       if (spendableHomeroAtomic < quoteAmountAtomic) return { status: 'insufficient_homero' as const }

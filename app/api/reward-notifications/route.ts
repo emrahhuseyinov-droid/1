@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
       db.select({
         id: referralCommissions.id,
         amountAtomic: referralCommissions.commissionAmountAtomic,
+        tokenSymbol: referralCommissions.tokenSymbol,
         createdAt: referralCommissions.createdAt,
       })
         .from(referralCommissions)
@@ -91,9 +92,9 @@ export async function GET(request: NextRequest) {
       })),
       ...commissionRows.map((row) => ({
         id: row.id,
-        source: 'referral_commission',
+        source: 'referral_bonus',
         kind: 'token' as const,
-        tokenSymbol: 'HOMERO' as const,
+        tokenSymbol: row.tokenSymbol,
         amountAtomic: String(row.amountAtomic),
         createdAt: row.createdAt.toISOString(),
       })),

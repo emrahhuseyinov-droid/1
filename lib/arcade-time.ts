@@ -3,6 +3,8 @@ const ARCADE_RESET_HOUR = 17
 const ARCADE_RESET_MINUTE = 38
 const ARCADE_RESET_WALL_TIME_MS = (ARCADE_RESET_HOUR * 60 + ARCADE_RESET_MINUTE) * 60_000
 const DAY_MS = 24 * 60 * 60 * 1000
+const WEEK_MS = 7 * DAY_MS
+const ARCADE_WEEK_ANCHOR = Date.parse('2026-11-14T17:09:29.000Z')
 
 const bakuDateTimeFormatter = new Intl.DateTimeFormat('en-US', {
   timeZone: ARCADE_TIME_ZONE,
@@ -67,14 +69,13 @@ export function getArcadeDayWindow(date = new Date()) {
 }
 
 export function getArcadeWeekWindow(date = new Date()) {
-  const arcadeDay = new Date(`${getArcadeDayKey(date)}T00:00:00.000Z`)
-  const daysSinceMonday = (arcadeDay.getUTCDay() + 6) % 7
-  const periodStart = new Date(arcadeDay.getTime() - daysSinceMonday * DAY_MS).toISOString().slice(0, 10)
-  const nextPeriodStart = addCalendarDays(periodStart, 7)
+  const elapsedWeeks = Math.floor((date.getTime() - ARCADE_WEEK_ANCHOR) / WEEK_MS)
+  const start = new Date(ARCADE_WEEK_ANCHOR + elapsedWeeks * WEEK_MS)
+  const end = new Date(start.getTime() + WEEK_MS)
 
   return {
-    start: getBakuResetInstant(periodStart),
-    end: getBakuResetInstant(nextPeriodStart),
-    periodStart,
+    start,
+    end,
+    periodStart: start.toISOString().slice(0, 10),
   }
 }

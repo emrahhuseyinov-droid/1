@@ -71,20 +71,32 @@ export async function getReferralOverview(profileId: string): Promise<ReferralOv
     .from(guestProfiles)
     .where(eq(guestProfiles.referrerId, profileId))
 
-  const [commissions] = await db
-    .select({
-      commissionAtomic: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text`,
-      commissionCount: sql<number>`count(*)`.mapWith(Number),
+  const [bonusStats, bonusBalances] = await Promise.all([
+    db.select({
+      bonusCount: sql<number>`count(*)`.mapWith(Number),
       activeReferralCount: sql<number>`count(distinct ${referralCommissions.referredId})`.mapWith(Number),
     })
-    .from(referralCommissions)
-    .where(eq(referralCommissions.referrerId, profileId))
+      .from(referralCommissions)
+      .where(eq(referralCommissions.referrerId, profileId)),
+    db.select({
+      tokenSymbol: referralCommissions.tokenSymbol,
+      amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text`,
+    })
+      .from(referralCommissions)
+      .where(eq(referralCommissions.referrerId, profileId))
+      .groupBy(referralCommissions.tokenSymbol),
+  ])
+
+  const bonusAtomicByToken: ReferralOverview['bonusAtomicByToken'] = { HOMERO: '0', PEPE: '0' }
+  for (const row of bonusBalances) {
+    if (row.tokenSymbol === 'PEPE' || row.tokenSymbol === 'HOMERO') bonusAtomicByToken[row.tokenSymbol] = row.amount
+  }
 
   return {
     referralCode: profile.referralCode,
     referralCount: referrals?.referralCount ?? 0,
-    activeReferralCount: commissions?.activeReferralCount ?? 0,
-    commissionCount: commissions?.commissionCount ?? 0,
-    commissionAtomic: commissions?.commissionAtomic ?? '0',
+    activeReferralCount: bonusStats[0]?.activeReferralCount ?? 0,
+    bonusCount: bonusStats[0]?.bonusCount ?? 0,
+    bonusAtomicByToken,
   }
 }

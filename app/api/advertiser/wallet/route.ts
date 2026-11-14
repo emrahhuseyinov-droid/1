@@ -5,7 +5,7 @@ import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { ADVERTISER_WALLET_EVENT_SOURCES, ADVERTISER_WALLET_TRANSFER_IN_SOURCE, ADVERTISER_WALLET_TRANSFER_OUT_SOURCE } from '@/lib/advertiser-wallet'
 import { db } from '@/lib/db'
-import { earningEvents, guestProfiles } from '@/lib/db/schema'
+import { earningEvents, guestProfiles, referralCommissions } from '@/lib/db/schema'
 import { parsePepeAmountToAtomic } from '@/lib/pepe-amount'
 import { PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
@@ -17,7 +17,7 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const publisherExcludedSources = [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]
 
 async function getBalances(guestId: string) {
-  const [publisherRows, advertiserRows, activityRows] = await Promise.all([
+  const [publisherRows, referralRows, advertiserRows, activityRows] = await Promise.all([
     db.select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
       .where(and(
@@ -25,6 +25,9 @@ async function getBalances(guestId: string) {
         eq(earningEvents.tokenSymbol, 'PEPE'),
         notInArray(earningEvents.source, publisherExcludedSources),
       )),
+    db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+      .from(referralCommissions)
+      .where(and(eq(referralCommissions.referrerId, guestId), eq(referralCommissions.tokenSymbol, 'PEPE'))),
     db.select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
       .where(and(
@@ -44,7 +47,7 @@ async function getBalances(guestId: string) {
   ])
 
   return {
-    publisherBalanceAtomic: publisherRows[0]?.amount ?? '0',
+    publisherBalanceAtomic: (BigInt(publisherRows[0]?.amount ?? '0') + BigInt(referralRows[0]?.amount ?? '0')).toString(),
     advertiserBalanceAtomic: advertiserRows[0]?.amount ?? '0',
     activity: activityRows.map((row) => ({
       id: row.id,
@@ -134,6 +137,13 @@ export async function POST(request: NextRequest) {
           eq(earningEvents.tokenSymbol, 'PEPE'),
           notInArray(earningEvents.source, publisherExcludedSources),
         ))
+      const [referralRow] = await transaction
+        .select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+        .from(referralCommissions)
+        .where(and(
+          eq(referralCommissions.referrerId, account.profile.id),
+          eq(referralCommissions.tokenSymbol, 'PEPE'),
+        ))
       const [advertiserRow] = await transaction
         .select({ amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
         .from(earningEvents)
@@ -143,7 +153,7 @@ export async function POST(request: NextRequest) {
           inArray(earningEvents.source, [...ADVERTISER_WALLET_EVENT_SOURCES]),
         ))
 
-      const publisherBalance = BigInt(publisherRow?.amount ?? '0')
+      const publisherBalance = BigInt(publisherRow?.amount ?? '0') + BigInt(referralRow?.amount ?? '0')
       const advertiserBalance = BigInt(advertiserRow?.amount ?? '0')
       if (publisherBalance < BigInt(amountAtomic)) {
         return { status: 'insufficient_balance' as const, publisherBalanceAtomic: publisherBalance.toString() }
