@@ -155,8 +155,8 @@ function PaymentMethodSelector({
           className="group h-auto min-h-32 w-full justify-start rounded-[24px] border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-emerald-200/30 focus-visible:ring-2 focus-visible:ring-emerald-200/50 data-[pressed]:border-emerald-200/50 data-[pressed]:bg-emerald-200/[0.08] sm:p-5"
         >
           <span className="flex w-full items-start gap-4">
-            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-emerald-200/[0.08] transition-colors group-data-[pressed]:bg-emerald-200/15">
-              <Image src="/payment-logos/faucetpay.png" alt="" width={36} height={36} className="size-9 object-contain" />
+            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center">
+              <Image src="/payment-logos/faucetpay.png" alt="" width={40} height={40} className="size-10 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
@@ -177,8 +177,8 @@ function PaymentMethodSelector({
           className="group h-auto min-h-32 w-full justify-start rounded-[24px] border border-white/10 bg-[#0d1531] p-4 text-left transition hover:border-sky-200/30 focus-visible:ring-2 focus-visible:ring-sky-200/50 data-[pressed]:border-sky-200/50 data-[pressed]:bg-sky-200/[0.08] sm:p-5"
         >
           <span className="flex w-full items-start gap-4">
-            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-sky-200/[0.08] transition-colors group-data-[pressed]:bg-sky-200/15">
-              <Image src="/payment-logos/cwallet.svg" alt="" width={36} height={36} className="size-9 object-contain" />
+            <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center">
+              <Image src="/payment-logos/cwallet.svg" alt="" width={40} height={40} className="size-10 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
