@@ -139,11 +139,11 @@ const ruPhrases = new Map<string, string>([
   ['One spin every 2 hours', 'Одно вращение каждые 2 часа'],
   ['SPIN THE WHEEL · FREE', 'КРУТИТЬ КОЛЕСО · БЕСПЛАТНО'],
   ['A reward is waiting to be collected.', 'Награда ждёт получения.'],
-  ['Show my reward', 'Показать нагр����ду'],
+  ['Show my reward', 'Показать награду'],
   ['Published odds', 'Опубликованные вероятности'],
   ['Every sector, every chance', 'Все секторы и их вероятности'],
   ['100% total', 'Всего 100%'],
-  ['The result and cooldown are saved on the server. A reward can be collected once, even if you refresh the page.', 'Результат и таймер с��храня��тся на сервере. Награду можно забрать один раз, даже после перезагрузки страницы.'],
+  ['The result and cooldown are saved on the server. A reward can be collected once, even if you refresh the page.', 'Результат и таймер сохраняются на сервере. Награду можно забрать один раз, даже после перезагрузки страницы.'],
   ['Eight-segment prize wheel. The prize odds are listed below.', 'Колесо с восемью секторами. Вероятности выигрыша указаны ниже.'],
   ['Wheel result', 'Результат колеса'],
   ['Congratulations!', 'Поздравляем!'],
@@ -361,7 +361,7 @@ const ruPhrases = new Map<string, string>([
   ['Fund your Advertiser wallet with PEPE, create PTC or YouTube campaigns, and monitor views and budget. Cancel a campaign to receive its unused task budget and eligible unused promotion value back.', 'Пополните рекламный кошелёк в PEPE, создайте кампанию PTC или YouTube и отслеживайте просмотры и бюджет. При отмене возвращается неиспользованный бюджет заданий и доступная к возврату стоимость продвижения.'],
   ['Open Advertiser workspace', 'Открыть кабинет рекламодателя'],
   ['Clear platform rules', 'Понятные правила платформы'],
-  ['Understand verification, fair play, and payout limits before you begin.', 'Разберитесь в проверке заданий, честной игре и лимитах выплат до начал��.'],
+  ['Understand verification, fair play, and payout limits before you begin.', 'Разберитесь в проверке заданий, честной игре и лимитах выплат до начала.']
   ['Payout history', 'История выплат'],
   ['Track each PEPE request and its FaucetPay status from your account.', 'Проверяйте статус каждой заявки на вывод PEPE и подтверждение FaucetPay.'],
   ['Clear from the start', 'Понятно с самого начала'],
@@ -465,8 +465,8 @@ const ruPhrases = new Map<string, string>([
   ['A successful Daily Bonus also adds up to 1 Pepe Runner energy. Energy cannot exceed 20.00, so the amount credited may be lower when you are close to the cap or already full.', 'Успешное получение ежедневного бонуса также добавляет до 1 единицы энергии Pepe Runner. Энергия не может превышать 20,00, поэтому начисление может быть меньше, если вы близки к лимиту или уже достигли его.'],
   ['Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.', 'Перед началом прочитайте условия каждого задания View Ads. Не закрывайте окно задания и дождитесь окончания таймера: награда начисляется только после подтверждения выполнения сервером.'],
   ['Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.', 'За подтверждённое задание PTC начисляется +0,20 энергии Pepe Runner, за Shortlink — +0,35. Действуют ограничения на хранение энергии и её дневное начисление.'],
-  ['Each task shows its reward token, amount, and requirements before you start. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE after verification.', 'Перед началом задания показываются токен и размер награды, а также требования. Награды за рекламные кампании PTC и YouTube начисляются в PEPE после проверки.'],
-  ['Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.', 'Не используйте ботов, скрипты, фиктивную активность или дублирующие аккаунты для получения наград и привлечения рефералов. Задания и награды могут меняться; заработок не гарантируется.'],
+  ['Each task shows its reward token, amount, and requirements before you start. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE after verification.', 'Перед началом задания показываются токен и размер награды, а также требования. Награды за рекламные кампании PTC и YouTube начисляются в PEPE после проверки.']
+  ['Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.', 'Не используйте ботов, скрипты, фиктивную активность или дублирующие аккаунты для получения наград и привлечения рефералов. Задания и награды могут меняться; заработок не гарантируется.']
   ['Earner and advertiser workspaces', 'Кабинеты исполнителя и рекламодателя'],
   ['Use one pepe.casa login to complete tasks or manage your own advertising campaigns.', 'Используйте один аккаунт pepe.casa для выполнения заданий и управления рекламными кампаниями.'],
   ['Switch between Earner and Advertiser workspaces from the account navigation. Switching workspaces does not create a second login.', 'Переключайтесь между кабинетами исполнителя и рекламодателя через меню аккаунта. Смена кабинета не создаёт второй аккаунт.'],
@@ -479,7 +479,8 @@ const ruPhrases = new Map<string, string>([
   ['Complete a CAPTCHA to unlock the current PEPE reward after server-side verification.', 'Пройдите CAPTCHA, чтобы открыть текущую награду PEPE после проверки на сервере.'],
   ['Start the challenge from Manual Faucet, complete it, then return to claim your PEPE.', 'Запустите проверку в разделе «Ручной кран», пройдите её, затем вернитесь и заберите PEPE.'],
   ['Each claim requires a unique CAPTCHA session and is credited only after server-side verification.', 'Для каждого получения нужна отдельная сессия CAPTCHA; награда начисляется только после проверки на сервере.'],
-  ['Rewards are credited only after the activity is successfully verified.', 'Награды начисляются только после успешной проверки задания.'],
+  ['Eligible PEPE withdrawals are sent through FaucetPay after verification.', 'Подходящие заявки на вывод PEPE после проверки отправляются через FaucetPay.'],
+  ['Rewards are credited only after the activity is successfully verified.', 'Награды начисляются только после успешной проверки задания.']
   ['Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals.', 'Не используйте ботов, скрипты, фиктивную активность или дублирующие аккаунты для получения наград и реферальных бонусов.'],
   ['Task availability and reward amounts can change. No earnings are guaranteed.', 'Доступность заданий и размер наград могут меняться. Заработок не гарантируется.'],
   ['Protect your account', 'Защитите аккаунт'],
@@ -733,9 +734,9 @@ const ruPhrases = new Map<string, string>([
   ['Manage your signed-in account and profile information.', 'Управляйте аккаунтом и данными профиля.'],
   ['My Profile', 'Мой профиль'],
   ['Security', 'Безопасность'],
-  ['Profile details', 'Данные профиля'],
+  ['Profile details', 'Данные профиля']
   ['Choose your avatar', 'Выберите аватар'],
-  ['Choose an avatar; your choice will appear across your account.', 'Выберите аватар — он бу��ет отображаться во всём аккаунте.'],
+  ['Choose an avatar; your choice will appear across your account.', 'Выберите аватар — он будет отображаться во всём аккаунте.']
   ['Avatar saved.', 'Аватар сохранён.'],
   ['Could not save avatar. Please try again.', 'Не удалось сохранить аватар. Попробуйте ещё раз.'],
   ['Saving avatar…', 'Сохраняем аватар…'],
@@ -749,7 +750,7 @@ const ruPhrases = new Map<string, string>([
   ['Forest', 'Лесной'],
   ['Rose', 'Розовый'],
   ['Silver', 'Серебряный'],
-  ['Your sign-in identity is attached to your existing account profile.', 'Дан��ые для входа связаны с вашим профилем аккаунта.'],
+  ['Your sign-in identity is attached to your existing account profile.', 'Данные для входа связаны с вашим профилем аккаунта.']
   ['Profile name', 'Имя профиля'],
   ['Profile nickname', 'Псевдоним профиля'],
   ['Email for sign-in', 'Почта для входа'],
@@ -767,7 +768,7 @@ const ruPhrases = new Map<string, string>([
   ['Security & access', 'Безопасность и доступ'],
   ['Account protection', 'Защита аккаунта'],
   ['Make your account harder to compromise.', 'Сделайте аккаунт более защищённым.'],
-  ['Protect your account with a password that is unique and hard to guess.', 'Защитите аккаунт уникальным и сложным для угады��ания паролем.'],
+  ['Protect your account with a password that is unique and hard to guess.', 'Защитите аккаунт уникальным и сложным для угадывания паролем.']
   ['A unique, longer password is one of the simplest ways to protect your account. Change it whenever you think it may have been exposed.', 'Уникальный длинный пароль — простой способ защитить аккаунт. Измените его, если считаете, что он мог стать известен другим.'],
   ['Password protection', 'Защита паролем'],
   ['Change password fields', 'Поля смены пароля'],
@@ -883,7 +884,7 @@ const ruPhrases = new Map<string, string>([
   ['Daily ad energy limit reached.', 'Дневной лимит энергии от рекламы достигнут.'],
   ['Ranked runs are temporarily unavailable.', 'Рейтинговые забеги временно недоступны.'],
   ['A successful Daily Bonus also adds up to 1 Pepe Runner energy. Energy cannot exceed 20.00, so the amount credited may be lower when you are close to the cap or already full.', 'За получение ежедневного бонуса начисляется до 1 единицы энергии Pepe Runner. Запас не может превышать 20,00, поэтому при заполненном или почти заполненном запасе будет начислено меньше.'],
-  ['Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.', 'За подтверждённые PTC-задания начисляется +0.20 энергии для бегуна Pepe, за Shortlinks — +0,35; действуют ограничения запаса и дневного лимита энергии.'],
+  ['Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.', 'За подтверждённое задание PTC начисляется +0,20 энергии Pepe Runner, за Shortlink — +0,35. Действуют ограничения на хранение энергии и её дневное начисление.']
   ['Daily energy earned: 20', 'Дневной лимит энергии: 20'],
   ['Weekly HOMERO prize budget', 'Недельный призовой фонд HOMERO'],
   ['Weekly PEPE prize budget', 'Недельный призовой фонд PEPE'],
@@ -894,9 +895,9 @@ const ruPhrases = new Map<string, string>([
   ['Quote expires in 30 seconds', 'Котировка истекает через 30 секунд'],
   ['Remaining HOMERO treasury supply', 'Остаток HOMERO в казначействе'],
   ['HOMERO treasury balance', 'Баланс казначейства HOMERO'],
-  ['Initialize 10B HOMERO treasury', 'Инициализ��ровать казначейство на 10 млрд HOMERO'],
+  ['Initialize 10B HOMERO treasury', 'Инициализировать казначейство на 10 млрд HOMERO']
   ['The HOMERO treasury is ready.', 'Казначейство HOMERO готово.'],
-  ['Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.', 'За подтверждённые PTC-задания начисляется +0.20 энергии для бегуна Pepe, за Shortlinks — +0,35; действуют ограничения запаса и дневного лимита энергии.'],
+  ['Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.', 'За подтверждённое задание PTC начисляется +0,20 энергии Pepe Runner, за Shortlink — +0,35. Действуют ограничения на хранение энергии и её дневное начисление.']
   ['Arcade reserve', 'Резерв аркады'],
   ['Your stats', 'Ваша статистика'],
   ['Player profile', 'Профиль игрока'],
@@ -946,7 +947,7 @@ const ruPhrases = new Map<string, string>([
   ['Adds 1 energy', 'Добавляет 1 энергию'],
   ['0.20 Pepe Runner energy', '0.20 энергии для бегуна Pepe'],
   ['This campaign was already completed and removed from your tasks.', 'Вы уже выполнили эту кампанию — она удалена из списка заданий.'],
-  ['You have already completed this campaign.', 'Вы уже выполнили эту кампанию.'],
+  ['You have already completed this campaign.', 'Вы уже выполнили эту кампанию.']
   ['+0.20 Pepe Runner energy', '+0.20 энергии для бегуна Pepe'],
   ['0.35 Pepe Runner energy', '0,35 энергии для бегуна Pepe'],
   ['+0.35 Pepe Runner energy', '+0,35 энергии для бегуна Pepe'],
@@ -1154,7 +1155,7 @@ const ruPhrases = new Map<string, string>([
   ['Charged at launch, before tasks are distributed.', 'Сумма списывается при запуске до распределения заданий.'],
   ['Performers receive HOMERO for each completed task. The reward equivalent and the', 'Исполнители получают HOMERO за каждое выполненное задание. Эквивалент награды и комиссия'],
   ['PEPE commission are tracked separately.', 'в PEPE учитываются отдельно.'],
-  ['Unused task budget and commission are refunded on cancellation; unused Pro time is refunded if the campaign is cancelled or finishes early.', 'Неиспользованн��й бюджет заданий и комиссия возвращаются при отмене; неиспользованное время Pro возвращается при отмене или досрочном завершении кампании.'],
+  ['Unused task budget and commission are refunded on cancellation; unused Pro time is refunded if the campaign is cancelled or finishes early.', 'Неиспользованный бюджет заданий и комиссия возвращаются при отмене; неиспользованное время Pro возвращается при отмене или досрочном завершении кампании.']
   ['The title must be between 3 and 80 characters.', 'Название должно содержать от 3 до 80 символов.'],
   ['The description must be 500 characters or fewer.', 'Описание должно содержать не более 500 символов.'],
   ['Enter a valid HTTPS YouTube URL.', 'Введите корректную HTTPS-ссылку на YouTube.'],
@@ -1229,7 +1230,7 @@ const ruPhrases = new Map<string, string>([
   ['Could not load today’s video availability. Refresh the page and try again.', 'Не удалось загрузить доступность видео на сегодня. Обновите страницу и попробуйте ещё раз.'],
   ['You have used all 10 video rewards available today.', 'Вы использовали все 10 видеонаград на сегодня.'],
   ['Could not load the weekly leaderboard.', 'Не удалось загрузить недельный рейтинг.'],
-  ['Could not load advertiser balance.', 'Не удалось загрузить баланс реклам��дателя.'],
+  ['Could not load advertiser balance.', 'Не удалось загрузить баланс рекламодателя.']
   ['Select language', 'Выбрать язык'],
   ['Website language', 'Язык сайта'],
   ['Choose language', 'Выберите язык'],
@@ -1516,7 +1517,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Подтверждённое рекламное задание выполнено за последние ${match[1]} дн.${match[2] ? ` Последняя активность: ${match[2]}.` : ''} Погашение промокодов приостановлено до настройки финансируемых кампаний.`
 
   match = value.match(/^Complete at least one verified View Ads task in the previous (\d+) days to meet the promo-code activity requirement\. Promo redemptions remain paused until funded campaigns are configured\.$/i)
-  if (match) return `Выполните хотя бы одно подтверждённое рекламное задание за последние ${match[1]} дн., чтобы выполнить требование активности для промокода. Погашение промокодов пр��остановлено до настройки финансируемых кампаний.`
+  if (match) return `Выполните хотя бы одно подтверждённое рекламное задание за последние ${match[1]} дн., чтобы выполнить требование активности для промокода. Погашение промокодов приостановлено до настройки финансируемых кампаний.`
 
   match = value.match(/^(.+) will be added when you send that category\.$/i)
   if (match) return `Раздел «${match[1]}» появится после добавления этой категории.`

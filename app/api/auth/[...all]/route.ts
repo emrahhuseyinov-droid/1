@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 import { isIP } from 'node:net'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, or, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { toNextJsHandler } from 'better-auth/next-js'
 import { auth } from '@/lib/auth'
@@ -13,13 +13,22 @@ const authHandlers = toNextJsHandler(auth)
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 
 function normalizeIpAddress(value: string): string | null {
-  const address = value.trim().replace(/^\[|\]$/g, '')
+  let address = value.trim().replace(/^\[|\]$/g, '')
   const mappedIpv4 = address.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i)?.[1]
   const ipv4Address = mappedIpv4 ?? address
 
   if (isIP(ipv4Address) === 4) {
     return ipv4Address.split('.').map((part) => String(Number(part))).join('.')
   }
+
+  const embeddedIpv4 = address.match(/:(\d{1,3}(?:\.\d{1,3}){3})$/)?.[1]
+  if (embeddedIpv4) {
+    const octets = embeddedIpv4.split('.').map(Number)
+    if (octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)) return null
+    const ipv4Tail = `${((octets[0] << 8) | octets[1]).toString(16)}:${((octets[2] << 8) | octets[3]).toString(16)}`
+    address = address.slice(0, -embeddedIpv4.length) + ipv4Tail
+  }
+
   if (isIP(address) !== 6) return null
 
   const [left = '', right = '', ...extra] = address.toLowerCase().split('::')
@@ -40,11 +49,13 @@ function normalizeIpAddress(value: string): string | null {
 
 function getClientIp(request: NextRequest): string | null {
   const trustedHeader = request.headers.get('x-vercel-forwarded-for')
-  const developmentHeader = process.env.NODE_ENV === 'production'
-    ? null
+  const forwardedHeader = process.env.NODE_ENV === 'production'
+    ? request.headers.get('x-forwarded-for')
     : request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')
-  const forwardedAddress = (trustedHeader ?? developmentHeader)?.split(',')[0]
-  return forwardedAddress ? normalizeIpAddress(forwardedAddress) : null
+  const forwardedAddress = (trustedHeader ?? forwardedHeader)?.split(',')[0]
+
+  if (forwardedAddress) return normalizeIpAddress(forwardedAddress)
+  return process.env.NODE_ENV === 'production' ? null : '127.0.0.1'
 }
 
 function hashSignupValue(label: 'ip' | 'email', value: string, secret: string) {
@@ -86,7 +97,13 @@ export async function POST(request: NextRequest) {
           status: sql`case when ${signupIpClaims.status} = 'claimed' then 'claimed' else 'pending' end`,
           updatedAt: new Date(),
         },
-        setWhere: eq(signupIpClaims.emailHash, emailHash),
+        setWhere: or(
+          eq(signupIpClaims.emailHash, emailHash),
+          and(
+            eq(signupIpClaims.status, 'pending'),
+            sql`${signupIpClaims.updatedAt} < now() - interval '15 minutes'`,
+          ),
+        ),
       })
       .returning({ ipHash: signupIpClaims.ipHash })
 
