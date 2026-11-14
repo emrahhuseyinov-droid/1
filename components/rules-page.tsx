@@ -17,7 +17,7 @@ const rules = [
       'A successful Daily Bonus also adds up to 1 Pepe Runner energy. Energy cannot exceed 20.00, so the amount credited may be lower when you are close to the cap or already full.',
       'Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.',
       'Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.',
-      'Each task shows its reward token, amount, and requirements before you start. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE after verification.'
+      'Each task shows its reward token, amount, and requirements before you start. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE after verification.',
       'The Wheel of Fortune shows when a free spin is available and the reward before you collect it.',
       'Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.',
     ],
