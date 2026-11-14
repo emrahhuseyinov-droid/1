@@ -442,7 +442,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
   async function handleCampaignStatusChange(campaign: AdvertiserCampaign, status: CampaignStatus) {
     if (status === 'cancelled') {
       const confirmed = window.confirm(isRussian
-        ? 'Отменить кампанию и вернуть неиспользованный бюджет заданий и оставшее��я время продвижения?'
+        ? 'Отменить кампанию и вернуть неиспользованный бюджет заданий и оставшееся время продвижения?'
         : 'Cancel this campaign and refund unused task budget and remaining promotion time?')
       if (!confirmed) return
     }
@@ -678,7 +678,7 @@ function AdvertiserWalletPage({ view = 'fund' }: { view?: AdvertiserPageView }) 
             </div>
               : <div className="flex min-h-32 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-5 text-center">
                 <span className="flex size-10 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-200"><Megaphone size={18} /></span>
-                <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока ��ет' : 'No campaigns yet'}</p>
+                <p className="mt-3 text-xs font-extrabold text-white">{isRussian ? 'Кампаний пока нет' : 'No campaigns yet'}</p>
                 <p className="mt-1 max-w-sm text-[10px] leading-5 text-slate-400">{isRussian ? 'Создайте PTC- или YouTube-кампанию, чтобы она появилась в разделе заданий для исполнителей.' : 'Create a PTC or YouTube campaign to make it available to performers.'}</p>
               </div>}
         </section>}

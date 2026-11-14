@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Check, Gift, Gamepad2, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Check, Gift, Gamepad2, Megaphone, ShieldCheck, Wallet } from 'lucide-react'
 import { PepeCasaLogo } from '@/components/pepe-casa-logo'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { LocalizedTree } from '@/components/site-language-provider'
@@ -17,9 +17,21 @@ const rules = [
       'A successful Daily Bonus also adds up to 1 Pepe Runner energy. Energy cannot exceed 20.00, so the amount credited may be lower when you are close to the cap or already full.',
       'Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.',
       'Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.',
-      'Partner task requirements and PEPE rewards are shown before you start. Rewards are credited only after verification.',
+      'Each task shows its reward token, amount, and requirements before you start. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE after verification.'
       'The Wheel of Fortune shows when a free spin is available and the reward before you collect it.',
       'Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.',
+    ],
+  },
+  {
+    title: 'Earner and advertiser workspaces',
+    description: 'Use one pepe.casa login to complete tasks or manage your own advertising campaigns.',
+    icon: ArrowLeftRight,
+    tone: 'text-indigo-200 bg-indigo-300/10 ring-indigo-200/15',
+    points: [
+      'Switch between Earner and Advertiser workspaces from the account navigation. Switching workspaces does not create a second login.',
+      'Fund the Advertiser wallet through the supported FaucetPay top-up flow or transfer PEPE from the Earner wallet. Review your available balance and total campaign cost before launch.',
+      'Create a PTC or YouTube campaign. PTC campaigns are listed with View Ads tasks; YouTube campaigns are listed in YouTube tasks. Performers see the reward, token, viewing time, and requirements before starting.',
+      'Pause or resume active campaigns. Cancelling returns the unused task budget, including its commission, and any eligible unused promotion amount. Completed tasks are not refunded.',
     ],
   },
   {
@@ -105,7 +117,7 @@ export function RulesPage() {
           </p>
           <h1 className="mt-5 max-w-3xl text-balance text-4xl font-black leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-6xl">Daily rewards. Ad tasks. Clear rules.</h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-            Learn how CAPTCHA rewards, daily HOMERO bonuses, partner tasks, the Wheel of Fortune, Arcade, and PEPE withdrawals work. Check the terms before you claim or withdraw.
+            Learn how verified tasks, advertiser campaigns, account switching, daily rewards, and real PEPE payouts through FaucetPay work. Check each task&apos;s reward and terms before you begin.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-4">
@@ -121,7 +133,7 @@ export function RulesPage() {
               <p className="mt-2 text-xl font-black text-white">FaucetPay</p>
             </div>
           </div>
-          <p className="mt-4 text-[10px] leading-5 text-white/40">The daily withdrawal limit resets at 00:00 UTC. A registered, verified FaucetPay account is required.</p>
+          <p className="mt-4 text-[10px] leading-5 text-white/40">The daily withdrawal limit resets at 00:00 UTC. A registered, verified FaucetPay account is required. Eligible PEPE payout requests are sent automatically and their status is shown in your account.</p>
         </section>
 
         <section id="rules" aria-labelledby="rules-heading" className="scroll-mt-28 pt-14 sm:pt-16">
@@ -158,7 +170,7 @@ export function RulesPage() {
         <section aria-labelledby="balances-heading" className="mt-5 rounded-[24px] border border-amber-200/15 bg-amber-200/[0.04] p-5 sm:p-7">
           <h2 id="balances-heading" className="text-lg font-extrabold">Balances are not all the same</h2>
           <p className="mt-2 text-xs leading-6 text-white/60 sm:text-sm">
-            PEPE and HOMERO are recorded separately in your account. The withdrawal form sends PEPE only. HOMERO remains an in-platform balance; if an exchange option is available to you, its current rate and fee are shown before you confirm.
+            PEPE, HOMERO, and the Advertiser wallet are tracked separately. The withdrawal form sends PEPE only; HOMERO is an in-platform balance and advertiser campaign funds are reserved for campaigns. If an exchange option is available, its current rate and fee are shown before you confirm.
           </p>
           <p className="mt-3 text-[10px] leading-5 text-white/40">PEPE is a crypto asset, so its market value can change. pepe.casa does not promise a fixed fiat value or guaranteed earnings.</p>
         </section>

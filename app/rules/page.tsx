@@ -8,11 +8,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return language === 'ru'
     ? {
         title: 'Правила платформы и выплаты PEPE | pepe.casa',
-        description: 'Правила pepe.casa о CAPTCHA-наградах, заданиях, честной игре и выводе PEPE, включая требования FaucetPay и лимиты выплат.'
+        description: 'Правила pepe.casa о заданиях рекламодателей, переключении между кабинетами, проверке наград, балансе рекламодателя и выводе PEPE через FaucetPay.'
       }
     : {
         title: 'Platform Rules & PEPE Payouts | pepe.casa',
-        description: 'Read pepe.casa CAPTCHA reward, task, fair-play, and PEPE withdrawal rules, including FaucetPay requirements and payout limits.'
+        description: 'Read pepe.casa rules for advertiser tasks, switching workspaces, campaign budgets, reward verification, and PEPE withdrawals through FaucetPay.'
       }
 }
 

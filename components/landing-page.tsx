@@ -16,6 +16,7 @@ import {
   Gamepad2,
   MonitorPlay,
   Menu,
+  Megaphone,
   ShieldCheck,
   Trophy,
   UsersRound,
@@ -33,7 +34,7 @@ const navigation = [
 const features = [
   {
     title: 'Verified reward tasks',
-    description: 'Explore View Ads, PTC, Shortlinks, and eligible sponsored campaigns; check the reward and requirements before starting.',
+    description: 'Complete View Ads, PTC, Shortlinks, partner offers, and advertiser campaigns. Each task shows its reward and requirements before you begin.',
     icon: Gift,
     tone: 'text-amber-200 bg-amber-300/10 ring-amber-200/15',
   },
@@ -87,8 +88,14 @@ const features = [
   },
   {
     title: 'Advertiser tasks',
-    description: 'Discover sponsored tasks from pepe.casa advertisers alongside other eligible activities.',
+    description: 'Complete advertiser-created PTC and YouTube tasks. See the reward, currency, and watch requirements before starting.',
     icon: MonitorPlay,
+    tone: 'text-indigo-200 bg-indigo-300/10 ring-indigo-200/15',
+  },
+  {
+    title: 'Advertiser workspace',
+    description: 'Switch workspaces with one login, fund your advertiser wallet, launch PTC or YouTube campaigns, and track their budgets.',
+    icon: Megaphone,
     tone: 'text-indigo-200 bg-indigo-300/10 ring-indigo-200/15',
   },
   {
@@ -102,31 +109,34 @@ const features = [
 const steps = [
   {
     title: 'Create your account',
-    description: 'Complete a quick registration on pepe.casa to unlock your dashboard, tasks, and reward tracking.',
+    description: 'Register once to access your Earner and Advertiser workspaces with the same pepe.casa login.',
     icon: ShieldCheck,
   },
   {
-    title: 'Choose an activity',
-    description: 'Explore verified ad tasks, the current PEPE CAPTCHA reward, Wheel of Fortune spins, and Arcade runs.',
-    icon: Zap,
+    title: 'Choose how to participate',
+    description: 'Complete tasks as an Earner, or switch to Advertiser to fund and manage PTC or YouTube campaigns.',
+    icon: ArrowLeftRight,
   },
   {
-    title: 'Earn rewards',
-    description: 'Track instant reward credits in your profile and exchange HOMERO for PEPE on our exchange.',
-    icon: Gift,
+    title: 'Complete verified tasks',
+    description: 'Check the reward, currency, and requirements first. Finish the task timer; the server verifies completion before crediting the reward.',
+    icon: MonitorPlay,
   },
   {
-    title: 'Withdraw your PEPE',
-    description: 'Have at least 500 PEPE? Add your FaucetPay account and request a payout instantly!',
+    title: 'Receive PEPE through FaucetPay',
+    description: 'Request an eligible PEPE payout to a registered, verified FaucetPay account. Track the transfer status in your dashboard.',
     icon: Wallet,
   },
 ]
 
-type FAQKind = 'captcha' | 'payouts' | 'balances' | 'rewards' | 'leaderboard'
+type FAQKind = 'captcha' | 'accounts' | 'advertisers' | 'tasks' | 'payouts' | 'balances' | 'rewards' | 'leaderboard'
 
 const faqs: { kind: FAQKind; question: string }[] = [
   { kind: 'captcha', question: 'How do I claim the current CAPTCHA faucet reward?' },
-  { kind: 'payouts', question: 'Does pepe.casa pay PEPE?' },
+  { kind: 'accounts', question: 'Can I earn and advertise with one account?' },
+  { kind: 'advertisers', question: 'How do advertiser campaigns work?' },
+  { kind: 'tasks', question: 'How are advertiser task rewards credited?' },
+  { kind: 'payouts', question: 'Does pepe.casa really pay PEPE?' },
   { kind: 'balances', question: 'What is the difference between PEPE and HOMERO?' },
   { kind: 'rewards', question: 'Are rewards guaranteed?' },
   { kind: 'leaderboard', question: 'Can I play without joining the leaderboard?' },
@@ -267,6 +277,22 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
           </div>
           <p className="text-[12px] leading-5 text-white/50">{'Open Manual Faucet, complete the challenge, and return to claim after verification.'}</p>
         </div>
+      ) : kind === 'accounts' ? (
+        <div className="space-y-3 text-[13px] leading-6 text-white/70">
+          <p>{'Yes. One pepe.casa login gives you access to both the Earner and Advertiser workspaces.'}</p>
+          <p>{'Use Switch to Advertiser or Switch to Earner in the workspace navigation. Switching changes the workspace, not your login; PEPE and HOMERO balances are tracked separately.'}</p>
+        </div>
+      ) : kind === 'advertisers' ? (
+        <div className="space-y-3 text-[13px] leading-6 text-white/70">
+          <p>{'Add PEPE to your Advertiser wallet through a supported FaucetPay top-up or by transferring PEPE from your Earner balance.'}</p>
+          <p>{'Create a PTC or YouTube campaign, review the per-view reward, fee, and total budget, then launch it. PTC campaigns appear with View Ads tasks; YouTube campaigns appear in YouTube tasks.'}</p>
+          <p>{'You can pause or resume an active campaign. When you cancel, the unused task budget and eligible unused promotion value are returned; completed tasks are not refunded.'}</p>
+        </div>
+      ) : kind === 'tasks' ? (
+        <div className="space-y-3 text-[13px] leading-6 text-white/70">
+          <p>{'Open View Ads/PTC or YouTube tasks and check the displayed reward, token, watch time, and requirements before starting.'}</p>
+          <p>{'Keep the task open until its timer is complete. The server verifies completion before crediting the reward. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE; other activities show their reward token in the task details.'}</p>
+        </div>
       ) : kind === 'payouts' ? (
         <div className="space-y-4">
           <div className="flex items-start gap-3 rounded-2xl border border-amber-200/10 bg-amber-200/[0.045] p-4">
@@ -274,7 +300,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
               <Wallet size={16} aria-hidden="true" />
             </span>
             <p className="text-[13px] leading-6 text-white/75 sm:text-sm">
-              {'Yes, pepe.casa pays PEPE. Approved withdrawal requests are processed through FaucetPay after verification.'}
+              {'Yes. Eligible PEPE withdrawal requests are sent automatically through FaucetPay after they are accepted and verified. The payout status is recorded in your account.'}
             </p>
           </div>
           <dl className="grid gap-2 sm:grid-cols-3">
@@ -305,7 +331,7 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
                 <p className="text-[13px] font-extrabold text-white">{'PEPE (external cryptocurrency)'}</p>
               </div>
               <p className="mt-3 text-[13px] leading-6 text-white/65">
-                {'The main currency for withdrawals through FaucetPay. Platform limits apply.'}
+                {'PEPE is the withdrawable balance. Eligible payout requests are sent through FaucetPay; platform limits and verification apply.'}
               </p>
             </article>
             <article className="rounded-2xl border border-amber-200/10 bg-gradient-to-br from-amber-300/[0.055] to-white/[0.015] p-4">
@@ -330,13 +356,13 @@ function FAQAnswer({ kind }: { kind: FAQKind }) {
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-cyan-200/10 text-cyan-100">
                 <MonitorPlay size={17} aria-hidden="true" />
               </span>
-              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Complete verified PTC tasks for PEPE rewards.'}</p>
+              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Complete advertiser-created PTC or YouTube tasks to receive the PEPE reward shown, after server verification.'}</p>
             </div>
             <div className="flex items-center gap-3 rounded-2xl border border-amber-200/10 bg-amber-300/[0.035] p-4">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-amber-200/10 text-amber-100">
                 <Gift size={17} aria-hidden="true" />
               </span>
-              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Claiming the daily HOMERO bonus also adds up to 1 Pepe Runner energy, subject to the energy cap.'}</p>
+              <p className="text-[13px] font-semibold leading-5 text-white/80">{'Daily bonuses and eligible in-platform activities can credit HOMERO. Check the displayed amount and conditions before claiming.'}</p>
             </div>
           </div>
         </div>
@@ -445,8 +471,8 @@ export function LandingPage({ referralCode }: LandingPageProps) {
         <div className="mx-auto max-w-[1760px]">
           <SectionHeading
             id="steps-title"
-            title="Four steps to your first payout"
-            description="Register, stay active, and claim your PEPE tokens directly on FaucetPay."
+            title="Earn through tasks or launch a campaign"
+            description="Use one login to complete verified tasks as an Earner or fund and manage campaigns as an Advertiser."
           />
           <div className="relative grid gap-4 md:grid-cols-4">
             <div aria-hidden="true" className="absolute left-[16%] right-[16%] top-8 hidden border-t border-dashed border-white/10 md:block" />
@@ -465,6 +491,16 @@ export function LandingPage({ referralCode }: LandingPageProps) {
               )
             })}
           </div>
+          <article className="mt-5 flex flex-col gap-4 rounded-[24px] border border-indigo-200/15 bg-gradient-to-r from-indigo-500/[0.08] via-[#111a26] to-cyan-500/[0.06] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+            <div className="flex items-start gap-4">
+              <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-indigo-200/15 bg-indigo-300/[0.08] text-indigo-100"><Megaphone size={19} aria-hidden="true" /></span>
+              <div>
+                <h3 className="text-base font-extrabold text-white">For advertisers</h3>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-white/65">Fund your Advertiser wallet with PEPE, create PTC or YouTube campaigns, and monitor views and budget. Cancel a campaign to receive its unused task budget and eligible unused promotion value back.</p>
+              </div>
+            </div>
+            <Link href="/sign-in?next=%2Fadvertiser%2Ffund" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-indigo-200/20 bg-indigo-300/[0.08] px-4 text-xs font-bold text-indigo-100 transition hover:bg-indigo-300/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-200">Open Advertiser workspace <ArrowRight size={14} aria-hidden="true" /></Link>
+          </article>
         </div>
       </section>
 
@@ -473,7 +509,7 @@ export function LandingPage({ referralCode }: LandingPageProps) {
           <SectionHeading
             id="faq-title"
             title="Frequently asked questions"
-            description="Clear answers about CAPTCHA claims, tasks, rewards, Arcade, and PEPE payouts."
+            description="Learn how earning and advertiser workspaces, task verification, campaign funding, PEPE rewards, and FaucetPay payouts work."
           />
           <div className="grid gap-3 lg:grid-cols-2">
             {faqs.map((faq) => (
@@ -500,7 +536,7 @@ export function LandingPage({ referralCode }: LandingPageProps) {
             <Link href="/" aria-label="pepe.casa home" className="inline-flex rounded-xl text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
               <PepeCasaLogo size={30} textClassName="text-base" />
             </Link>
-            <p className="max-w-md text-xs leading-5 text-white/45">Earn PEPE through verified activities. Clear rules, straightforward rewards.</p>
+            <p className="max-w-md text-xs leading-5 text-white/45">Complete verified tasks for PEPE, or manage advertiser campaigns from the same account.</p>
           </div>
           <nav aria-label="Footer navigation" className="flex flex-wrap gap-2 sm:justify-end">
             {navigation.map((item) => <Link key={item.href} href={item.href} className="rounded-full border border-white/[0.08] bg-white/[0.025] px-3 py-2 text-[11px] font-semibold text-white/60 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">{item.label}</Link>)}

@@ -11,13 +11,13 @@ export async function generateMetadata(): Promise<Metadata> {
   if (savedLanguage === 'en') {
     return {
       title: 'pepe.casa | Rewards, Arcade & PEPE Payouts',
-      description: 'Explore pepe.casa CAPTCHA rewards, verified tasks, the Wheel of Fortune, neon Arcade, PEPE and HOMERO balances, and payouts from one account.',
+      description: 'Complete verified advertiser and partner tasks, manage PTC or YouTube campaigns, earn PEPE, and request FaucetPay payouts from one pepe.casa account.',
     }
   }
 
   return {
     title: 'pepe.casa | Награды, аркада и выплаты PEPE',
-    description: 'Получайте награды за CAPTCHA и задания, вращайте колесо фортуны, играйте в неоновую аркаду и управляйте балансами PEPE и HOMERO на pepe.casa.',
+    description: 'Выполняйте проверенные задания рекламодателей и партнёров, создавайте PTC- и YouTube-кампании, получайте PEPE и выводите его через FaucetPay на pepe.casa.'
   }
 }
 
