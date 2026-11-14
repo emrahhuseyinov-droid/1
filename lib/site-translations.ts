@@ -139,7 +139,7 @@ const ruPhrases = new Map<string, string>([
   ['One spin every 2 hours', 'Одно вращение каждые 2 часа'],
   ['SPIN THE WHEEL · FREE', 'КРУТИТЬ КОЛЕСО · БЕСПЛАТНО'],
   ['A reward is waiting to be collected.', 'Награда ждёт получения.'],
-  ['Show my reward', 'Показать награду'],
+  ['Show my reward', 'Показать ��аграду'],
   ['Published odds', 'Опубликованные вероятности'],
   ['Every sector, every chance', 'Все секторы и их вероятности'],
   ['100% total', 'Всего 100%'],
@@ -298,7 +298,7 @@ const ruPhrases = new Map<string, string>([
   ['Already verified?', 'Уже подтвердили?'],
   ['Your account remains protected until your email is verified.', 'Ваш аккаунт защищён до подтверждения почты.'],
   ['Need to start over?', 'Хотите начать заново?'],
-  ['Account recovery', 'Восстановление аккаунта'],
+  ['Account recovery', 'Вос��тановление аккаунта'],
   ['Reset your password', 'Сброс пароля'],
   ["We'll email you a one-time code so you can choose a new password.", 'Мы отправим одноразовый код на почту, чтобы вы могли установить новый пароль.'],
   ['If an account matches this address, a reset code has been sent.', 'Если аккаунт с таким адр��сом существует, код для сброса пароля отправлен.'],
@@ -440,7 +440,7 @@ const ruPhrases = new Map<string, string>([
   ['Task availability and reward amounts can change. No earnings are guaranteed.', 'Доступность заданий и размер наград могут меняться. Заработок не гарантируется.'],
   ['Protect your account', 'Защитите аккаунт'],
   ['Use your own account and keep its sign-in details private.', 'Используйте только свой аккаунт и не раскрывайте данные для входа.'],
-  ['Do not access another person’s account, share credentials, or create duplicate accounts to bypass limits.', 'Не входите в чужие аккаунты, не передавайте учётные данные и не создавайте дубликаты аккаунтов для обхода ограничений.'],
+  ['Do not access another person’s account, share credentials, or create duplicate accounts to bypass limits.', 'Не входите в чужие аккаунты, не передав��йте учётные данные и не создавайте дубликаты аккаунтов для обхода ограничений.'],
   ['Do not manipulate referrals, reward claims, account balances, or platform requests.', 'Не манипулируйте рефералами, заявками на награды, балансами аккаунтов и запросами к платформе.'],
   ['Activity that fails verification may not be credited; suspicious activity can be reviewed.', 'Задания, не прошедшие проверку, могут остаться без начисления; подозрительная активность может быть проверена.'],
   ['Play Arcade fairly', 'Играйте в аркаде честно'],
@@ -455,7 +455,7 @@ const ruPhrases = new Map<string, string>([
   ['Pending and paid requests count toward that day’s limit. The requested PEPE is reserved while the transfer is being processed.', 'Заявки в обработке и выполненные заявки учитываются в дневном лимите. Запрошенные PEPE резервируются на время перевода.'],
   ['If FaucetPay rejects a request, the PEPE is returned to your balance. If the status is pending, do not submit the same withdrawal again; the balance remains reserved to prevent a duplicate transfer.', 'Если FaucetPay отклонит заявку, PEPE вернутся на баланс. Пока заявка обрабатывается, не отправляйте её повторно: сумма остаётся в резерве, чтобы избежать дублирующего перевода.'],
   ['Balances are not all the same', 'Балансы имеют разные назначения'],
-  ['PEPE and HOMERO are recorded separately in your account. The withdrawal form sends PEPE only. HOMERO remains an in-platform balance; if an exchange option is available to you, its current rate and fee are shown before you confirm.', 'PEPE и HOMERO учитываются в аккаунте отдельно. Форма вывода отправляет только PEPE. HOMERO остаётся внутренним балансом платформы; если обмен доступен, курс и комиссия будут показаны до подтверждения.'],
+  ['PEPE and HOMERO are recorded separately in your account. The withdrawal form sends PEPE only. HOMERO remains an in-platform balance; if an exchange option is available to you, its current rate and fee are shown before you confirm.', 'PEPE и HOMERO учитываются в аккаунте отдельно. Форма вывода отправляет только PEPE. HOMERO остаётся внутрен��им балансом платформы; если обмен доступен, курс и комиссия будут показаны до подтверждения.'],
   ['PEPE is a crypto asset, so its market value can change. pepe.casa does not promise a fixed fiat value or guaranteed earnings.', 'PEPE — криптоактив, его ры��очная стоимость может меняться. pepe.casa не гарантирует фиксированную стоимость в фиатной валюте или доход.'],
   ['Ready to get started?', 'Готовы начать?'],
   ['See available activities and the current terms in your account.', 'Посмотрите доступные задания и актуальные условия в аккаунте.'],
@@ -671,7 +671,7 @@ const ruPhrases = new Map<string, string>([
   ['One-way internal exchange. No withdrawals or on-chain transfers are performed here.', 'Односторонний внутренний обмен. Вывод средств и переводы в блокчейне здесь недоступны.'],
   ['Live market quote unavailable. Swaps still use the fixed 1 HOMERO = 1 PEPE internal rate.', 'Рыноч��ая котировка недоступна. Обмен выполняется по фиксированному внутреннему курсу 1 HOMERO = 1 PEPE.'],
   ['Request failed. Please try again.', 'Не удалось выполнить запрос. Попробуйте ещё раз.'],
-  ['The swap could not be completed.', 'Не удалось выполнить обмен.'],
+  ['The swap could not be completed.', 'Не удало��ь выполнить обмен.'],
   ['The exchange balance could not be updated.', 'Не удалось обновить баланс обмена.'],
   ['The exchange balance is ready.', 'Баланс обмена готов.'],
   ['PEPE was added to the exchange balance.', 'PEPE добавлены в резерв обмена.'],
@@ -813,7 +813,7 @@ const ruPhrases = new Map<string, string>([
   ['days to meet the promo-code activity requirement. Promo redemptions remain paused until funded campaigns are configured.', 'дней, чтобы выполнить требование активности для промокода. Погашение промокодов приостановлено до настройки финансируемых кампаний.'],
   ['A completed View Ads claim was recorded within the last', 'Подтверждённое рекламное зад��ние выполнено за последние'],
   ['days. Promo redemptions remain paused until funded campaigns are configured.', 'дней. Погашение промокодов приостановлено до настройки финансируемых кампаний.'],
-  ['Could not load arcade data.', 'Не удалось загрузить данные аркады.'],
+  ['Could not load arcade data.', 'Не удалось за��рузить данные аркады.'],
   ['The arcade request could not be completed.', 'Не удалось выполнить запрос аркады.'],
   ['Could not save that run.', 'Не удалось сохранить забег.'],
   ['Could not start a run.', 'Не удалось начать забег.'],
@@ -1145,7 +1145,7 @@ const ruPhrases = new Map<string, string>([
   ['Tomorrow', 'Завтра'],
   ['Ready now', 'Готово'],
   ['Full-view reward', 'Награда за полный просмотр'],
-  ['Only after a verified completion', 'Только после подтверждённого просмотра'],
+  ['Only after a verified completion', 'Только после подтверждённого прос��отра'],
   ['Your video will appear here', 'Видео появится здесь'],
   ['Start a session to load the AppLixir player securely.', 'Запустите сессию, чтобы безопасно загрузить плеер AppLixir.'],
   ['Preparing player…', 'Подготавливаем плеер…'],
@@ -1287,7 +1287,7 @@ const ruWords: Record<string, string> = {
   'daily': 'ежедневный',
   'disabled': 'отключено',
   'distance': 'дистанция',
-  'energy': 'энергия',
+  'energy': 'энер��ия',
   'english': 'английский',
   'error': 'ошибка',
   'exchange': 'обмен',
@@ -1354,7 +1354,10 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Введите положительную сумму или нажмите «Максимум». Комиссия ${match[1]}% удерживается из получаемых PEPE.`
 
   match = value.match(/^Estimated value received · (.+)$/i)
-  if (match) return `Ориентировочная сумма к получению · ${match[1].toLowerCase() === 'live market feed' ? 'рыночная котировка' : match[1]}`
+  if (match) {
+    if (match[1].toLowerCase() === 'dex screener') return 'Ориентировочная сумма к получению'
+    return `Ориентировочная сумма к получению · ${match[1].toLowerCase() === 'live market feed' ? 'рыночная котировка' : match[1]}`
+  }
 
   match = value.match(/^The (\d+(?:\.\d+)?)% fee is deducted from the PEPE output and recorded separately in the configured admin's PEPE balance\. This exchange updates internal balances only, not blockchain holdings\.$/i)
   if (match) return `Комиссия ${match[1]}% удерживается из суммы PEPE к получению и отдельно учитывается на балансе администратора. Обмен изменяет только внутренние балансы и не затрагивает средства в блокчейне.`

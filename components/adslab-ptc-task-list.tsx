@@ -118,6 +118,18 @@ function formatCountdown(seconds: number) {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
+function getAdvertiserFaviconUrl(taskKey: string, targetUrl: string) {
+  if (!advertiserTaskKeyPattern.test(taskKey)) return null
+
+  try {
+    const url = new URL(targetUrl)
+    if (url.protocol !== 'https:' || url.username || url.password) return null
+    return `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(url.origin)}&sz=128`
+  } catch {
+    return null
+  }
+}
+
 export function AdsLabPtcTaskList({
   onTaskBusyChange,
   onSummaryChange,
@@ -551,15 +563,15 @@ export function AdsLabPtcTaskList({
             return 'Partner'
           }
         })()
+        const iconUrl = task.iconUrl ?? getAdvertiserFaviconUrl(task.key, task.url)
 
         return (
           <li key={task.key} className={`ptc-task-card group flex min-h-[210px] flex-col border border-dashboard-outline bg-dashboard-surface p-4 transition duration-200 motion-reduce:transition-none motion-reduce:hover:transform-none ${isPro ? 'ptc-task-card-pro' : ''}`}>
             <div className="relative flex min-w-0 items-start gap-3">
-              {task.iconUrl ? (
-                <img src={task.iconUrl} alt="" aria-hidden="true" referrerPolicy="no-referrer" className="size-12 shrink-0 rounded-2xl border-2 border-cyan-200/25 bg-[#26345d] object-contain p-1.5 shadow-sm" />
-              ) : (
-                <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-100/60 bg-[#ffd166] text-[#29204e] shadow-md shadow-amber-950/15"><Eye size={18} /></span>
-              )}
+              <span aria-hidden="true" className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-amber-100/60 bg-[#ffd166] text-[#29204e] shadow-md shadow-amber-950/15">
+                <Eye size={18} />
+                {iconUrl && <img src={iconUrl} alt="" aria-hidden="true" referrerPolicy="no-referrer" onError={(event) => event.currentTarget.remove()} className="absolute inset-0 size-full rounded-full border-2 border-cyan-200/25 bg-[#26345d] object-contain p-1.5" />}
+              </span>
               <div className={`min-w-0 flex-1 ${isPro ? 'pr-16' : ''}`}>
                 <h3 className="truncate text-sm font-extrabold tracking-tight">{task.title}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
