@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import type { ReferralOverview } from '@/lib/referral-types'
-import { HomeroTokenLogo } from '@/components/homero-token-logo'
 import { LocalizedTree } from '@/components/site-language-provider'
 import {
   ArrowUpRight,
@@ -20,17 +19,17 @@ import {
 type Props = { referralOverview: ReferralOverview }
 
 function formatAtomicAmount(amount: string) {
-  const atomicUnitsPerDoge = BigInt(100_000_000)
+  const atomicUnitsPerToken = BigInt(100_000_000)
   const atomic = BigInt(amount)
-  const whole = atomic / atomicUnitsPerDoge
-  const fraction = String(atomic % atomicUnitsPerDoge).padStart(8, '0')
+  const whole = atomic / atomicUnitsPerToken
+  const fraction = String(atomic % atomicUnitsPerToken).padStart(8, '0')
   return `${whole}.${fraction}`
 }
 
 const faqItems = [
   {
     question: 'When are referral rewards credited?',
-    answer: 'Referral commissions are credited when eligible activity is recorded. Review your balance here and exchange it for PEPE.'
+    answer: 'The site funds a 10% bonus on eligible referral earnings, in the same token. It is not deducted from the referred user’s reward. HOMERO bonuses can be exchanged for PEPE here.'
   },
   {
     question: 'Do I need to register or sign in?',
@@ -82,7 +81,7 @@ export function ReferralsPage({ referralOverview }: Props) {
         <div className="relative max-w-xl space-y-4">
           <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-blue-50">Referral attribution</span>
           <h2 className="text-3xl font-black leading-[1.05] tracking-tight sm:text-4xl">Share your link.<br />Keep records together.</h2>
-          <p className="max-w-lg text-xs font-medium leading-relaxed text-blue-100 sm:text-sm">Referral sign-ups are linked to your account. Eligible referral activity earns commission.</p>
+          <p className="max-w-lg text-xs font-medium leading-relaxed text-blue-100 sm:text-sm">Eligible referral earnings generate a 10% site-funded bonus in the same token, without reducing the referral&apos;s reward.</p>
 
           <div className="space-y-3 rounded-2xl border border-white/50 bg-white p-3.5 text-slate-900 shadow-lg sm:p-4">
             <div className="flex items-center justify-between gap-3">
@@ -114,15 +113,14 @@ export function ReferralsPage({ referralOverview }: Props) {
         {[
           { label: 'Total referrals', icon: UsersRound, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', value: String(referralOverview.referralCount) },
           { label: 'Rewarded referrals', icon: Flame, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', value: String(referralOverview.activeReferralCount) },
-          { label: 'Commission events', icon: Wallet, iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-500', value: String(referralOverview.commissionCount) },
-          { label: 'Commission balance', icon: Wallet, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', value: `${formatAtomicAmount(referralOverview.commissionAtomic)} HOMERO` },
+          { label: 'Bonus events', icon: Wallet, iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-500', value: String(referralOverview.bonusCount) },
+          { label: 'Bonus balance', icon: Wallet, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', value: `${formatAtomicAmount(referralOverview.bonusAtomicByToken.HOMERO)} HOMERO · ${formatAtomicAmount(referralOverview.bonusAtomicByToken.PEPE)} PEPE` },
         ].map(({ label, icon: Icon, iconBg, iconColor, value }) => (
           <article key={label} className="flex min-h-[88px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-[#111a2b] sm:p-4">
             <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg} ${iconColor}`}><Icon size={17} /></span>
             <div className="min-w-0 flex-1">
               <p className="whitespace-normal break-words text-[9px] font-extrabold uppercase leading-snug tracking-wide text-slate-400">{label}</p>
-              <p className={`mt-1 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 break-words font-black leading-tight ${label === 'Commission balance' ? 'text-xs sm:text-base' : 'text-base'}`}>
-                {label === 'Commission balance' && <HomeroTokenLogo size={14} />}
+              <p className={`mt-1 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 break-words font-black leading-tight ${label === 'Bonus balance' ? 'text-[10px] sm:text-xs' : 'text-base'}`}>
                 {value}
               </p>
             </div>
@@ -136,12 +134,12 @@ export function ReferralsPage({ referralOverview }: Props) {
       </aside>
 
       <section className="space-y-3">
-        <div className="text-center"><h2 className="text-base font-black sm:text-lg">Referral status</h2><p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 sm:text-sm">Commissions are active and credited for eligible referral activity.</p></div>
+        <div className="text-center"><h2 className="text-base font-black sm:text-lg">Referral status</h2><p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 sm:text-sm">The site funds a 10% bonus in the same token for eligible referral earnings.</p></div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           {[
             { icon: Share2, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', title: '1. Share your link', text: 'A new account can carry your referral code through sign-up.' },
             { icon: Flame, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', title: '2. Sign-ups are attributed', text: 'Referral attribution is recorded on the persistent account profile.' },
-            { icon: Wallet, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', title: '3. Earn commissions', text: 'Eligible referral activity generates commission credits in your account balance.' },
+            { icon: Wallet, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', title: '3. Earn a 10% bonus', text: 'The platform funds the bonus separately; it does not reduce what your referral earns.' },
           ].map(({ icon: Icon, iconBg, iconColor, title, text }) => (
             <article key={title} className="rounded-2xl border border-slate-200 bg-white p-5 text-center dark:border-slate-800 dark:bg-[#111a2b] sm:p-6">
               <span className={`mx-auto flex size-11 items-center justify-center rounded-full ${iconBg} ${iconColor}`}><Icon size={20} /></span>

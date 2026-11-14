@@ -191,9 +191,22 @@ export const referralCommissions = pgTable('earnpepe_referral_commissions', {
   earningEventId: uuid('earning_event_id').notNull().unique(),
   baseAmountAtomic: bigint('base_amount_atomic', { mode: 'number' }).notNull(),
   commissionAmountAtomic: bigint('commission_amount_atomic', { mode: 'number' }).notNull(),
+  tokenSymbol: text('token_symbol').$type<WalletCoinSymbol>().notNull().default('HOMERO'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index('earnpepe_commissions_referrer_idx').on(table.referrerId, table.createdAt),
+])
+
+export type SignupIpClaimStatus = 'pending' | 'claimed'
+
+export const signupIpClaims = pgTable('earnpepe_signup_ip_claims', {
+  ipHash: text('ip_hash').primaryKey(),
+  emailHash: text('email_hash').notNull(),
+  status: text('status').$type<SignupIpClaimStatus>().notNull().default('pending'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  check('earnpepe_signup_ip_claims_status_check', sql`${table.status} in ('pending', 'claimed')`),
 ])
 
 export const shortlinkSessions = pgTable('earnpepe_shortlink_sessions', {

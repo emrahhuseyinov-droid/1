@@ -69,9 +69,11 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
           })
 
       if (result.error) {
-        setErrorMessage(isSignUp
-          ? 'Could not create the account. Check your details and try again.'
-          : 'Could not sign in. Check your email and password.')
+        setErrorMessage(isSignUp && result.error.code === 'SIGNUP_IP_LIMIT'
+          ? 'Only one account per network IP is allowed.'
+          : isSignUp
+            ? 'Could not create the account. Check your details and try again.'
+            : 'Could not sign in. Check your email and password.')
         return
       }
 

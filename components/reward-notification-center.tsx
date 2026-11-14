@@ -40,7 +40,8 @@ const rewardLabels: Record<string, { en: string; ru: string }> = {
   wheel_of_fortune: { en: 'Wheel of Fortune', ru: 'Колесо удачи' },
   withdrawal_refund: { en: 'PEPE withdrawal refund', ru: 'Возврат вывода PEPE' },
   admin_adjustment: { en: 'Account credit', ru: 'Зачисление на счёт' },
-  referral_commission: { en: 'Referral commission', ru: 'Реферальная комиссия' },
+  referral_bonus: { en: 'Referral bonus', ru: 'Реферальный бонус' },
+  referral_commission: { en: 'Referral bonus', ru: 'Реферальный бонус' },
 }
 
 const taskSources = new Set([

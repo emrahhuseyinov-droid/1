@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { db } from '@/lib/db'
-import { earningEvents, guestProfiles, withdrawalRequests } from '@/lib/db/schema'
+import { earningEvents, guestProfiles, referralCommissions, withdrawalRequests } from '@/lib/db/schema'
 import { ADVERTISER_WALLET_EVENT_SOURCES } from '@/lib/advertiser-wallet'
 import { parsePepeAmountToAtomic } from '@/lib/pepe-amount'
 import { DAILY_WITHDRAWAL_LIMIT_ATOMIC, MIN_WITHDRAWAL_ATOMIC } from '@/lib/withdrawal-constants'
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const today = getUtcDayKey()
-    const [requestRows, balanceRows, dailyRows] = await Promise.all([
+    const [requestRows, balanceRows, referralBalanceRows, dailyRows] = await Promise.all([
       db.select().from(withdrawalRequests)
         .where(eq(withdrawalRequests.userId, account.session.user.id))
         .orderBy(desc(withdrawalRequests.createdAt))
@@ -180,6 +180,9 @@ export async function GET(request: NextRequest) {
           eq(earningEvents.tokenSymbol, 'PEPE'),
           notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
         )),
+      db.select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+        .from(referralCommissions)
+        .where(and(eq(referralCommissions.referrerId, account.profile.id), eq(referralCommissions.tokenSymbol, 'PEPE'))),
       db.select({ amount: sql<string>`coalesce(sum(${withdrawalRequests.amountAtomic}), 0)::text` })
         .from(withdrawalRequests)
         .where(and(
@@ -193,7 +196,7 @@ export async function GET(request: NextRequest) {
     const dailyRemainingAtomic = BigInt(DAILY_WITHDRAWAL_LIMIT_ATOMIC) - todayUsedAtomic
 
     return NextResponse.json({
-      availableBalanceAtomic: balanceRows[0]?.amount ?? '0',
+      availableBalanceAtomic: (BigInt(balanceRows[0]?.amount ?? '0') + BigInt(referralBalanceRows[0]?.amount ?? '0')).toString(),
       todayUsedAtomic: todayUsedAtomic.toString(),
       dailyRemainingAtomic: (dailyRemainingAtomic > 0n ? dailyRemainingAtomic : 0n).toString(),
       dailyLimitAtomic: String(DAILY_WITHDRAWAL_LIMIT_ATOMIC),
@@ -307,7 +310,14 @@ export async function POST(request: NextRequest) {
           eq(earningEvents.tokenSymbol, 'PEPE'),
           notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES]),
         ))
-      const balanceAtomic = BigInt(balanceRow?.amount ?? '0')
+      const [referralBalanceRow] = await transaction
+        .select({ amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+        .from(referralCommissions)
+        .where(and(
+          eq(referralCommissions.referrerId, account.profile.id),
+          eq(referralCommissions.tokenSymbol, 'PEPE'),
+        ))
+      const balanceAtomic = BigInt(balanceRow?.amount ?? '0') + BigInt(referralBalanceRow?.amount ?? '0')
       if (balanceAtomic < BigInt(amountAtomic)) {
         return { status: 'insufficient_balance' as const, availableBalanceAtomic: balanceAtomic.toString() }
       }
