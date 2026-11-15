@@ -12,12 +12,14 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: 'pepe.casa | Rewards, Arcade & PEPE Payouts',
       description: 'Complete verified advertiser and partner tasks, manage PTC or YouTube campaigns, earn PEPE, and request FaucetPay payouts from one pepe.casa account.',
+      other: { 'offerwall-verification': '6af96dc7f977c5f3cb68a6b9' },
     }
   }
 
   return {
     title: 'pepe.casa | Награды, аркада и выплаты PEPE',
-    description: 'Выполняйте проверенные задания рекламодателей и партнёров, создавайте PTC- и YouTube-кампании, получайте PEPE и выводите его через FaucetPay на pepe.casa.'
+    description: 'Выполняйте проверенные задания рекламодателей и партнёров, создавайте PTC- и YouTube-кампании, получайте PEPE и выводите его через FaucetPay на pepe.casa.',
+    other: { 'offerwall-verification': '6af96dc7f977c5f3cb68a6b9' },
   }
 }
 

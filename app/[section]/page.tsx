@@ -23,14 +23,20 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
   if (!section) return { title: 'pepe.casa' }
 
   const language = cookieStore.get('pepecasa_language')?.value === 'en' ? 'en' : 'ru'
-  const title = section === 'Advertiser'
-    ? language === 'ru' ? 'Кошелёк рекламодателя | pepe.casa' : 'Advertiser wallet | pepe.casa'
-    : translateSiteText(`${section} | pepe.casa`, language)
-  const description = section === 'Advertiser'
+  const title = section === 'Offerwall'
+    ? 'Offerwall.me | pepe.casa'
+    : section === 'Advertiser'
+      ? language === 'ru' ? 'Кошелёк рекламодателя | pepe.casa' : 'Advertiser wallet | pepe.casa'
+      : translateSiteText(`${section} | pepe.casa`, language)
+  const description = section === 'Offerwall'
     ? language === 'ru'
-      ? 'Создавайте PTC-кампании, пополняйте рекламный кошелёк PEPE и управляйте заданиями.'
-      : 'Create PTC campaigns, fund your PEPE advertiser wallet, and manage sponsored tasks.'
-    : language === 'ru'
+      ? 'Выполняйте партнёрские предложения, задания PTC и короткие ссылки с автоматическим начислением HOMERO.'
+      : 'Complete partner offers, PTC tasks, and shortlinks with automatic HOMERO rewards.'
+    : section === 'Advertiser'
+      ? language === 'ru'
+        ? 'Создавайте PTC-кампании, пополняйте рекламный кошелёк PEPE и управляйте заданиями.'
+        : 'Create PTC campaigns, fund your PEPE advertiser wallet, and manage sponsored tasks.'
+      : language === 'ru'
     ? section === 'Manual Faucet'
       ? 'Получайте награды PEPE после серверной проверки CAPTCHA.'
       : section === 'Watch and Earn'

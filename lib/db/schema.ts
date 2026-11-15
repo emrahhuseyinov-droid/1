@@ -150,6 +150,27 @@ export const adslabOfferwallTransactions = pgTable('earnpepe_adslab_offerwall_tr
   check('earnpepe_adslab_offerwall_state_check', sql`(${table.status} = 'credited' and ${table.rewardAtomic} > 0 and ${table.reversedAt} is null) or (${table.status} = 'reversed' and ${table.reversedAt} is not null)`),
 ])
 
+export type OfferwallMeTransactionStatus = 'credited' | 'reversed'
+
+export const offerwallMeTransactions = pgTable('earnpepe_offerwall_me_transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  providerTransactionId: text('provider_transaction_id').notNull().unique(),
+  guestId: uuid('guest_id').notNull().references(() => guestProfiles.id, { onDelete: 'restrict' }),
+  offerType: text('offer_type').notNull(),
+  offerName: text('offer_name'),
+  status: text('status').$type<OfferwallMeTransactionStatus>().notNull(),
+  rewardAtomic: bigint('reward_atomic', { mode: 'number' }).notNull().default(0),
+  payoutUsd: numeric('payout_usd', { precision: 24, scale: 18, mode: 'string' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  reversedAt: timestamp('reversed_at', { withTimezone: true }),
+}, (table) => [
+  index('earnpepe_offerwall_me_guest_created_idx').on(table.guestId, table.createdAt.desc()),
+  check('earnpepe_offerwall_me_status_check', sql`${table.status} in ('credited', 'reversed')`),
+  check('earnpepe_offerwall_me_reward_check', sql`${table.rewardAtomic} >= 0`),
+  check('earnpepe_offerwall_me_payout_check', sql`${table.payoutUsd} is null or ${table.payoutUsd} >= 0`),
+  check('earnpepe_offerwall_me_state_check', sql`(${table.status} = 'credited' and ${table.rewardAtomic} > 0 and ${table.reversedAt} is null) or (${table.status} = 'reversed' and ${table.reversedAt} is not null)`),
+])
+
 export const adslabInterstitialEvents = pgTable('earnpepe_adslab_interstitial_events', {
   id: uuid('id').primaryKey().defaultRandom(),
   providerTransactionId: text('provider_transaction_id').notNull().unique(),

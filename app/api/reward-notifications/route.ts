@@ -12,6 +12,7 @@ const rewardSources = [
   'adslab_ptc',
   'adslab_shortlink',
   'adslab_offerwall',
+  'offerwall_me',
   'advertiser_task',
   'youtube_advertiser_task',
   'view_ads',

@@ -1,0 +1,229 @@
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
+import { and, eq } from 'drizzle-orm'
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { earningEvents, guestProfiles, offerwallMeTransactions } from '@/lib/db/schema'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+const maxBodyBytes = 16 * 1024
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
+
+type ParamValue = { value: string | null; valid: boolean }
+
+function response(body: string, status: number) {
+  return new NextResponse(body, {
+    status,
+    headers: { ...noStoreHeaders, 'Content-Type': 'text/plain; charset=utf-8' },
+  })
+}
+
+async function readLimitedBody(request: NextRequest) {
+  const declaredLength = Number(request.headers.get('content-length'))
+  if (Number.isFinite(declaredLength) && declaredLength > maxBodyBytes) return null
+
+  const reader = request.body?.getReader()
+  if (!reader) return ''
+
+  const chunks: Uint8Array[] = []
+  let totalBytes = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    totalBytes += value.byteLength
+    if (totalBytes > maxBodyBytes) {
+      await reader.cancel()
+      return null
+    }
+    chunks.push(value)
+  }
+
+  return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))
+}
+
+function getSingleParam(params: URLSearchParams, name: string): ParamValue {
+  const values = params.getAll(name)
+  if (values.length > 1) return { value: null, valid: false }
+  return { value: values[0] ?? null, valid: true }
+}
+
+function getSignature(params: URLSearchParams): ParamValue {
+  const values = [...params.getAll('signature'), ...params.getAll('hash')]
+  if (values.length !== 1) return { value: null, valid: false }
+  return { value: values[0], valid: true }
+}
+
+function parseRewardAtomic(value: string) {
+  const match = value.match(/^(\d{1,14})(?:\.(\d{1,8}))?$/)
+  if (!match) return null
+
+  const whole = BigInt(match[1])
+  const fraction = BigInt((match[2] ?? '').padEnd(8, '0') || '0')
+  const atomic = whole * 100_000_000n + fraction
+  if (atomic <= 0n || atomic > BigInt(Number.MAX_SAFE_INTEGER)) return null
+  return Number(atomic)
+}
+
+function isValidSignature(subId: string, transId: string, reward: string, supplied: string, secret: string) {
+  const candidate = supplied.trim().toLowerCase()
+  if (!/^[a-f0-9]{32}$/.test(candidate)) return false
+
+  const expected = createHash('md5').update(`${subId}${transId}${reward}${secret}`, 'utf8').digest()
+  const actual = Buffer.from(candidate, 'hex')
+  return actual.length === expected.length && timingSafeEqual(expected, actual)
+}
+
+function parsePayout(value: string | null) {
+  if (!value || !/^\d{1,14}(?:\.\d{1,18})?$/.test(value)) return null
+  return value
+}
+
+export async function POST(request: NextRequest) {
+  const contentType = request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase()
+  if (contentType !== 'application/x-www-form-urlencoded') return response('no', 415)
+
+  let body: string | null
+  try {
+    body = await readLimitedBody(request)
+  } catch {
+    return response('no', 400)
+  }
+  if (body === null) return response('no', 413)
+
+  const params = new URLSearchParams(body)
+  const subIdParam = getSingleParam(params, 'subId')
+  const transIdParam = getSingleParam(params, 'transId')
+  const rewardParam = getSingleParam(params, 'reward')
+  const statusParam = getSingleParam(params, 'status')
+  const signatureParam = getSignature(params)
+  const offerTypeParam = getSingleParam(params, 'offer_type')
+  const offerNameParam = getSingleParam(params, 'offer_name')
+  const payoutParam = getSingleParam(params, 'payout')
+
+  if (![subIdParam, transIdParam, rewardParam, statusParam, signatureParam, offerTypeParam, offerNameParam, payoutParam].every((param) => param.valid)) {
+    return response('no', 400)
+  }
+
+  const subId = subIdParam.value ?? ''
+  const transId = transIdParam.value ?? ''
+  const reward = rewardParam.value ?? ''
+  const status = statusParam.value ?? ''
+  const signature = signatureParam.value ?? ''
+  const guestId = subId.toLowerCase()
+
+  if (!uuidPattern.test(subId) || !transId || transId.length > 200 || /[\u0000-\u001f\u007f]/.test(transId)) {
+    return response('no', 400)
+  }
+  if (status !== '1' && status !== '2') return response('no', 400)
+
+  const rewardAtomic = parseRewardAtomic(reward)
+  if (rewardAtomic === null) return response('no', 400)
+
+  const secret = process.env.OFFERWALL_ME_SECRET?.trim() ?? ''
+  if (!secret) return response('no', 503)
+  if (!isValidSignature(subId, transId, reward, signature, secret)) return response('no', 401)
+
+  const rawOfferType = offerTypeParam.value?.trim().toLowerCase() || 'offer'
+  if (!/^[a-z0-9_-]{1,64}$/.test(rawOfferType)) return response('no', 400)
+  const offerName = offerNameParam.value?.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 500) || null
+  const payoutUsd = parsePayout(payoutParam.value)
+  const now = new Date()
+
+  try {
+    const result = await db.transaction(async (transaction) => {
+      const [profile] = await transaction
+        .select({ id: guestProfiles.id })
+        .from(guestProfiles)
+        .where(eq(guestProfiles.id, guestId))
+        .for('update')
+        .limit(1)
+
+      if (!profile) return 'not_found' as const
+
+      let [record] = await transaction
+        .select()
+        .from(offerwallMeTransactions)
+        .where(eq(offerwallMeTransactions.providerTransactionId, transId))
+        .for('update')
+        .limit(1)
+
+      if (!record) {
+        const [inserted] = await transaction
+          .insert(offerwallMeTransactions)
+          .values({
+            providerTransactionId: transId,
+            guestId,
+            offerType: rawOfferType,
+            offerName,
+            payoutUsd,
+            status: status === '1' ? 'credited' : 'reversed',
+            rewardAtomic: status === '1' ? rewardAtomic : 0,
+            reversedAt: status === '1' ? null : now,
+            createdAt: now,
+          })
+          .onConflictDoNothing({ target: [offerwallMeTransactions.providerTransactionId] })
+          .returning()
+
+        if (inserted) {
+          if (status === '1') {
+            await transaction.insert(earningEvents).values({
+              id: randomUUID(),
+              guestId,
+              source: 'offerwall_me',
+              sourceKey: transId,
+              itemId: offerName ?? rawOfferType,
+              tokenSymbol: 'HOMERO',
+              rewardAtomic,
+              createdAt: now,
+            })
+          }
+          return status === '1' ? 'credited' as const : 'reversed' as const
+        }
+
+        ;[record] = await transaction
+          .select()
+          .from(offerwallMeTransactions)
+          .where(eq(offerwallMeTransactions.providerTransactionId, transId))
+          .for('update')
+          .limit(1)
+      }
+
+      if (!record) throw new Error('Offerwall.me transaction could not be locked.')
+      if (record.guestId !== guestId) return 'user_mismatch' as const
+
+      if (status === '1') return 'duplicate' as const
+      if (record.status === 'reversed') return 'duplicate' as const
+
+      await transaction.insert(earningEvents).values({
+        id: randomUUID(),
+        guestId,
+        source: 'offerwall_me_reversal',
+        sourceKey: transId,
+        itemId: record.offerName ?? record.offerType,
+        tokenSymbol: 'HOMERO',
+        rewardAtomic: -record.rewardAtomic,
+        createdAt: now,
+      }).onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
+
+      await transaction
+        .update(offerwallMeTransactions)
+        .set({ status: 'reversed', reversedAt: now })
+        .where(and(
+          eq(offerwallMeTransactions.id, record.id),
+          eq(offerwallMeTransactions.status, 'credited'),
+        ))
+
+      return 'reversed' as const
+    })
+
+    if (result === 'not_found') return response('no', 404)
+    if (result === 'user_mismatch') return response('no', 409)
+    return response('ok', 200)
+  } catch (error) {
+    console.error('[offerwall-me-postback] Failed to process a verified callback.', error)
+    return response('no', 500)
+  }
+}
