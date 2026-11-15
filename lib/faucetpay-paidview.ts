@@ -1,0 +1,2 @@
+export const FAUCETPAY_PAIDVIEW_PLACEMENT_ID =
+  process.env.NEXT_PUBLIC_FAUCETPAY_AD_UNIT?.trim() || '265'
