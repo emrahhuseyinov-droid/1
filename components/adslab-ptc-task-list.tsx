@@ -136,12 +136,14 @@ export function AdsLabPtcTaskList({
   searchQuery = '',
   availableOnly = false,
   sortBy = 'reward',
+  showEmptyState = true,
 }: {
   onTaskBusyChange?: (busy: boolean) => void
   onSummaryChange?: (summary: PtcTaskSummary) => void
   searchQuery?: string
   availableOnly?: boolean
   sortBy?: TaskSort
+  showEmptyState?: boolean
 }) {
   const router = useRouter()
   const { language } = useSiteLanguage()
@@ -541,11 +543,13 @@ export function AdsLabPtcTaskList({
       {message && <li className="col-span-full"><p role="status" aria-live="polite" className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.06] px-4 py-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{message}</p></li>}
       {errorMessage && <li className="col-span-full"><p role="alert" className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700 dark:text-amber-300">{errorMessage}</p></li>}
       {tasks.length === 0 ? (
-        <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-10 text-center">
-          <span aria-hidden="true" className="mx-auto flex size-12 items-center justify-center rounded-xl bg-dashboard-accent/10 text-dashboard-accent"><Coins size={22} /></span>
-          <h3 className="mt-3 text-sm font-bold">{isRussian ? 'Сейчас нет доступных PTC-заданий' : 'No PTC tasks available right now'}</h3>
-          <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-dashboard-muted">{isRussian ? 'Проверьте позже — список заданий обновляется автоматически.' : 'Check back later. Tasks refresh automatically.'}</p>
-        </li>
+        showEmptyState ? (
+          <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-10 text-center">
+            <span aria-hidden="true" className="mx-auto flex size-12 items-center justify-center rounded-xl bg-dashboard-accent/10 text-dashboard-accent"><Coins size={22} /></span>
+            <h3 className="mt-3 text-sm font-bold">{isRussian ? 'Сейчас нет доступных PTC-заданий' : 'No PTC tasks available right now'}</h3>
+            <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-dashboard-muted">{isRussian ? 'Проверьте позже — список заданий обновляется автоматически.' : 'Check back later. Tasks refresh automatically.'}</p>
+          </li>
+        ) : null
       ) : visibleTasks.length === 0 ? (
         <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-8 text-center text-xs text-dashboard-muted">
           {isRussian ? 'По этим условиям заданий не найдено.' : 'No tasks match these filters.'}
