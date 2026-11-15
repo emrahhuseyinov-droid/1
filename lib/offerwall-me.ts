@@ -1,8 +1,8 @@
 import 'server-only'
 import { createHmac } from 'node:crypto'
 
-export const OFFERWALL_ME_PUBLIC_API_KEY = 'HtjNj2QeKr5CjFKJefH2OLfhgBtn6A'
-export const OFFERWALL_ME_PTC_PUBLIC_API_KEY = 'lItJNj2QeKr5CjFKJefII20LfhgBtn6A'
+export const OFFERWALL_ME_PUBLIC_API_KEY = process.env.OFFERWALL_ME_PUBLIC_API_KEY?.trim() || 'HtjNj2QeKr5CjFKJefH2OLfhgBtn6A'
+export const OFFERWALL_ME_PTC_PUBLIC_API_KEY = OFFERWALL_ME_PUBLIC_API_KEY
 const offerwallMeOrigin = 'https://offerwall.me'
 
 type SignedOfferwallIdentity = {
