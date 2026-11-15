@@ -140,7 +140,7 @@ export function WalletPage({ balances, activeCoin, onSelectCoin, onNavigate }: P
                   <span className={`size-1.5 shrink-0 rounded-full ${marketQuote ? 'bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.8)]' : marketQuoteLoading ? 'bg-amber-300' : 'bg-slate-400'}`} />
                   <div className="min-w-0">
                     <p className="truncate text-[9px] font-bold text-white/85">{marketQuote ? marketQuote.source : marketQuoteError ? 'Retrying automatically' : 'Fetching live quote'}</p>
-                    <p className="mt-0.5 text-[8px] text-blue-100/50">Updates every minute</p>
+                    <p className="mt-0.5 text-[8px] text-blue-100/50">Updates every 5 minutes</p>
                   </div>
                 </div>
               </div>
@@ -170,7 +170,7 @@ export function WalletPage({ balances, activeCoin, onSelectCoin, onNavigate }: P
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[9px] font-medium text-blue-100/55">
                 <span className={`size-1.5 rounded-full ${marketQuote ? 'bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.8)]' : 'bg-slate-400'}`} />
-                {marketQuote ? <><span>{marketQuote.source}</span><span aria-hidden="true">·</span><span>Updates every minute</span></> : marketQuoteError ? 'Retrying automatically' : 'Fetching live quote'}
+                {marketQuote ? <><span>{marketQuote.source}</span><span aria-hidden="true">·</span><span>Updates every 5 minutes</span></> : marketQuoteError ? 'Retrying automatically' : 'Fetching live quote'}
               </div>
             </div>
 
@@ -181,7 +181,7 @@ export function WalletPage({ balances, activeCoin, onSelectCoin, onNavigate }: P
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-3 py-3">
                 <p className="truncate text-[8px] font-extrabold uppercase tracking-[0.12em] text-blue-100/45">{marketQuote?.source ?? (marketQuoteError ? 'Retrying automatically' : 'Fetching live quote')}</p>
-                <p className="mt-1.5 text-[10px] font-bold text-white">{marketQuote ? 'Updates every minute' : 'PEPE / USD'}</p>
+                <p className="mt-1.5 text-[10px] font-bold text-white">{marketQuote ? 'Updates every 5 minutes' : 'PEPE / USD'}</p>
               </div>
             </div>
           </div>
@@ -223,7 +223,7 @@ export function WalletPage({ balances, activeCoin, onSelectCoin, onNavigate }: P
         </div>
       </section>
 
-      <footer className="flex items-center justify-center gap-1.5 pb-2 text-center text-[9px] text-slate-400"><ShieldCheck size={12} className="shrink-0 text-blue-500" /><span>PEPE/USD is a live DEX Screener quote that refreshes every minute. HOMERO is an internal site token valued at the same reference price; this feed does not execute or guarantee a swap.</span></footer>
+      <footer className="flex items-center justify-center gap-1.5 pb-2 text-center text-[9px] text-slate-400"><ShieldCheck size={12} className="shrink-0 text-blue-500" /><span>PEPE/USD is a live DEX Screener quote that refreshes every 5 minutes. HOMERO is an internal site token valued at the same reference price; this feed does not execute or guarantee a swap.</span></footer>
 
     </main>
     </LocalizedTree>
