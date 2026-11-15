@@ -132,7 +132,7 @@ export function OfferwallPtcList({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-dashboard-outline pt-3 text-[10px] font-bold">
-            <span className="inline-flex items-center gap-1.5 text-dashboard-gold"><Coins size={13} aria-hidden="true" />{formatTokenAtomic(task.rewardAtomic)} HOMERO</span>
+            <span className="inline-flex items-center gap-1.5 text-dashboard-gold"><Coins size={13} aria-hidden="true" />{formatTokenAtomic(task.rewardAtomic)} PEPE</span>
             <span className="inline-flex items-center gap-1.5 text-dashboard-muted"><Clock3 size={12} aria-hidden="true" />{task.durationSeconds} {isRussian ? 'сек.' : 'sec'}</span>
           </div>
 

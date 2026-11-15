@@ -20,7 +20,7 @@ export function OfferwallMePage({ iframeUrl }: OfferwallMePageProps) {
           <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100">{isRussian ? 'партнёрские задания' : 'partner tasks'}</p>
             <h1 className="mt-0.5 text-2xl font-black tracking-tight sm:text-3xl">Offerwall.me</h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/85">{isRussian ? 'Выполняйте предложения, PTC и короткие ссылки. Проверенные задания автоматически начисляют HOMERO.' : 'Complete offers, PTC tasks, and shortlinks. Verified completions are credited automatically in HOMERO.'}</p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/85">{isRussian ? 'Выполняйте предложения, PTC и короткие ссылки. Проверенные задания автоматически начисляют PEPE.' : 'Complete offers, PTC tasks, and shortlinks. Verified completions are credited automatically in PEPE.'}</p>
             <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-extrabold text-white shadow-sm backdrop-blur"><Sparkles size={12} />{isRussian ? 'Предложения · PTC · короткие ссылки' : 'Offers · PTC · shortlinks'}</span>
           </div>
         </div>
