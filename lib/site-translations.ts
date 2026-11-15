@@ -139,7 +139,7 @@ const ruPhrases = new Map<string, string>([
   ['One spin every 2 hours', 'Одно вращение каждые 2 часа'],
   ['SPIN THE WHEEL · FREE', 'КРУТИТЬ КОЛЕСО · БЕСПЛАТНО'],
   ['A reward is waiting to be collected.', 'Награда ждёт получения.'],
-  ['Show my reward', 'Показать нагр������ду'],
+  ['Show my reward', 'Показать нагр��������ду'],
   ['Published odds', 'Опубликованные вероятности'],
   ['Every sector, every chance', 'Все секторы и их вероятности'],
   ['100% total', 'Всего 100%'],
@@ -193,8 +193,7 @@ const ruPhrases = new Map<string, string>([
   ['View Ads', 'Просмотр рекламы'],
   ['PTC Ads', 'PTC-реклама'],
   ['Watch and Earn', 'Смотри и зарабатывай'],
-  ['Partner offers', 'Партнёрские предложения'],
-  ['Swap', 'Обмен'],
+   ['Swap', 'Обмен'],
   ['Referrals', 'Рефералы'],
   ['Promo Code', 'Промокод'],
   ['Security & Wallets', 'Безопасность и кошельки'],
@@ -216,7 +215,7 @@ const ruPhrases = new Map<string, string>([
   ['Insufficient HOMERO balance.', 'Недостаточно HOMERO на балансе.'],
   ['The HOMERO treasury has not been initialized yet.', 'Резерв HOMERO ещё не инициализирован.'],
   ['This request key was already used for a different swap.', 'Этот ключ запроса уже использован для другого обмена.'],
-  ['The swap record could not be confirmed. Contact support before retrying.', 'Не удалось подтвердить запись об обмене. Перед повторной попыткой обратитесь в поддержку.'],
+  ['The swap record could not be confirmed. Contact support before retrying.', 'Не удалось подтвердить запись об обмене. Перед повторной попы��кой обратитесь в поддержку.'],
   ['Could not complete the swap. Please retry the same request.', 'Не удалось завершить обмен. Повторите тот же запрос.'],
   ['Could not load internal swap balances.', 'Не удалось загрузить внутренние балансы для обмена.'],
   ['The swap could not be completed.', 'Не удалось выполнить обмен.'],
@@ -395,7 +394,7 @@ const ruPhrases = new Map<string, string>([
   ['How do advertiser campaigns work?', 'Как работают рекламные кампании?'],
   ['How are advertiser task rewards credited?', 'Как начисляются награды за задания рекламодателей?'],
   ['Does pepe.casa really pay PEPE?', 'pepe.casa действительно выплачивает PEPE?'],
-  ['Yes. One pepe.casa login gives you access to both the Earner and Advertiser workspaces.', 'Да. ��дин логин pepe.casa открывает доступ к кабинетам Исполнителя и Рекламодателя.'],
+  ['Yes. One pepe.casa login gives you access to both the Earner and Advertiser workspaces.', 'Да. ��дин логин pepe.casa открывает до��туп к кабинетам Исполнителя и Рекламодателя.'],
   ['Use Switch to Advertiser or Switch to Earner in the workspace navigation. Switching changes the workspace, not your login; PEPE and HOMERO balances are tracked separately.', 'Используйте пункты «Перейти в кабинет рекламодателя» или «Перейти в кабинет исполнителя» в меню. Меняется рабочий кабинет, а не аккаунт; балансы PEPE и HOMERO учитываются отдельно.'],
   ['PEPE and HOMERO are tracked separately. The withdrawal form sends PEPE only; HOMERO is an in-platform balance and advertiser campaign funds are reserved for campaigns. If an exchange option is available, its current rate and fee are shown before you confirm.', 'PEPE, HOMERO и рекламный кошелёк учитываются отдельно. Через форму вывода отправляется только PEPE; HOMERO — внутренний баланс, а средства рекламного кошелька резервируются для кампаний. Если обмен доступен, текущий курс и комиссия будут показаны до подтверждения.'],
   ['Add PEPE to your Advertiser wallet through a supported FaucetPay top-up or by transferring PEPE from your Earner balance.', 'Пополните рекламный кошелёк через доступное пополнение FaucetPay или переведите в него PEPE со счёта Исполнителя.'],
@@ -467,7 +466,7 @@ const ruPhrases = new Map<string, string>([
   ['Read each View Ads task before starting. Keep the task window open and complete its timer; the reward is credited only after the server confirms completion.', 'Перед началом прочитайте условия каждого задания по просмотру рекламы. Не закрывайте окно задания и дождитесь окончания таймера: награда начисляется только после подтверждения выполнения сервером.'],
   ['Verified PTC tasks add +0.20 Pepe Runner energy; verified Shortlinks add +0.35 Pepe Runner energy, subject to the storage and daily energy caps.', 'За подтверждённое задание PTC начисляется +0,20 энергии Pepe Runner, за короткие ссылки — +0,35. Действуют ограничения на запас энергии и её дневное начисление.'],
   ['Each task shows its reward token, amount, and requirements before you start. Advertiser-created PTC and YouTube campaign rewards are credited in PEPE after verification.', 'Перед началом задания показываются токен и размер награды, а также требования. Награды за рекламные кампании PTC и YouTube начисляются в PEPE после проверки.'],
-  ['Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.', 'Не используйте ботов, скрипты, фиктивную активность или дублирующие аккаунты для получения наград и привлечения рефералов. Задания и награды могут меняться; заработок не гарантируется.'],
+  ['Do not use bots, scripts, fake engagement, or duplicate accounts to claim rewards or referrals. Tasks and rewards may change; earnings are not guaranteed.', 'Не используйте ботов, скрипты, фиктивную активность или дублирующие аккаунты для получения наград и привлечения рефералов. Задания и награды могут мен��ться; заработок не гарантируется.'],
   ['Earner and advertiser workspaces', 'Кабинеты исполнителя и рекламодателя'],
   ['Use one pepe.casa login to complete tasks or manage your own advertising campaigns.', 'Используйте один аккаунт pepe.casa для выполнения заданий и управления рекламными кампаниями.'],
   ['Switch between Earner and Advertiser workspaces from the account navigation. Switching workspaces does not create a second login.', 'Переключайтесь между кабинетами исполнителя и рекламодателя через меню аккаунта. Смена кабинета не создаёт второй аккаунт.'],
@@ -715,7 +714,7 @@ const ruPhrases = new Map<string, string>([
   ['Loading internal balances…', 'Загружаем внутренние балансы…'],
   ['Only HOMERO → PEPE swaps are enabled. PEPE cannot be exchanged back to HOMERO.', 'Доступен только обмен HOMERO → PEPE. Обратный обмен PEPE на HOMERO невозможен.'],
   ['One-way internal exchange. No withdrawals or on-chain transfers are performed here.', 'Односторонний внутренний обмен. Вывод средств и переводы в блокчейне здесь недоступны.'],
-  ['Live market quote unavailable. Swaps still use the fixed 1 HOMERO = 1 PEPE internal rate.', 'Рыночная котировка недоступна. Обмен выполняется по фиксированному внутреннему курсу 1 HOMERO = 1 PEPE.'],
+  ['Live market quote unavailable. Swaps still use the fixed 1 HOMERO = 1 PEPE internal rate.', 'Рыночная котировка недоступна. Обмен выполняется по фикси��ованному внутреннему курсу 1 HOMERO = 1 PEPE.'],
   ['Request failed. Please try again.', 'Не удалось выполнить запрос. Попробуйте ещё раз.'],
   ['The swap could not be completed.', 'Не удалось выполнить обмен.'],
   ['The exchange balance could not be updated.', 'Не уд��лось обновить баланс обмена.'],
@@ -1006,7 +1005,7 @@ const ruPhrases = new Map<string, string>([
   ['Reward source', 'Источник награды'],
   ['Third-party link rewards are not enabled.', 'Награды за сторонние ссылки отключены.'],
   ['No verified shortlink partner is connected', 'Нет подключённого партнёра коротких ссылок с проверкой'],
-  ['A countdown or browser redirect cannot prove a completed offer. Unverified offer links and client-side reward timers have been removed; credits will stay paused until a partner can verify completions securely.', 'Таймер или пе��енаправление браузера не подтверждают выполнение задания. Непроверенные ссылки и клиентские таймеры наград удалены; начисления будут приостановлены, пока партнёр не сможет надёжно проверять выполнение.'],
+  ['A countdown or browser redirect cannot prove a completed offer. Unverified offer links and client-side reward timers have been removed; credits will stay paused until a partner can verify completions securely.', 'Т��ймер или пе��енаправление браузера не подтверждают выполнение задания. Непроверенные ссылки и клиентские таймеры наград удалены; начисления будут приостановлены, пока партнёр не сможет надёжно проверять выполнение.'],
   ['No external links are opened from this page.', 'На этой странице внешние ссылки не открываются.'],
   ['Advertisement', 'Реклама'],
   ['Advertisements', 'Рекламные блоки'],
@@ -1018,7 +1017,7 @@ const ruPhrases = new Map<string, string>([
 
   ['Could not load weekly leaderboard.', 'Не удалось загрузить недельный рейтинг.'],
   ['Weekly leaderboard', 'Недельный рейтинг'],
-  ['Your best server-verified ranked run earns the spot. Casual and boosted runs stay off the board.', 'Лучший рейтинговый забег, проверенный сервером, определяет ваше место. FREE забеги в рейтинг не попадают.'],
+  ['Your best server-verified ranked run earns the spot. Casual and boosted runs stay off the board.', 'Лучший рейтинговый забег, проверенный сервером, определяет ваше место. FREE забег�� в рейтинг не попадают.'],
   ['Live · refreshes every 30 seconds', 'В прямом эфи��е · обновление каждые 30 секунд'],
   ['This week · ranked runs', 'Эта неделя · рейтинговые забеги'],
   ['Arcade Weekly Leaderboard', 'Недельный рейтинг аркады'],
@@ -1176,7 +1175,7 @@ const ruPhrases = new Map<string, string>([
   ['Campaign funds', 'Средства кампаний'],
   ['Transfer amount', 'Сумма перевода'],
   ['Your campaign balance is separate from Earner funds. Amounts support up to 8 decimals.', 'Баланс кампаний отделён от средств Исполнителя. Сумма может содержать до 8 знаков после запятой.'],
-  ['Moving PEPE…', 'Переводим PEPE…'],
+  ['Moving PEPE…', 'Переводим PEPE���'],
   ['Transfer funds', 'Пе��евести средства'],
   ['Amount is greater than your available Earner balance.', 'Сумма превышает доступный баланс Исполнителя.'],
   ['Your ledger', 'Ваш реестр'],
@@ -1495,7 +1494,7 @@ function translateDynamicPhrase(value: string): string | null {
   if (match) return `Осталось времени: ${match[1]}`
 
   match = value.match(/^Timer paused · return to task · (.+)$/i)
-  if (match) return `Таймер приостановлен · вернитесь к заданию · ${match[1]}`
+  if (match) return `Тайме�� приостановлен · вернитесь к заданию · ${match[1]}`
 
   match = value.match(/^The 24-hour limit of (.+) Manual Claims has been reached\. Try again when an earlier claim passes the 24-hour window\.$/i)
   if (match) return `Достигнут лимит ручных заявок за 24 часа: ${match[1]}. Попробуйте снова после окончания предыдущего 24-часов��го периода.`
