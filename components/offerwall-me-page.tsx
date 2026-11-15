@@ -4,31 +4,12 @@ import { Layers, ShieldCheck, Sparkles } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 
 type OfferwallMePageProps = {
-  guestProfileId: string
-  iframeUrlTemplate: string
+  iframeUrl: string
 }
 
-function buildIframeUrl(template: string, guestProfileId: string) {
-  if (!template.trim()) return null
-
-  const hasSubIdPlaceholder = /\{\{?\s*subId\s*\}?\}/i.test(template)
-  const urlWithSubId = template.trim().replace(/\{\{?\s*subId\s*\}?\}/gi, encodeURIComponent(guestProfileId))
-
-  try {
-    const url = new URL(urlWithSubId)
-    const isOfferwallHost = url.hostname === 'offerwall.me' || url.hostname.endsWith('.offerwall.me')
-    if (url.protocol !== 'https:' || !isOfferwallHost || url.username || url.password) return null
-    if (!hasSubIdPlaceholder) url.searchParams.set('subId', guestProfileId)
-    return url.toString()
-  } catch {
-    return null
-  }
-}
-
-export function OfferwallMePage({ guestProfileId, iframeUrlTemplate }: OfferwallMePageProps) {
+export function OfferwallMePage({ iframeUrl }: OfferwallMePageProps) {
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
-  const iframeUrl = buildIframeUrl(iframeUrlTemplate, guestProfileId)
 
   return (
     <main id="top" className="dashboard-page-shell flex flex-col gap-4 sm:gap-5">
