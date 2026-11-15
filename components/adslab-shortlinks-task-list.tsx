@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { ArrowUpRight, BatteryCharging, Clock3, Coins, ExternalLink, Link2 } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
@@ -22,7 +22,19 @@ type ShortlinkTask = {
   awaitingConfirmation: boolean
 }
 
-type ShortlinksResponse = { tasks: ShortlinkTask[]; pepeUsdPrice: string; awaitingConfirmation: boolean }
+type ShortlinksResponse = {
+  tasks: ShortlinkTask[]
+  pepeUsdPrice: string
+  awaitingConfirmation: boolean
+  stats: { todayClicks: number; todayEarningsAtomic: string; totalEarningsAtomic: string }
+}
+
+export type ShortlinkTaskSummary = {
+  availableLinks: number
+  todayClicks: number
+  todayEarningsAtomic: string
+  totalEarningsAtomic: string
+}
 
 async function fetchShortlinks(url: string): Promise<ShortlinksResponse> {
   const response = await fetch(url, { cache: 'no-store' })
@@ -45,16 +57,16 @@ function formatCountdown(seconds: number) {
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`
 }
 
-function isAdsLabTrackingUrl(value: string) {
+function isSafeShortlinkUrl(value: string) {
   try {
     const url = new URL(value)
-    return url.protocol === 'https:' && (url.hostname === 'adslab.me' || url.hostname.endsWith('.adslab.me')) && !url.username && !url.password
+    return url.protocol === 'https:' && !url.username && !url.password
   } catch {
     return false
   }
 }
 
-export function AdsLabShortlinksTaskList() {
+export function AdsLabShortlinksTaskList({ onSummaryChange }: { onSummaryChange?: (summary: ShortlinkTaskSummary) => void }) {
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
   const { data, error, isLoading, mutate } = useSWR('/api/adslab/shortlinks/tasks', fetchShortlinks, {
@@ -64,6 +76,16 @@ export function AdsLabShortlinksTaskList() {
   const [openingKey, setOpeningKey] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!data) return
+    onSummaryChange?.({
+      availableLinks: data.tasks.length,
+      todayClicks: data.stats?.todayClicks ?? 0,
+      todayEarningsAtomic: data.stats?.todayEarningsAtomic ?? '0',
+      totalEarningsAtomic: data.stats?.totalEarningsAtomic ?? '0',
+    })
+  }, [data, onSummaryChange])
 
   async function openShortlink(task: ShortlinkTask) {
     if (openingKey || data?.awaitingConfirmation) return
@@ -85,7 +107,7 @@ export function AdsLabShortlinksTaskList() {
         body: JSON.stringify({ taskKey: task.key }),
       })
       const result = await response.json().catch(() => null) as { directLink?: string; error?: string } | null
-      if (!response.ok || !result?.directLink || !isAdsLabTrackingUrl(result.directLink)) {
+      if (!response.ok || !result?.directLink || !isSafeShortlinkUrl(result.directLink)) {
         throw new Error(result?.error ?? (isRussian ? 'Не удалось открыть ссылку.' : 'Could not open this shortlink.'))
       }
 
@@ -126,6 +148,7 @@ export function AdsLabShortlinksTaskList() {
           <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">{isRussian ? 'Проверьте позже — список заданий обновляется автоматически.' : 'Check back later. Tasks refresh automatically.'}</p>
         </li>
       ) : tasks.map((task) => {
+        const isOfferwallMeTask = task.key.startsWith('offerwall-me-shortlinks:')
         const onCooldown = task.cooldownRemainingSeconds > 0
         const disabled = Boolean(openingKey || onCooldown || task.awaitingConfirmation || data?.awaitingConfirmation)
         const palette = getAdsLabTaskCardPalette(task.key)
@@ -146,13 +169,18 @@ export function AdsLabShortlinksTaskList() {
               )}
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-black leading-5 tracking-tight text-slate-900 dark:text-white">{task.title}</h3>
+                <p className="mt-1 text-[10px] font-bold text-dashboard-accent">{isOfferwallMeTask ? 'Offerwall.me' : 'AdsLab.me'}</p>
                 {task.description && <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{task.description}</p>}
               </div>
             </div>
 
             <div className="relative z-10 mt-4 flex flex-wrap items-center justify-between gap-2">
               <span className={rewardClass}><Coins size={12} />+{formatTokenAtomic(task.rewardAtomic)} {task.tokenSymbol}</span>
-              <span className={energyClass} title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={12} aria-hidden="true" />{isRussian ? `+${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии для бегуна Pepe` : `+${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span>
+              {isOfferwallMeTask ? (
+                <span className={cooldownClass}><Link2 size={12} aria-hidden="true" />{isRussian ? `Осталось: ${task.visitsRemaining}` : `${task.visitsRemaining} remaining`}</span>
+              ) : (
+                <span className={energyClass} title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={12} aria-hidden="true" />{isRussian ? `+${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2).replace('.', ',')} энергии для бегуна Pepe` : `+${ARCADE_SHORTLINK_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span>
+              )}
               {task.cooldownMinutes > 0 && <span className={cooldownClass}><Clock3 size={12} />{isRussian ? `Пауза ${task.cooldownMinutes} мин.` : `${task.cooldownMinutes} min cooldown`}</span>}
             </div>
 
