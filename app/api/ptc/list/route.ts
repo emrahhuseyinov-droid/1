@@ -4,12 +4,13 @@ import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { getClientIp, getCountryCode } from '@/lib/adslab-ptc'
 import { createOfferwallMeSignedIdentity, OFFERWALL_ME_PTC_PUBLIC_API_KEY } from '@/lib/offerwall-me'
+import { getFreshPepeUsdPrice } from '@/lib/pepe-market-price'
+import { calculateOfferwallMeRewardAtomic, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
-const maxRewardAtomic = BigInt(Number.MAX_SAFE_INTEGER)
 const offerwallOrigin = 'https://offerwall.me'
 
 type UnknownRecord = Record<string, unknown>
@@ -38,19 +39,17 @@ function parseDuration(value: unknown): number | null {
   return Number.isSafeInteger(input) && input >= 1 && input <= 3600 ? input : null
 }
 
-function parseRewardAtomic(value: unknown): string | null {
-  const input = typeof value === 'number' && Number.isFinite(value)
+function parseRewardAtomic(value: unknown, pepeUsdPrice: string): string | null {
+  const rewardPoints = typeof value === 'number' && Number.isFinite(value)
     ? String(value)
     : typeof value === 'string'
       ? value.trim()
       : ''
-  const match = /^(\d{1,12})(?:\.(\d{1,8}))?$/.exec(input)
-  if (!match) return null
+  const rewardUsd = offerwallPointsToUsd(rewardPoints)
+  if (!rewardUsd) return null
 
-  const whole = BigInt(match[1])
-  const fraction = BigInt((match[2] ?? '').padEnd(8, '0') || '0')
-  const atomic = whole * 100_000_000n + fraction
-  return atomic > 0n && atomic <= maxRewardAtomic ? atomic.toString() : null
+  const rewardAtomic = calculateOfferwallMeRewardAtomic(rewardUsd, pepeUsdPrice)
+  return rewardAtomic === null ? null : String(rewardAtomic)
 }
 
 function parseOfferwallUrl(value: unknown): string | null {
@@ -78,13 +77,13 @@ function parseIconUrl(value: unknown): string | null {
   }
 }
 
-function parseTask(value: unknown): OfferwallPtcTask | null {
+function parseTask(value: unknown, pepeUsdPrice: string): OfferwallPtcTask | null {
   if (!isRecord(value)) return null
 
   const url = parseOfferwallUrl(value.url)
   const title = readString(value.title, 200) ?? readString(value.name, 200)
   const durationSeconds = parseDuration(value.duration)
-  const rewardAtomic = parseRewardAtomic(value.reward)
+  const rewardAtomic = parseRewardAtomic(value.reward, pepeUsdPrice)
   if (!url || !title || durationSeconds === null || rewardAtomic === null) return null
 
   const description = readString(value.description, 1200) ?? ''
@@ -161,8 +160,17 @@ export async function GET(request: NextRequest) {
       return jsonError('PTC ads are temporarily unavailable.', 502)
     }
 
+    if (payload.data.length === 0) return NextResponse.json({ tasks: [] }, { headers: noStoreHeaders })
+
+    let pepeUsdPrice: string
+    try {
+      pepeUsdPrice = (await getFreshPepeUsdPrice()).toFixed(18).replace(/0+$/, '').replace(/\.$/, '')
+    } catch {
+      return jsonError('PEPE/USD reward quote is temporarily unavailable.', 503)
+    }
+
     const tasks = payload.data.flatMap((item) => {
-      const task = parseTask(item)
+      const task = parseTask(item, pepeUsdPrice)
       return task ? [task] : []
     })
     return NextResponse.json({ tasks }, { headers: noStoreHeaders })

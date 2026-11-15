@@ -55,7 +55,7 @@ function pairLiquidityUsd(pair: JsonRecord): number {
   return positiveNumber(pair.liquidity.usd) ?? 0
 }
 
-const PEPE_PRICE_CACHE_TTL_MS = 5 * 60_000
+const PEPE_PRICE_CACHE_TTL_MS = 30_000
 const MAX_STALE_PRICE_AGE_MS = 10 * 60_000
 const HOMERO_RATE_SCALE = 1_000_000_000_000
 
