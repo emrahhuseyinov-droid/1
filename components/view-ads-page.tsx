@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import {
   BarChart3,
   Clock3,
@@ -19,6 +19,16 @@ import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provi
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 
 type TaskSort = 'reward' | 'duration'
+type PtcTaskPriority = { rewardAtomic: string; durationSeconds: number }
+
+function comparePtcTaskPriority(first: PtcTaskPriority | null, second: PtcTaskPriority | null, sortBy: TaskSort) {
+  if (!first) return second ? 1 : 0
+  if (!second) return -1
+  if (sortBy === 'duration') return first.durationSeconds - second.durationSeconds
+
+  const rewardDifference = BigInt(second.rewardAtomic) - BigInt(first.rewardAtomic)
+  return rewardDifference > 0n ? 1 : rewardDifference < 0n ? -1 : 0
+}
 
 function compactAtomic(value: string) {
   const [whole, fraction = ''] = formatTokenAtomic(value).split('.')
@@ -72,6 +82,14 @@ export function ViewAdsPage() {
   const [sortBy, setSortBy] = useState<TaskSort>('reward')
   const [summary, setSummary] = useState<PtcTaskSummary | null>(null)
   const [offerwallAvailableAds, setOfferwallAvailableAds] = useState<number | null>(null)
+  const [adsLabTopTask, setAdsLabTopTask] = useState<PtcTaskPriority | null>(null)
+  const [offerwallTopTask, setOfferwallTopTask] = useState<PtcTaskPriority | null>(null)
+  const taskSourceOrder = useMemo(() => [
+    { key: 'adslab', priority: adsLabTopTask },
+    { key: 'offerwall', priority: offerwallTopTask },
+  ]
+    .sort((first, second) => comparePtcTaskPriority(first.priority, second.priority, sortBy))
+    .map(({ key }) => key), [adsLabTopTask, offerwallTopTask, sortBy])
 
   return (
     <LocalizedTree>
@@ -173,18 +191,27 @@ export function ViewAdsPage() {
           </div>
           <div className="p-3 sm:p-4">
             <ul aria-label={isRussian ? 'PTC-задания' : 'PTC tasks'} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <AdsLabPtcTaskList
-                onSummaryChange={setSummary}
-                searchQuery={searchQuery}
-                availableOnly={availableOnly}
-                sortBy={sortBy}
-                showEmptyState={offerwallAvailableAds === 0}
-              />
-              <OfferwallPtcList
-                onAvailableCountChange={setOfferwallAvailableAds}
-                searchQuery={searchQuery}
-                sortBy={sortBy}
-              />
+              {taskSourceOrder.map((source) => source === 'adslab' ? (
+                <Fragment key="adslab">
+                  <AdsLabPtcTaskList
+                    onSummaryChange={setSummary}
+                    onTopTaskChange={setAdsLabTopTask}
+                    searchQuery={searchQuery}
+                    availableOnly={availableOnly}
+                    sortBy={sortBy}
+                    showEmptyState={offerwallAvailableAds === 0}
+                  />
+                </Fragment>
+              ) : (
+                <Fragment key="offerwall">
+                  <OfferwallPtcList
+                    onAvailableCountChange={setOfferwallAvailableAds}
+                    onTopTaskChange={setOfferwallTopTask}
+                    searchQuery={searchQuery}
+                    sortBy={sortBy}
+                  />
+                </Fragment>
+              ))}
             </ul>
           </div>
         </section>

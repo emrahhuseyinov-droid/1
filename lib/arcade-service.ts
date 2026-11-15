@@ -19,7 +19,8 @@ import {
   referralCommissions,
   user,
 } from '@/lib/db/schema'
-import { getPepeReserveAdminProfile, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
+import { getPepeReserveAdminProfile, isPepeReserveAdmin, PEPE_RESERVE_ARCADE_WEEKLY_SOURCE, PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
+import { getProfileAvatar } from '@/lib/profile-avatars'
 import { getHomeroTreasurySnapshot, lockHomeroTreasuryProfiles, recordHomeroTreasuryTransfer, HOMERO_TREASURY_CAP_ATOMIC } from '@/lib/homero-treasury'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { ARCADE_ATOMIC_PER_PEPE, ARCADE_DAILY_ENERGY_EARNED_CAP, ARCADE_ENERGY_CAP, ARCADE_MILESTONES, ARCADE_PTC_ENERGY_REWARD, ARCADE_SHOP, ARCADE_SHORTLINK_ENERGY_REWARD, ARCADE_VIEW_AD_ENERGY_REWARD, getArcadeWeeklyPrize } from '@/lib/arcade-gameplay'
@@ -329,6 +330,9 @@ export async function getArcadeLeaderboard(start: Date, end: Date, currentGuestI
       guestId: guestProfiles.id,
       referralCode: guestProfiles.referralCode,
       nickname: user.name,
+      avatar: user.image,
+      email: user.email,
+      emailVerified: user.emailVerified,
     })
     .from(guestProfiles)
     .leftJoin(user, eq(guestProfiles.userId, user.id))
@@ -343,6 +347,7 @@ export async function getArcadeLeaderboard(start: Date, end: Date, currentGuestI
     return {
       rank,
       displayName,
+      avatarSrc: getProfileAvatar(profile?.avatar, isPepeReserveAdmin(profile?.email, profile?.emailVerified ?? false)),
       bestDistanceM: row.distanceM,
       prizeAmount: prize ? prize.amountAtomic / ARCADE_ATOMIC_PER_PEPE : 0,
       prizeTokenSymbol: prize?.tokenSymbol ?? 'PEPE',

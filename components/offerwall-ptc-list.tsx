@@ -58,10 +58,12 @@ function getErrorStatus(error: unknown): number | null {
 
 export function OfferwallPtcList({
   onAvailableCountChange,
+  onTopTaskChange,
   searchQuery = '',
   sortBy = 'reward',
 }: {
   onAvailableCountChange?: (count: number) => void
+  onTopTaskChange?: (priority: { rewardAtomic: string; durationSeconds: number } | null) => void
   searchQuery?: string
   sortBy?: TaskSort
 }) {
@@ -87,6 +89,11 @@ export function OfferwallPtcList({
         return rewardDifference > 0n ? 1 : rewardDifference < 0n ? -1 : 0
       })
   }, [searchQuery, sortBy, tasks])
+  const topTask = visibleTasks[0]
+
+  useEffect(() => {
+    onTopTaskChange?.(topTask ? { rewardAtomic: topTask.rewardAtomic, durationSeconds: topTask.durationSeconds } : null)
+  }, [onTopTaskChange, topTask?.durationSeconds, topTask?.rewardAtomic])
 
   if (isLoading && !data) {
     return <li role="status" className="col-span-full rounded-2xl border border-dashboard-outline bg-dashboard-surface px-4 py-8 text-center text-xs text-dashboard-muted">{isRussian ? 'Загружаем PTC-рекламу Offerwall.me…' : 'Loading Offerwall.me PTC ads…'}</li>

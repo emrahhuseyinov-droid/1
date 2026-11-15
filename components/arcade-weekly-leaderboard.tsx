@@ -1,13 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { AlertCircle, Clock3, Crown, Medal, RefreshCw, Search, Trophy } from 'lucide-react'
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { ARCADE_WEEKLY_PRIZE_BUDGET_HOMERO, ARCADE_WEEKLY_PRIZE_BUDGET_PEPE, ARCADE_WEEKLY_PRIZE_TIERS } from '@/lib/arcade-gameplay'
+import type { ProfileAvatarSrc } from '@/lib/profile-avatars'
 
 type LeaderboardPlayer = {
   rank: number
   displayName: string
+  avatarSrc: ProfileAvatarSrc
   bestDistanceM: number
   prizeAmount: number
   prizeTokenSymbol: 'HOMERO' | 'PEPE'
@@ -133,8 +136,22 @@ function PlayerAvatar({ player, compact = false }: { player: LeaderboardPlayer; 
       : player.rank === 3
         ? 'border-fuchsia-200/40 bg-fuchsia-300/20 text-fuchsia-50'
         : 'border-white/20 bg-white/10 text-white/90'
+  const pixelSize = compact ? 28 : 36
 
-  return <span aria-hidden="true" className={`grid shrink-0 place-items-center rounded-full border font-black tracking-wide shadow-inner shadow-black/20 ${size} ${tone}`}>{initials}</span>
+  return (
+    <span aria-hidden="true" className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full border font-black tracking-wide shadow-inner shadow-black/20 ${size} ${tone}`}>
+      <span>{initials}</span>
+      <Image
+        src={player.avatarSrc}
+        alt=""
+        aria-hidden="true"
+        width={pixelSize}
+        height={pixelSize}
+        onError={(event) => event.currentTarget.remove()}
+        className="absolute inset-0 size-full rounded-full object-cover"
+      />
+    </span>
+  )
 }
 
 export function ArcadeWeeklyLeaderboard({
