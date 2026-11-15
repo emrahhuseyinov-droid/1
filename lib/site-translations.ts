@@ -617,7 +617,7 @@ const ruPhrases = new Map<string, string>([
   ['Recorded balance', 'Баланс в реестре'],
   ['USD value', 'Стоимость в USD'],
   ['Action', 'Действие'],
-  ['PEPE/USD is a live DEX Screener quote that refreshes every minute. HOMERO is an internal site token valued at the same reference price; this feed does not execute or guarantee a swap.', 'Котировка PEPE/USD поступает из DEX Screener и обновляется каждую минуту. HOMERO — внутренний токен сайта, стоимость которого рассчитывается по той же ориентировочной цене; эта котировка не выполняет и не гарантирует обмен.'],
+  ['PEPE/USD is a live DEX Screener quote that refreshes every 5 minutes. HOMERO is an internal site token valued at the same reference price; this feed does not execute or guarantee a swap.', 'Котировка PEPE/USD поступает из DEX Screener и обновляется каждые 5 минут. HOMERO — внутренний токен сайта, стоимость которого рассчитывается по той же ориентировочной цене; эта котировка не выполняет и не гарантирует обмен.'],
   ['Could not load withdrawal data.', 'Не удалось загрузить данные о выводах.'],
   ['Paid', 'Выплачено'],
   ['FaucetPay confirmed the automatic payout.', 'FaucetPay подтвердил автоматическую выплату.'],

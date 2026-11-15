@@ -3,6 +3,8 @@ import { and, eq } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, offerwallMeTransactions } from '@/lib/db/schema'
+import { getFreshPepeUsdPrice } from '@/lib/pepe-market-price'
+import { calculateOfferwallMeRewardAtomic, normalizeOfferwallUsd, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -54,17 +56,6 @@ function getSignature(params: URLSearchParams): ParamValue {
   return getSingleParam(params, 'signature')
 }
 
-function parseRewardAtomic(value: string) {
-  const match = value.match(/^(\d{1,14})(?:\.(\d{1,8}))?$/)
-  if (!match) return null
-
-  const whole = BigInt(match[1])
-  const fraction = BigInt((match[2] ?? '').padEnd(8, '0') || '0')
-  const atomic = whole * 100_000_000n + fraction
-  if (atomic <= 0n || atomic > BigInt(Number.MAX_SAFE_INTEGER)) return null
-  return Number(atomic)
-}
-
 function isValidSignature(subId: string, transId: string, reward: string, supplied: string, secret: string) {
   const candidate = supplied.trim().toLowerCase()
   if (!/^[a-f0-9]{32}$/.test(candidate)) return false
@@ -72,11 +63,6 @@ function isValidSignature(subId: string, transId: string, reward: string, suppli
   const expected = createHash('md5').update(`${subId}${transId}${reward}${secret}`, 'utf8').digest()
   const actual = Buffer.from(candidate, 'hex')
   return actual.length === expected.length && timingSafeEqual(expected, actual)
-}
-
-function parsePayout(value: string | null) {
-  if (!value || !/^\d{1,14}(?:\.\d{1,18})?$/.test(value)) return null
-  return value
 }
 
 export async function POST(request: NextRequest) {
@@ -137,18 +123,56 @@ export async function POST(request: NextRequest) {
   }
   if (status !== '1' && status !== '2') return response('no', 400)
 
-  const rewardAtomic = parseRewardAtomic(reward)
-  if (rewardAtomic === null) return response('no', 400)
+  const pointsUsd = offerwallPointsToUsd(reward)
+  if (pointsUsd === null) return response('no', 400)
 
   const secret = process.env.OFFERWALL_ME_SECRET?.trim() ?? ''
   if (!secret) return response('no', 503)
   if (!isValidSignature(subId, transId, reward, signature, secret)) return response('no', 401)
   if (testPostback) return response('ok', 200)
 
+  if (status === '1') {
+    try {
+      const [existingRecord] = await db
+        .select({ guestId: offerwallMeTransactions.guestId })
+        .from(offerwallMeTransactions)
+        .where(eq(offerwallMeTransactions.providerTransactionId, transId))
+        .limit(1)
+
+      if (existingRecord) {
+        return existingRecord.guestId === guestId ? response('ok', 200) : response('no', 409)
+      }
+    } catch (error) {
+      console.error('[offerwall-me-postback] Could not check for an existing transaction.', error)
+      return response('no', 500)
+    }
+  }
+
   const rawOfferType = offerTypeParam.value?.trim().toLowerCase() || 'offer'
   if (!/^[a-z0-9_-]{1,64}$/.test(rawOfferType)) return response('no', 400)
   const offerName = offerNameParam.value?.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 500) || null
-  const payoutUsd = parsePayout(payoutParam.value)
+  const rawPayoutUsd = payoutParam.value?.trim() ?? ''
+  const payoutUsd = rawPayoutUsd ? normalizeOfferwallUsd(rawPayoutUsd) : null
+  if (rawPayoutUsd && payoutUsd === null) return response('no', 400)
+  // The provider signature covers reward points, so reject an unsigned payout that contradicts the configured rate.
+  if (payoutUsd && payoutUsd !== pointsUsd) return response('no', 400)
+
+  const usdAmount = payoutUsd ?? pointsUsd
+  let rewardAtomic = 0
+  if (status === '1') {
+    let pepeUsdPrice: string
+    try {
+      pepeUsdPrice = (await getFreshPepeUsdPrice()).toFixed(18).replace(/0+$/, '').replace(/\.$/, '')
+    } catch (error) {
+      console.error('[offerwall-me-postback] Live PEPE/USD quote is unavailable.', error)
+      return response('no', 503)
+    }
+
+    const convertedRewardAtomic = calculateOfferwallMeRewardAtomic(usdAmount, pepeUsdPrice)
+    if (convertedRewardAtomic === null) return response('no', 400)
+    rewardAtomic = convertedRewardAtomic
+  }
+
   const now = new Date()
 
   try {
@@ -177,7 +201,7 @@ export async function POST(request: NextRequest) {
             guestId,
             offerType: rawOfferType,
             offerName,
-            payoutUsd,
+            payoutUsd: usdAmount,
             status: status === '1' ? 'credited' : 'reversed',
             rewardAtomic: status === '1' ? rewardAtomic : 0,
             reversedAt: status === '1' ? null : now,
@@ -194,7 +218,7 @@ export async function POST(request: NextRequest) {
               source: 'offerwall_me',
               sourceKey: transId,
               itemId: offerName ?? rawOfferType,
-              tokenSymbol: 'HOMERO',
+              tokenSymbol: 'PEPE',
               rewardAtomic,
               createdAt: now,
             })
@@ -216,13 +240,23 @@ export async function POST(request: NextRequest) {
       if (status === '1') return 'duplicate' as const
       if (record.status === 'reversed') return 'duplicate' as const
 
+      const [originalCredit] = await transaction
+        .select({ tokenSymbol: earningEvents.tokenSymbol })
+        .from(earningEvents)
+        .where(and(
+          eq(earningEvents.guestId, guestId),
+          eq(earningEvents.source, 'offerwall_me'),
+          eq(earningEvents.sourceKey, transId),
+        ))
+        .limit(1)
+
       await transaction.insert(earningEvents).values({
         id: randomUUID(),
         guestId,
         source: 'offerwall_me_reversal',
         sourceKey: transId,
         itemId: record.offerName ?? record.offerType,
-        tokenSymbol: 'HOMERO',
+        tokenSymbol: originalCredit?.tokenSymbol ?? 'HOMERO',
         rewardAtomic: -record.rewardAtomic,
         createdAt: now,
       }).onConflictDoNothing({ target: [earningEvents.guestId, earningEvents.source, earningEvents.sourceKey] })
