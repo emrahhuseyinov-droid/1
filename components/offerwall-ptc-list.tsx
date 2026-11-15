@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo } from 'react'
 import useSWR from 'swr'
-import { ArrowUpRight, Clock3, Coins, Eye } from 'lucide-react'
+import { ArrowUpRight, BadgeCheck, BatteryCharging, Clock3, Coins, Eye } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
+import { ARCADE_PTC_ENERGY_REWARD } from '@/lib/arcade-gameplay'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 
 type OfferwallPtcTask = {
@@ -124,7 +125,7 @@ export function OfferwallPtcList({
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-2 text-sm font-extrabold tracking-tight">{task.title}</h3>
               <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
-                <span className="inline-flex items-center gap-1 text-dashboard-accent"><Eye size={11} aria-hidden="true" />{isRussian ? 'Партнёр' : 'Partner'}</span>
+                <span className="inline-flex items-center gap-1 text-dashboard-accent"><BadgeCheck size={11} aria-hidden="true" />{isRussian ? 'Партнёр' : 'Partner'}</span>
               </div>
               {task.description && <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-dashboard-muted">{task.description}</p>}
             </div>
@@ -132,6 +133,7 @@ export function OfferwallPtcList({
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-dashboard-outline pt-3 text-[10px] font-bold">
             <span className="inline-flex items-center gap-1.5 text-dashboard-gold"><Coins size={13} aria-hidden="true" />{formatTokenAtomic(task.rewardAtomic)} PEPE</span>
+            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-300" title={isRussian ? 'Фактическое начисление зависит от дневного лимита и свободного места в запасе.' : 'Actual credit depends on the daily energy limit and available storage.'}><BatteryCharging size={12} aria-hidden="true" />{isRussian ? `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} энергии для бегуна Pepe` : `+${ARCADE_PTC_ENERGY_REWARD.toFixed(2)} Pepe Runner energy`}</span>
             <span className="inline-flex items-center gap-1.5 text-dashboard-muted"><Clock3 size={12} aria-hidden="true" />{task.durationSeconds} {isRussian ? 'сек.' : 'sec'}</span>
           </div>
 
