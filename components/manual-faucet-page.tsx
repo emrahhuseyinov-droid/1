@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { Check, Clock3, Gift, LoaderCircle, RefreshCw, ShieldCheck } from 'lucide-react'
-import { AdsLabBanner } from '@/components/adslab-banner'
 import { FaucetPayPaidView } from '@/components/faucetpay-paidview'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
@@ -198,7 +197,6 @@ export function ManualFaucetPage({ guestId }: { guestId: string }) {
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">Manual Faucet</h1>
           <p className="max-w-2xl text-xs leading-5 text-slate-400 sm:text-sm">Claim free PEPE after completing a secure CAPTCHA.</p>
         </div>
-        <AdsLabBanner id="unit-jkhhu6le3" container="adslab-banner-unit-jkhhu6le3" alignment="right" format="leaderboard" />
       </header>
 
       <section aria-label="Faucet reward and claim limit" className="grid gap-4 md:grid-cols-2">
@@ -222,12 +220,6 @@ export function ManualFaucetPage({ guestId }: { guestId: string }) {
       </section>
 
       <div className="relative mx-auto w-full max-w-3xl">
-        <div className="absolute right-full top-0 mr-6 hidden w-[160px] 2xl:block">
-          <AdsLabBanner id="unit-h2xkw0j13" container="adslab-banner-unit-h2xkw0j13" alignment="center" format="skyscraper" />
-        </div>
-        <div className="absolute left-full top-0 ml-6 hidden w-[160px] 2xl:block">
-          <AdsLabBanner id="unit-cf6cr4ie2" container="adslab-banner-unit-cf6cr4ie2" alignment="center" format="skyscraper" />
-        </div>
         <section aria-labelledby="faucet-captcha-title" className="w-full rounded-[28px] border border-violet-200/20 bg-[#171e42] p-5 shadow-[0_20px_60px_rgba(4,9,32,0.32)] sm:p-8">
         <div className="mx-auto flex max-w-xl flex-col items-center text-center">
           <span className="grid size-14 place-items-center rounded-2xl bg-violet-400/10 text-violet-200"><ShieldCheck aria-hidden="true" /></span>
@@ -292,7 +284,6 @@ export function ManualFaucetPage({ guestId }: { guestId: string }) {
         <ShieldCheck aria-hidden="true" size={14} className="shrink-0" />
         <p>CAPTCHA results are verified by the server before any PEPE is credited.</p>
       </div>
-      <AdsLabBanner id="unit-2a7xnmbi8" container="adslab-banner-unit-2a7xnmbi8" alignment="center" format="medium-banner" />
       <FaucetPayPaidView guestId={guestId} />
 
       <AdsLabCaptchaModal
