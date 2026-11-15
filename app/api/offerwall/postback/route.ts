@@ -51,9 +51,7 @@ function getSingleParam(params: URLSearchParams, name: string): ParamValue {
 }
 
 function getSignature(params: URLSearchParams): ParamValue {
-  const values = [...params.getAll('signature'), ...params.getAll('hash')]
-  if (values.length !== 1) return { value: null, valid: false }
-  return { value: values[0], valid: true }
+  return getSingleParam(params, 'signature')
 }
 
 function parseRewardAtomic(value: string) {
@@ -82,8 +80,7 @@ function parsePayout(value: string | null) {
 }
 
 export async function POST(request: NextRequest) {
-  const contentType = request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase()
-  if (contentType !== 'application/x-www-form-urlencoded') return response('no', 415)
+  const contentType = request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() ?? null
 
   let body: string | null
   try {
@@ -93,7 +90,26 @@ export async function POST(request: NextRequest) {
   }
   if (body === null) return response('no', 413)
 
-  const params = new URLSearchParams(body)
+  const params = new URLSearchParams(request.nextUrl.searchParams)
+  if (body) {
+    if (contentType === 'application/x-www-form-urlencoded') {
+      new URLSearchParams(body).forEach((value, key) => params.append(key, value))
+    } else if (contentType === 'application/json') {
+      let payload: unknown
+      try {
+        payload = JSON.parse(body)
+      } catch {
+        return response('no', 400)
+      }
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return response('no', 400)
+      for (const [key, value] of Object.entries(payload)) {
+        if (typeof value !== 'string' && typeof value !== 'number') return response('no', 400)
+        params.append(key, String(value))
+      }
+    } else {
+      return response('no', 415)
+    }
+  }
   const subIdParam = getSingleParam(params, 'subId')
   const transIdParam = getSingleParam(params, 'transId')
   const rewardParam = getSingleParam(params, 'reward')
@@ -102,8 +118,9 @@ export async function POST(request: NextRequest) {
   const offerTypeParam = getSingleParam(params, 'offer_type')
   const offerNameParam = getSingleParam(params, 'offer_name')
   const payoutParam = getSingleParam(params, 'payout')
+  const debugParam = getSingleParam(params, 'debug')
 
-  if (![subIdParam, transIdParam, rewardParam, statusParam, signatureParam, offerTypeParam, offerNameParam, payoutParam].every((param) => param.valid)) {
+  if (![subIdParam, transIdParam, rewardParam, statusParam, signatureParam, offerTypeParam, offerNameParam, payoutParam, debugParam].every((param) => param.valid)) {
     return response('no', 400)
   }
 
@@ -113,8 +130,9 @@ export async function POST(request: NextRequest) {
   const status = statusParam.value ?? ''
   const signature = signatureParam.value ?? ''
   const guestId = subId.toLowerCase()
+  const testPostback = debugParam.value === '1' || /^test-user-[a-z0-9_-]{1,128}$/i.test(subId)
 
-  if (!uuidPattern.test(subId) || !transId || transId.length > 200 || /[\u0000-\u001f\u007f]/.test(transId)) {
+  if (!subId || subId.length > 200 || /[\u0000-\u001f\u007f]/.test(subId) || (!testPostback && !uuidPattern.test(subId)) || !transId || transId.length > 200 || /[\u0000-\u001f\u007f]/.test(transId)) {
     return response('no', 400)
   }
   if (status !== '1' && status !== '2') return response('no', 400)
@@ -125,6 +143,7 @@ export async function POST(request: NextRequest) {
   const secret = process.env.OFFERWALL_ME_SECRET?.trim() ?? ''
   if (!secret) return response('no', 503)
   if (!isValidSignature(subId, transId, reward, signature, secret)) return response('no', 401)
+  if (testPostback) return response('ok', 200)
 
   const rawOfferType = offerTypeParam.value?.trim().toLowerCase() || 'offer'
   if (!/^[a-z0-9_-]{1,64}$/.test(rawOfferType)) return response('no', 400)
