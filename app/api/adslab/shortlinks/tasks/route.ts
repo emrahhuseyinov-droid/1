@@ -205,7 +205,11 @@ export async function GET(request: NextRequest) {
       cooldownRemainingSeconds: 0,
       awaitingConfirmation,
     }))
-    const tasks = [...adsLabTasks, ...offerwallShortlinkTasks]
+    const tasks = [...adsLabTasks, ...offerwallShortlinkTasks].sort((left, right) => {
+      const leftReward = BigInt(left.rewardAtomic)
+      const rightReward = BigInt(right.rewardAtomic)
+      return leftReward > rightReward ? -1 : leftReward < rightReward ? 1 : 0
+    })
 
     failureStage = 'stats_query'
     const stats = await loadShortlinkStats(account.profile.id)
