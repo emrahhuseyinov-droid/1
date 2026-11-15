@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { Check, Clock3, Gift, LoaderCircle, RefreshCw, ShieldCheck } from 'lucide-react'
 import { AdsLabBanner } from '@/components/adslab-banner'
+import { FaucetPayPaidView } from '@/components/faucetpay-paidview'
 import { AdsLabCaptchaModal } from '@/components/adslab-captcha-modal'
 import { LocalizedTree } from '@/components/site-language-provider'
 import { TokenLogo } from '@/components/token-logo'
@@ -56,7 +57,7 @@ function formatRemaining(ms: number) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
-export function ManualFaucetPage() {
+export function ManualFaucetPage({ guestId }: { guestId: string }) {
   const router = useRouter()
   const { data, error: stateError, isLoading, mutate } = useSWR<FaucetState>('/api/manual-faucet/state', getFaucetState, {
     revalidateOnFocus: true,
@@ -292,6 +293,7 @@ export function ManualFaucetPage() {
         <p>CAPTCHA results are verified by the server before any PEPE is credited.</p>
       </div>
       <AdsLabBanner id="unit-2a7xnmbi8" container="adslab-banner-unit-2a7xnmbi8" alignment="center" format="medium-banner" />
+      <FaucetPayPaidView guestId={guestId} />
 
       <AdsLabCaptchaModal
         purpose="faucet"

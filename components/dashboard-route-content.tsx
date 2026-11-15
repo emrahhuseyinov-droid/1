@@ -99,6 +99,7 @@ export async function DashboardRouteContent({
       advertiserView={advertiserView}
       email={session.user.email}
       name={session.user.name}
+      guestId={profile.id}
       initialAvatarUrl={getProfileAvatar(session.user.image, isAdmin)}
       isAdmin={isAdmin}
       referralOverview={referralOverview}
