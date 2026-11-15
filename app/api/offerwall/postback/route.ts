@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, offerwallMeTransactions } from '@/lib/db/schema'
 import { getFreshPepeUsdPrice } from '@/lib/pepe-market-price'
-import { calculateOfferwallMeRewardAtomic, normalizeOfferwallUsd, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
+import { applyOfferwallMeEarnerShare, calculateOfferwallMeRewardAtomic, normalizeOfferwallUsd, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -168,7 +168,10 @@ export async function POST(request: NextRequest) {
       return response('no', 503)
     }
 
-    const convertedRewardAtomic = calculateOfferwallMeRewardAtomic(usdAmount, pepeUsdPrice)
+    const userRewardUsd = applyOfferwallMeEarnerShare(usdAmount)
+    if (userRewardUsd === null) return response('no', 400)
+
+    const convertedRewardAtomic = calculateOfferwallMeRewardAtomic(userRewardUsd, pepeUsdPrice)
     if (convertedRewardAtomic === null) return response('no', 400)
     rewardAtomic = convertedRewardAtomic
   }

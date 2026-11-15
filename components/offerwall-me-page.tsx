@@ -2,6 +2,7 @@
 
 import { Layers, ShieldCheck, Sparkles } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
+import { OFFERWALL_ME_EARNER_SHARE_PERCENT } from '@/lib/offerwall-me-pricing'
 
 type OfferwallMePageProps = {
   iframeUrl: string
@@ -20,7 +21,7 @@ export function OfferwallMePage({ iframeUrl }: OfferwallMePageProps) {
           <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100">{isRussian ? 'партнёрские задания' : 'partner tasks'}</p>
             <h1 className="mt-0.5 text-2xl font-black tracking-tight sm:text-3xl">Offerwall.me</h1>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/85">{isRussian ? 'Выполняйте предложения, PTC и короткие ссылки. Проверенные задания автоматически начисляют PEPE.' : 'Complete offers, PTC tasks, and shortlinks. Verified completions are credited automatically in PEPE.'}</p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-white/85">{isRussian ? `Выполняйте предложения, PTC и короткие ссылки. После проверки вам начисляется ${OFFERWALL_ME_EARNER_SHARE_PERCENT}% от вознаграждения провайдера в PEPE.` : `Complete offers, PTC tasks, and shortlinks. After verification, ${OFFERWALL_ME_EARNER_SHARE_PERCENT}% of each provider reward is credited to you in PEPE.`}</p>
             <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-extrabold text-white shadow-sm backdrop-blur"><Sparkles size={12} />{isRussian ? 'Предложения · PTC · короткие ссылки' : 'Offers · PTC · shortlinks'}</span>
           </div>
         </div>
@@ -30,7 +31,7 @@ export function OfferwallMePage({ iframeUrl }: OfferwallMePageProps) {
         <section aria-label={isRussian ? 'Предложения Offerwall.me' : 'Offerwall.me offers'} className="cartoon-panel overflow-hidden rounded-[28px] border-2 border-dashboard-outline bg-[#171f40] shadow-xl shadow-indigo-950/30">
           <header className="flex items-center gap-2 border-b-2 border-white/10 bg-gradient-to-r from-[#252f5b] to-[#20294e] px-4 py-3.5 sm:px-5">
             <ShieldCheck aria-hidden="true" size={16} className="text-emerald-200" />
-            <p className="text-[10px] font-extrabold text-white/90">{isRussian ? 'Вознаграждение зачисляется после проверки провайдером.' : 'Rewards are credited after provider verification.'}</p>
+            <p className="text-[10px] font-extrabold text-white/90">{isRussian ? `После проверки вам начисляется ${OFFERWALL_ME_EARNER_SHARE_PERCENT}% от вознаграждения провайдера в PEPE.` : `After verification, ${OFFERWALL_ME_EARNER_SHARE_PERCENT}% of the provider reward is credited to you in PEPE.`}</p>
           </header>
           <iframe
             title={isRussian ? 'Offerwall.me — партнёрские задания' : 'Offerwall.me partner tasks'}
