@@ -105,6 +105,8 @@ export async function DashboardRouteContent({
       promoClaims={promoClaims}
       promoActivity={promoActivity}
       dashboardOverview={dashboardOverview}
+      guestProfileId={profile.id}
+      offerwallMeIframeUrl={process.env.OFFERWALL_ME_IFRAME_URL ?? ''}
     />
   )
 }
