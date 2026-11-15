@@ -2,6 +2,7 @@ import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
 import { and, eq } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { grantPtcArcadeEnergy } from '@/lib/arcade-service'
 import { earningEvents, guestProfiles, offerwallMeTransactions } from '@/lib/db/schema'
 import { getFreshPepeUsdPrice } from '@/lib/pepe-market-price'
 import { applyOfferwallMeEarnerShare, calculateOfferwallMeRewardAtomic, normalizeOfferwallUsd, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
@@ -225,6 +226,7 @@ export async function POST(request: NextRequest) {
               rewardAtomic,
               createdAt: now,
             })
+            if (rawOfferType === 'ptc') await grantPtcArcadeEnergy(transaction, guestId, now)
           }
           return status === '1' ? 'credited' as const : 'reversed' as const
         }
