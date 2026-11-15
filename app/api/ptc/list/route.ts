@@ -5,7 +5,7 @@ import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import { getClientIp, getCountryCode } from '@/lib/adslab-ptc'
 import { createOfferwallMeSignedIdentity, OFFERWALL_ME_PTC_PUBLIC_API_KEY } from '@/lib/offerwall-me'
 import { getFreshPepeUsdPrice } from '@/lib/pepe-market-price'
-import { calculateOfferwallMeRewardAtomic, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
+import { applyOfferwallMeEarnerShare, calculateOfferwallMeRewardAtomic, offerwallPointsToUsd } from '@/lib/offerwall-me-pricing'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -48,7 +48,10 @@ function parseRewardAtomic(value: unknown, pepeUsdPrice: string): string | null 
   const rewardUsd = offerwallPointsToUsd(rewardPoints)
   if (!rewardUsd) return null
 
-  const rewardAtomic = calculateOfferwallMeRewardAtomic(rewardUsd, pepeUsdPrice)
+  const userRewardUsd = applyOfferwallMeEarnerShare(rewardUsd)
+  if (!userRewardUsd) return null
+
+  const rewardAtomic = calculateOfferwallMeRewardAtomic(userRewardUsd, pepeUsdPrice)
   return rewardAtomic === null ? null : String(rewardAtomic)
 }
 

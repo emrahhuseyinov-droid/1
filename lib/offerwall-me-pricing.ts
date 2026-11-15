@@ -2,7 +2,9 @@ const DECIMAL_SCALE_DIGITS = 18
 const DECIMAL_SCALE = 10n ** BigInt(DECIMAL_SCALE_DIGITS)
 const POINTS_SCALE = 100_000_000n
 const POINTS_TO_USD_SCALE = 10_000_000n
+const BASIS_POINTS_SCALE = 10_000n
 const ATOMIC_UNITS_PER_PEPE = 100_000_000n
+export const OFFERWALL_ME_EARNER_SHARE_PERCENT = 40
 const MAX_SAFE_ATOMIC = BigInt(Number.MAX_SAFE_INTEGER)
 
 function parseScaledUsd(value: string): bigint | null {
@@ -34,6 +36,15 @@ export function normalizeOfferwallUsd(value: string): string | null {
   const usdScaled = parseScaledUsd(value)
   if (usdScaled === null || usdScaled <= 0n) return null
   return formatScaledUsd(usdScaled)
+}
+
+export function applyOfferwallMeEarnerShare(amountUsd: string): string | null {
+  const usdScaled = parseScaledUsd(amountUsd)
+  if (usdScaled === null || usdScaled <= 0n) return null
+
+  const earnerUsdScaled = (usdScaled * BigInt(OFFERWALL_ME_EARNER_SHARE_PERCENT * 100)) / BASIS_POINTS_SCALE
+  if (earnerUsdScaled <= 0n) return null
+  return formatScaledUsd(earnerUsdScaled)
 }
 
 export function calculateOfferwallMeRewardAtomic(amountUsd: string, pepeUsdPrice: string): number | null {
