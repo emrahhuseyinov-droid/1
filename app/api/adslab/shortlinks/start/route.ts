@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto'
 import { and, desc, eq, like, sql } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
+import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 import {
   ADSLAB_SHORTLINK_TASK_PREFIX,
   AdsLabPtcError,
   formatPepePayoutAtomic,
   getAdsLabShortlinkTasks,
 } from '@/lib/adslab-ptc'
+import { getOfferwallMeShortlinkTasks, isOfferwallMeShortlinkKey, OfferwallMeShortlinksError } from '@/lib/offerwall-me-shortlinks'
 import { db } from '@/lib/db'
 import { guestProfiles, ptcClicks } from '@/lib/db/schema'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
@@ -26,7 +28,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function readTaskKey(request: NextRequest) {
   try {
     const body: unknown = await request.json()
-    if (!isRecord(body) || typeof body.taskKey !== 'string' || !taskKeyPattern.test(body.taskKey)) return null
+    if (!isRecord(body) || typeof body.taskKey !== 'string') return null
+    if (!taskKeyPattern.test(body.taskKey) && !isOfferwallMeShortlinkKey(body.taskKey)) return null
     return body.taskKey.toLowerCase()
   } catch {
     return null
@@ -49,6 +52,24 @@ export async function POST(request: NextRequest) {
 
   const taskKey = await readTaskKey(request)
   if (!taskKey) return NextResponse.json({ error: 'This shortlink is not available.' }, { status: 400, headers: noStoreHeaders })
+
+  if (isOfferwallMeShortlinkKey(taskKey)) {
+    const rateLimitResponse = await enforceApiRateLimit('offerwall-me-shortlink-start', account.profile.id, { windowSeconds: 60, max: 20 })
+    if (rateLimitResponse) return rateLimitResponse
+
+    try {
+      const tasks = await getOfferwallMeShortlinkTasks(request.headers, account.profile.id)
+      const task = tasks.find((candidate) => candidate.key === taskKey)
+      if (!task) return NextResponse.json({ error: 'This shortlink is no longer available.' }, { status: 409, headers: noStoreHeaders })
+      return NextResponse.json({ directLink: task.url }, { headers: noStoreHeaders })
+    } catch (error) {
+      if (error instanceof OfferwallMeShortlinksError) {
+        return NextResponse.json({ error: error.message }, { status: error.statusCode, headers: noStoreHeaders })
+      }
+      console.error('[offerwall-me-shortlinks] Could not start a shortlink.')
+      return NextResponse.json({ error: 'Could not start this shortlink.' }, { status: 500, headers: noStoreHeaders })
+    }
+  }
 
   try {
     const providerFeed = await getAdsLabShortlinkTasks(request.headers, account.profile.id)
