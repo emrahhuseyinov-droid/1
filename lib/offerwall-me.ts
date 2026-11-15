@@ -1,7 +1,7 @@
 import 'server-only'
 import { createHmac } from 'node:crypto'
 
-const offerwallMePublicApiKey = 'lItJNj2QeKr5CjFKJefII20LfhgBtn6A'
+const offerwallMePublicApiKey = 'HtjNj2QeKr5CjFKJefH2OLfhgBtn6A'
 const offerwallMeOrigin = 'https://offerwall.me'
 
 export function createOfferwallMeIframeUrl(userId: string) {
