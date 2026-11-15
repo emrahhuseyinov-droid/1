@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { ArrowUpRight, BadgeCheck, BatteryCharging, Clock3, Coins, Eye, Globe2, Sparkles, Timer } from 'lucide-react'
+import { ArrowUpRight, BadgeCheck, BatteryCharging, Clock3, Coins, Eye, Sparkles, Timer } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { ARCADE_PTC_ENERGY_REWARD } from '@/lib/arcade-gameplay'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
@@ -560,13 +560,6 @@ export function AdsLabPtcTaskList({
         const onCooldown = task.cooldownRemainingSeconds > 0 && !task.isInProgress
         const isStarting = startingKey === task.key
         const disabled = Boolean(activeTask || startingKey || onCooldown || task.awaitingConfirmation)
-        const domain = (() => {
-          try {
-            return new URL(task.url).hostname.replace(/^www\./, '')
-          } catch {
-            return 'Partner'
-          }
-        })()
         const iconUrl = task.iconUrl ?? getAdvertiserFaviconUrl(task.key, task.url)
 
         return (
@@ -579,7 +572,6 @@ export function AdsLabPtcTaskList({
               <div className={`min-w-0 flex-1 ${isPro ? 'pr-16' : ''}`}>
                 <h3 className="truncate text-sm font-extrabold tracking-tight">{task.title}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
-                  <span className="inline-flex items-center gap-1"><Globe2 size={11} />{domain}</span>
                   <span className="inline-flex items-center gap-1 text-dashboard-accent"><BadgeCheck size={11} />Partner</span>
                 </div>
                 {task.description && <p className="mt-1.5 line-clamp-1 text-[10px] leading-4 text-dashboard-muted">{task.description}</p>}
