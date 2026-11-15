@@ -4,11 +4,12 @@ import useSWR from 'swr'
 import { Radio, Trophy } from 'lucide-react'
 import { ArcadeWeeklyLeaderboard } from '@/components/arcade-weekly-leaderboard'
 import { LocalizedTree } from '@/components/site-language-provider'
+import type { ProfileAvatarSrc } from '@/lib/profile-avatars'
 
 type WeeklyLeaderboardData = {
   periodStart: string
   periodEnd: string
-  leaderboard: Array<{ rank: number; displayName: string; bestDistanceM: number; prizeAmount: number; prizeTokenSymbol: 'HOMERO' | 'PEPE'; isCurrentUser: boolean }>
+  leaderboard: Array<{ rank: number; displayName: string; avatarSrc: ProfileAvatarSrc; bestDistanceM: number; prizeAmount: number; prizeTokenSymbol: 'HOMERO' | 'PEPE'; isCurrentUser: boolean }>
 }
 
 async function getWeeklyLeaderboard(url: string): Promise<WeeklyLeaderboardData> {

@@ -133,6 +133,7 @@ function getAdvertiserFaviconUrl(taskKey: string, targetUrl: string) {
 export function AdsLabPtcTaskList({
   onTaskBusyChange,
   onSummaryChange,
+  onTopTaskChange,
   searchQuery = '',
   availableOnly = false,
   sortBy = 'reward',
@@ -140,6 +141,7 @@ export function AdsLabPtcTaskList({
 }: {
   onTaskBusyChange?: (busy: boolean) => void
   onSummaryChange?: (summary: PtcTaskSummary) => void
+  onTopTaskChange?: (priority: { rewardAtomic: string; durationSeconds: number } | null) => void
   searchQuery?: string
   availableOnly?: boolean
   sortBy?: TaskSort
@@ -518,6 +520,15 @@ export function AdsLabPtcTaskList({
       })
   }, [availableOnly, searchQuery, sortBy, tasks])
   const loadingLabel = isRussian ? 'Загружаем задания…' : 'Loading tasks…'
+  const topTask = visibleTasks.reduce<(typeof visibleTasks)[number] | undefined>((best, task) => {
+    if (!best) return task
+    if (sortBy === 'duration') return task.durationSeconds < best.durationSeconds ? task : best
+    return BigInt(task.rewardAtomic) > BigInt(best.rewardAtomic) ? task : best
+  }, undefined)
+
+  useEffect(() => {
+    onTopTaskChange?.(topTask ? { rewardAtomic: topTask.rewardAtomic, durationSeconds: topTask.durationSeconds } : null)
+  }, [onTopTaskChange, topTask?.durationSeconds, topTask?.rewardAtomic])
 
   if (isLoading && !data) {
     return <li role="status" className="col-span-full rounded-2xl border border-slate-200/70 px-4 py-8 text-center text-xs text-slate-500 dark:border-white/[0.06] dark:text-slate-400">{loadingLabel}</li>
