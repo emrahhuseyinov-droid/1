@@ -12,7 +12,6 @@ import { getProfileAvatar } from '@/lib/profile-avatars'
 import { isPepeReserveAdmin } from '@/lib/pepe-reserve'
 import { getPromoActivityEligibility, getPromoClaims } from '@/lib/promos'
 import { getReferralOverview, guestCookieName } from '@/lib/referrals'
-import { createOfferwallMeIframeUrl } from '@/lib/offerwall-me'
 
 function getSafeErrorDetails(error: unknown) {
   const normalizedError = error instanceof Error ? error : new Error(String(error))
@@ -106,7 +105,6 @@ export async function DashboardRouteContent({
       promoClaims={promoClaims}
       promoActivity={promoActivity}
       dashboardOverview={dashboardOverview}
-      offerwallMeIframeUrl={createOfferwallMeIframeUrl(profile.id)}
     />
   )
 }

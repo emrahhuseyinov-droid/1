@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react'
 import useSWR from 'swr'
-import { ArrowUpRight, Clock3, Coins, Eye, Globe2 } from 'lucide-react'
+import { ArrowUpRight, Clock3, Coins, Eye } from 'lucide-react'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 
@@ -124,7 +124,6 @@ export function OfferwallPtcList({
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-2 text-sm font-extrabold tracking-tight">{task.title}</h3>
               <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] text-dashboard-muted">
-                <span className="inline-flex items-center gap-1"><Globe2 size={11} aria-hidden="true" />Offerwall.me</span>
                 <span className="inline-flex items-center gap-1 text-dashboard-accent"><Eye size={11} aria-hidden="true" />{isRussian ? 'Партнёр' : 'Partner'}</span>
               </div>
               {task.description && <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-dashboard-muted">{task.description}</p>}

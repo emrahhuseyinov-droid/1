@@ -23,16 +23,10 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
   if (!section) return { title: 'pepe.casa' }
 
   const language = cookieStore.get('pepecasa_language')?.value === 'en' ? 'en' : 'ru'
-  const title = section === 'Offerwall'
-    ? 'Offerwall.me | pepe.casa'
-    : section === 'Advertiser'
-      ? language === 'ru' ? 'Кошелёк рекламодателя | pepe.casa' : 'Advertiser wallet | pepe.casa'
-      : translateSiteText(`${section} | pepe.casa`, language)
-  const description = section === 'Offerwall'
-    ? language === 'ru'
-      ? 'Выполняйте партнёрские предложения, задания PTC и короткие ссылки с автоматическим начислением HOMERO.'
-      : 'Complete partner offers, PTC tasks, and shortlinks with automatic HOMERO rewards.'
-    : section === 'Advertiser'
+  const title = section === 'Advertiser'
+    ? language === 'ru' ? 'Кошелёк рекламодателя | pepe.casa' : 'Advertiser wallet | pepe.casa'
+    : translateSiteText(`${section} | pepe.casa`, language)
+  const description = section === 'Advertiser'
       ? language === 'ru'
         ? 'Создавайте PTC-кампании, пополняйте рекламный кошелёк PEPE и управляйте заданиями.'
         : 'Create PTC campaigns, fund your PEPE advertiser wallet, and manage sponsored tasks.'
@@ -57,7 +51,7 @@ export async function generateMetadata({ params }: SectionPageProps): Promise<Me
 
 export default async function Page({ params, searchParams }: SectionPageProps) {
   const [{ section: slug }, query] = await Promise.all([params, searchParams])
-  if (slug === 'homero-mining' || slug === 'miner-shop' || slug === 'manual-claim') redirect('/view-ads')
+  if (slug === 'homero-mining' || slug === 'miner-shop' || slug === 'manual-claim' || slug === 'offerwall') redirect('/view-ads')
 
   const section = getDashboardSectionFromSlug(slug)
   if (!section) notFound()

@@ -169,7 +169,6 @@ export function AdsLabShortlinksTaskList({ onSummaryChange }: { onSummaryChange?
               )}
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-black leading-5 tracking-tight text-slate-900 dark:text-white">{task.title}</h3>
-                <p className="mt-1 text-[10px] font-bold text-dashboard-accent">{isOfferwallMeTask ? 'Offerwall.me' : 'AdsLab.me'}</p>
                 {task.description && <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{task.description}</p>}
               </div>
             </div>

@@ -12,6 +12,8 @@ export default async function Page({
   searchParams: Promise<{ ref?: string | string[] }>
 }) {
   const [{ section: slug }, query] = await Promise.all([params, searchParams])
+  if (slug === 'offerwall') redirect('/view-ads')
+
   const section = getDashboardSectionFromSlug(slug)
   if (!section) notFound()
 
