@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { AdsLabBanner } from '@/components/adslab-banner'
 import { AdsLabPtcTaskList, type PtcTaskSummary } from '@/components/adslab-ptc-task-list'
+import { OfferwallPtcList } from '@/components/offerwall-ptc-list'
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import { formatTokenAtomic } from '@/lib/pepe-amount'
 
@@ -70,6 +71,7 @@ export function ViewAdsPage() {
   const [availableOnly, setAvailableOnly] = useState(false)
   const [sortBy, setSortBy] = useState<TaskSort>('reward')
   const [summary, setSummary] = useState<PtcTaskSummary | null>(null)
+  const [offerwallAvailableAds, setOfferwallAvailableAds] = useState<number | null>(null)
 
   return (
     <LocalizedTree>
@@ -81,7 +83,7 @@ export function ViewAdsPage() {
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-100">{isRussian ? 'задания для исполнителей' : 'earner tasks'}</p>
               <h1 className="mt-0.5 text-2xl font-black tracking-tight sm:text-3xl">{isRussian ? 'PTC-реклама' : 'PTC Ads'}</h1>
-              <p className="mt-1 text-xs leading-5 text-white/85">{isRussian ? 'Выполняйте задания рекламодателей и получайте PEPE.' : 'Complete advertiser tasks and earn PEPE.'}</p>
+              <p className="mt-1 text-xs leading-5 text-white/85">{isRussian ? 'Выполняйте задания PTC и получайте PEPE или HOMERO.' : 'Complete PTC tasks and earn PEPE or HOMERO.'}</p>
               <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-extrabold text-white shadow-sm backdrop-blur"><Sparkles size={12} />{isRussian ? 'Смотри · выполняй · зарабатывай' : 'Watch · complete · earn'}</span>
             </div>
           </div>
@@ -99,7 +101,7 @@ export function ViewAdsPage() {
           <MetricCard
             icon={MousePointer2}
             label={isRussian ? 'Доступно реклам' : 'Available Ads'}
-            value={summary ? String(summary.availableAds) : '—'}
+            value={summary || offerwallAvailableAds !== null ? String((summary?.availableAds ?? 0) + (offerwallAvailableAds ?? 0)) : '—'}
             detail={isRussian ? 'Можно открыть сейчас' : 'Ready to view'}
             iconClass="bg-cyan-300/15 text-cyan-100"
             cardClass="border-cyan-200/30 bg-gradient-to-br from-[#173452] to-[#182146]"
@@ -175,6 +177,12 @@ export function ViewAdsPage() {
                 onSummaryChange={setSummary}
                 searchQuery={searchQuery}
                 availableOnly={availableOnly}
+                sortBy={sortBy}
+                showEmptyState={offerwallAvailableAds === 0}
+              />
+              <OfferwallPtcList
+                onAvailableCountChange={setOfferwallAvailableAds}
+                searchQuery={searchQuery}
                 sortBy={sortBy}
               />
             </ul>

@@ -96,7 +96,7 @@ function isPublicIp(value: string): boolean {
   return true
 }
 
-function getClientIp(headers: Headers): string | null {
+export function getClientIp(headers: Headers): string | null {
   const candidates = [
     headers.get('cf-connecting-ip'),
     ...(headers.get('x-forwarded-for')?.split(',') ?? []),
@@ -112,7 +112,7 @@ function getClientIp(headers: Headers): string | null {
   return null
 }
 
-function getCountryCode(headers: Headers): string {
+export function getCountryCode(headers: Headers): string {
   const candidates = [headers.get('cf-ipcountry'), headers.get('x-vercel-ip-country')]
   for (const candidate of candidates) {
     const country = candidate?.trim()

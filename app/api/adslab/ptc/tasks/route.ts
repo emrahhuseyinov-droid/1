@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAccountForRequest, guestCookieName } from '@/lib/account-profile'
 import { ADSLAB_PTC_TASK_PREFIX, AdsLabPtcError, getAdsLabPtcTasks, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
 import { db } from '@/lib/db'
-import { advertiserCampaigns, earningEvents, ptcClicks } from '@/lib/db/schema'
+import { advertiserCampaigns, earningEvents, offerwallMeTransactions, ptcClicks } from '@/lib/db/schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,7 +39,7 @@ async function loadPtcTaskStats(userId: string) {
   const todayStart = new Date()
   todayStart.setUTCHours(0, 0, 0, 0)
 
-  const [partnerClickRows, campaignClickRows, earningRows] = await Promise.all([
+  const [partnerClickRows, campaignClickRows, earningRows, offerwallPtcClickRows, offerwallPtcEarningRows] = await Promise.all([
     db
       .select({ todayClicks: sql<number>`count(*) filter (where ${ptcClicks.updatedAt} >= ${todayStart})::int` })
       .from(ptcClicks)
@@ -69,6 +69,28 @@ async function loadPtcTaskStats(userId: string) {
         inArray(earningEvents.source, ['adslab_ptc', 'adslab_ptc_reversal', 'advertiser_task', 'advertiser_task_pepe_correction']),
       ))
       .groupBy(earningEvents.tokenSymbol),
+    db
+      .select({ todayClicks: sql<number>`count(*) filter (where ${offerwallMeTransactions.createdAt} >= ${todayStart})::int` })
+      .from(offerwallMeTransactions)
+      .where(and(
+        eq(offerwallMeTransactions.guestId, userId),
+        eq(offerwallMeTransactions.offerType, 'ptc'),
+      )),
+    db
+      .select({
+        todayEarningsAtomic: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}) filter (where ${earningEvents.createdAt} >= ${todayStart}), 0)::text`,
+        totalEarningsAtomic: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text`,
+      })
+      .from(earningEvents)
+      .innerJoin(offerwallMeTransactions, and(
+        eq(earningEvents.sourceKey, offerwallMeTransactions.providerTransactionId),
+        eq(earningEvents.guestId, offerwallMeTransactions.guestId),
+      ))
+      .where(and(
+        eq(earningEvents.guestId, userId),
+        inArray(earningEvents.source, ['offerwall_me', 'offerwall_me_reversal']),
+        eq(offerwallMeTransactions.offerType, 'ptc'),
+      )),
   ])
 
   const stats = {
@@ -81,9 +103,15 @@ async function loadPtcTaskStats(userId: string) {
     stats.totalEarnings[row.tokenSymbol] = row.totalEarningsAtomic
   }
 
+  const offerwallPtcEarnings = offerwallPtcEarningRows[0]
+  stats.todayEarnings.HOMERO = (BigInt(stats.todayEarnings.HOMERO) + BigInt(offerwallPtcEarnings?.todayEarningsAtomic ?? '0')).toString()
+  stats.totalEarnings.HOMERO = (BigInt(stats.totalEarnings.HOMERO) + BigInt(offerwallPtcEarnings?.totalEarningsAtomic ?? '0')).toString()
+
   return {
     ...stats,
-    todayClicks: (partnerClickRows[0]?.todayClicks ?? 0) + (campaignClickRows[0]?.todayClicks ?? 0),
+    todayClicks: (partnerClickRows[0]?.todayClicks ?? 0)
+      + (campaignClickRows[0]?.todayClicks ?? 0)
+      + (offerwallPtcClickRows[0]?.todayClicks ?? 0),
   }
 }
 
