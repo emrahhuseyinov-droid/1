@@ -66,7 +66,7 @@ function isValidSignature(subId: string, transId: string, reward: string, suppli
   return actual.length === expected.length && timingSafeEqual(expected, actual)
 }
 
-export async function POST(request: NextRequest) {
+async function handlePostback(request: NextRequest) {
   const contentType = request.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase() ?? null
 
   let body: string | null
@@ -284,4 +284,12 @@ export async function POST(request: NextRequest) {
     console.error('[offerwall-me-postback] Failed to process a verified callback.', error)
     return response('no', 500)
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handlePostback(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handlePostback(request)
 }
