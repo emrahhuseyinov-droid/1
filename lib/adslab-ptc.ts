@@ -170,15 +170,23 @@ export function parseAdsLabGrossRewardAtomic(value: unknown): number | null {
   return parseAdsLabRewardAtomicAtShare(value, SHARE_BPS_SCALE)
 }
 
-export function parseAdsLabPepeRewardAtomic(value: unknown, pepeUsdPrice: unknown): number | null {
+function parseAdsLabPepeRewardAtomicAtShare(value: unknown, pepeUsdPrice: unknown, shareBps: bigint): number | null {
   const usdScaled = parseScaledUsd(value)
   const priceScaled = parseScaledUsd(pepeUsdPrice)
   if (usdScaled === null || priceScaled === null || priceScaled <= 0n) return null
 
-  const atomic = (usdScaled * TOKEN_ATOMIC_PER_UNIT * ADSLAB_USER_SHARE_BPS)
+  const atomic = (usdScaled * TOKEN_ATOMIC_PER_UNIT * shareBps)
     / (priceScaled * SHARE_BPS_SCALE)
   if (atomic <= 0n || atomic > MAX_SAFE_ATOMIC) return null
   return Number(atomic)
+}
+
+export function parseAdsLabPepeRewardAtomic(value: unknown, pepeUsdPrice: unknown): number | null {
+  return parseAdsLabPepeRewardAtomicAtShare(value, pepeUsdPrice, ADSLAB_USER_SHARE_BPS)
+}
+
+export function parseAdsLabGrossPepeRewardAtomic(value: unknown, pepeUsdPrice: unknown): number | null {
+  return parseAdsLabPepeRewardAtomicAtShare(value, pepeUsdPrice, SHARE_BPS_SCALE)
 }
 
 function parseInteger(value: unknown, minimum: number, maximum: number): number | null {

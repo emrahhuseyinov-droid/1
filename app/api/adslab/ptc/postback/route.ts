@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 import { and, asc, eq, like, or } from 'drizzle-orm'
 import { NextRequest, NextResponse } from 'next/server'
-import { ADSLAB_PTC_PLACEMENT_ID, ADSLAB_PTC_TASK_PREFIX, ADSLAB_SHORTLINK_TASK_PREFIX, adsLabPtcRewardMatches, formatHomeroPayoutAtomic, normalizeAdsLabUsd, parseAdsLabGrossRewardAtomic, parseAdsLabRewardAtomic, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
+import { ADSLAB_PTC_PLACEMENT_ID, ADSLAB_PTC_TASK_PREFIX, ADSLAB_SHORTLINK_TASK_PREFIX, adsLabPtcRewardMatches, formatHomeroPayoutAtomic, formatPepePayoutAtomic, normalizeAdsLabUsd, parseAdsLabGrossPepeRewardAtomic, parseAdsLabGrossRewardAtomic, parseAdsLabRewardAtomic, parseHomeroPayoutAtomic } from '@/lib/adslab-ptc'
 import { grantPtcArcadeEnergy, grantShortlinkArcadeEnergy } from '@/lib/arcade-service'
 import { db } from '@/lib/db'
 import { earningEvents, guestProfiles, ptcClicks } from '@/lib/db/schema'
@@ -458,42 +458,87 @@ export async function GET(request: NextRequest) {
       if ((shortlinkTypeRequested && clickIdentity && !clickIdentityIsShortlink)
         || (ptcTypeRequested && clickIdentityIsShortlink)) return 'category_mismatch' as const
 
-      const taskPrefix = clickIdentity
+      const preferredPrefix = clickIdentity
         ? (clickIdentityIsShortlink ? ADSLAB_SHORTLINK_TASK_PREFIX : ADSLAB_PTC_TASK_PREFIX)
         : (shortlinkTypeRequested || !ptcTypeRequested ? ADSLAB_SHORTLINK_TASK_PREFIX : ADSLAB_PTC_TASK_PREFIX)
-      const pendingClicks = await transaction
+      const candidateClicks = await transaction
         .select({
           clickId: ptcClicks.clickId,
           taskId: ptcClicks.taskId,
           payout: ptcClicks.payout,
           payoutTokenSymbol: ptcClicks.payoutTokenSymbol,
           rewardUsd: ptcClicks.rewardUsd,
+          pepeUsdPrice: ptcClicks.pepeUsdPrice,
         })
         .from(ptcClicks)
         .where(and(
           eq(ptcClicks.userId, userId),
           eq(ptcClicks.status, 'pending'),
-          like(ptcClicks.taskId, `${taskPrefix}%`),
+          clickIdentity
+            ? like(ptcClicks.taskId, `${preferredPrefix}%`)
+            : or(
+              like(ptcClicks.taskId, `${ADSLAB_PTC_TASK_PREFIX}%`),
+              like(ptcClicks.taskId, `${ADSLAB_SHORTLINK_TASK_PREFIX}%`),
+            ),
         ))
         .orderBy(asc(ptcClicks.createdAt))
         .for('update')
+      // AdsLab may label shortlink callbacks inconsistently, so the requested category is only a preference.
+      const pendingClicks = [
+        ...candidateClicks.filter((candidate) => candidate.taskId.startsWith(preferredPrefix)),
+        ...candidateClicks.filter((candidate) => !candidate.taskId.startsWith(preferredPrefix)),
+      ]
 
-      const pendingClick = pendingClicks.find((candidate) => {
+      let pendingClick = pendingClicks.find((candidate) => {
         if (directClickId && candidate.clickId !== directClickId) return false
         return candidate.payoutTokenSymbol === 'PEPE'
           ? adsLabPtcRewardMatches(reward, candidate.rewardUsd)
           : acceptableLegacyPayouts.has(candidate.payout ?? '')
       })
-      if (!pendingClick) return pendingClicks.length ? 'reward_mismatch' as const : 'ignored' as const
+      let providerCapAtomic: number | null = null
 
-      const creditRewardAtomic = pendingClick.payoutTokenSymbol === 'PEPE'
+      if (!pendingClick) {
+        // Shortlink payouts often differ from the listed rewardPerVisit. Users can only hold one pending
+        // shortlink at a time, so a verified callback is attributed to it and capped at the reported amount.
+        const hasPendingPtc = pendingClicks.some((candidate) => candidate.taskId.startsWith(ADSLAB_PTC_TASK_PREFIX))
+        const fallbackClick = pendingClicks.find((candidate) => (
+          candidate.payoutTokenSymbol === 'PEPE'
+          && candidate.taskId.startsWith(ADSLAB_SHORTLINK_TASK_PREFIX)
+          && (directClickId ? candidate.clickId === directClickId : !(ptcTypeRequested && hasPendingPtc))
+        ))
+        const capAtomic = fallbackClick
+          ? parseAdsLabGrossPepeRewardAtomic(reward, fallbackClick.pepeUsdPrice)
+          : null
+        if (fallbackClick && capAtomic !== null) {
+          pendingClick = fallbackClick
+          providerCapAtomic = capAtomic
+          console.warn('[adslab-ptc] Shortlink callback reward differed from the listed reward; crediting capped amount.', {
+            callbackRewardUsd: rewardUsd,
+            listedRewardUsd: fallbackClick.rewardUsd,
+            txidFingerprint: signatureFingerprint(txid),
+          })
+        } else {
+          console.error('[adslab-ptc] Verified callback did not match a pending click.', {
+            type: type || null,
+            callbackRewardUsd: rewardUsd,
+            pendingListedRewardsUsd: pendingClicks.map((candidate) => candidate.rewardUsd).slice(0, 5),
+            txidFingerprint: signatureFingerprint(txid),
+          })
+          return pendingClicks.length ? 'reward_mismatch' as const : 'ignored' as const
+        }
+      }
+
+      const listedPayoutAtomic = pendingClick.payoutTokenSymbol === 'PEPE'
         ? parseHomeroPayoutAtomic(pendingClick.payout)
         : rewardAtomic
-      if (creditRewardAtomic === null) return 'invalid_payout' as const
+      if (listedPayoutAtomic === null) return 'invalid_payout' as const
+      const creditRewardAtomic = providerCapAtomic === null
+        ? listedPayoutAtomic
+        : Math.min(listedPayoutAtomic, providerCapAtomic)
 
       const now = new Date()
       const completedPayout = pendingClick.payoutTokenSymbol === 'PEPE'
-        ? pendingClick.payout
+        ? (providerCapAtomic === null ? pendingClick.payout : formatPepePayoutAtomic(creditRewardAtomic))
         : formatHomeroPayoutAtomic(rewardAtomic)
       const [completedClick] = await transaction
         .update(ptcClicks)
