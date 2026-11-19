@@ -10,7 +10,9 @@ export const user = pgTable('user', {
   image: text('image'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-})
+}, (table) => [
+  uniqueIndex('user_name_lower_unique').on(sql`lower(${table.name})`),
+])
 
 export const session = pgTable('session', {
   id: text('id').primaryKey(),
@@ -217,6 +219,12 @@ export const referralCommissions = pgTable('earnpepe_referral_commissions', {
 }, (table) => [
   index('earnpepe_commissions_referrer_idx').on(table.referrerId, table.createdAt),
 ])
+
+export const referralLoginDays = pgTable('earnpepe_referral_login_days', {
+  userId: text('user_id').notNull(),
+  loginDay: date('login_day', { mode: 'string' }).notNull(),
+  recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [primaryKey({ columns: [table.userId, table.loginDay] })])
 
 export type SignupIpClaimStatus = 'pending' | 'claimed'
 

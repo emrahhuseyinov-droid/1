@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { enforceApiRateLimit } from '@/lib/api-rate-limit'
-import { getHourlyReferralLeaderboard } from '@/lib/referral-leaderboard'
+import { getMonthlyReferralLeaderboard } from '@/lib/referral-leaderboard'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,7 +22,7 @@ export async function GET() {
     const rateLimitResponse = await enforceApiRateLimit('referral-leaderboard', session.user.id, { windowSeconds: 60, max: 60 })
     if (rateLimitResponse) return rateLimitResponse
 
-    const leaderboard = await getHourlyReferralLeaderboard()
+    const leaderboard = await getMonthlyReferralLeaderboard()
     return NextResponse.json({ leaderboard }, { headers: noStoreHeaders })
   } catch (error) {
     console.error('[referral-leaderboard] Could not load leaderboard:', error)

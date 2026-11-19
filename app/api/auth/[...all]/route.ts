@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { toNextJsHandler } from 'better-auth/next-js'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { signupIpClaims } from '@/lib/db/schema'
+import { signupIpClaims, user } from '@/lib/db/schema'
 
 export const runtime = 'nodejs'
 
@@ -70,9 +70,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body: unknown = await request.clone().json().catch(() => null)
-  const email = typeof body === 'object' && body !== null && !Array.isArray(body)
-    ? (body as Record<string, unknown>).email
+  const signupPayload = typeof body === 'object' && body !== null && !Array.isArray(body)
+    ? body as Record<string, unknown>
     : null
+  const email = signupPayload?.email
+  const requestedNickname = typeof signupPayload?.name === 'string'
+    ? signupPayload.name.trim()
+    : ''
   const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
   const clientIp = getClientIp(request)
   const secret = process.env.BETTER_AUTH_SECRET
@@ -112,6 +116,25 @@ export async function POST(request: NextRequest) {
     }
 
     const response = await authHandlers.POST(request)
+    if (!response.ok && response.status >= 500 && /^[\p{L}\p{N}_-]{3,24}$/u.test(requestedNickname)) {
+      try {
+        const [nicknameOwner] = await db
+          .select({ id: user.id })
+          .from(user)
+          .where(sql`lower(${user.name}) = ${requestedNickname.toLowerCase()}`)
+          .limit(1)
+
+        if (nicknameOwner) {
+          return NextResponse.json({
+            code: 'NICKNAME_TAKEN',
+            message: 'That nickname is already in use. Choose another.',
+          }, { status: 400, headers: noStoreHeaders })
+        }
+      } catch {
+        console.error('[auth] Could not resolve nickname conflict after signup failure.')
+      }
+    }
+
     if (response.ok) {
       await db.update(signupIpClaims)
         .set({ status: 'claimed', updatedAt: new Date() })

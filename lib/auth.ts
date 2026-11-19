@@ -4,7 +4,7 @@ import { emailOTP } from 'better-auth/plugins'
 import { sendAuthCodeEmail } from '@/lib/send-auth-code'
 import { sql } from 'drizzle-orm'
 import { db, pool } from '@/lib/db'
-import { user } from '@/lib/db/schema'
+import { referralLoginDays, user } from '@/lib/db/schema'
 import { unverifiedEmailRecoveryPlugin } from '@/lib/unverified-email-recovery'
 
 const v0PreviewIframeOrigin =
@@ -50,6 +50,23 @@ export const auth = betterAuth({
     unverifiedEmailRecoveryPlugin,
   ],
   databaseHooks: {
+    session: {
+      create: {
+        after: async (createdSession) => {
+          try {
+            await db
+              .insert(referralLoginDays)
+              .values({
+                userId: createdSession.userId,
+                loginDay: new Date().toISOString().slice(0, 10),
+              })
+              .onConflictDoNothing()
+          } catch {
+            console.error('[auth] Could not record referral login activity.')
+          }
+        },
+      },
+    },
     user: {
       create: {
         before: async (createdUser) => {
@@ -67,7 +84,10 @@ export const auth = betterAuth({
             .limit(1)
 
           if (existingUser) {
-            throw new APIError('BAD_REQUEST', { message: 'That nickname is already in use.' })
+            throw new APIError('BAD_REQUEST', {
+              code: 'NICKNAME_TAKEN',
+              message: 'That nickname is already in use.',
+            })
           }
 
           return { data: { ...createdUser, name: nickname } }
