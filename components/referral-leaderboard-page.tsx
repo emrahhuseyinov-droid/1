@@ -156,7 +156,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
               <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-cyan-100/70">{isRussian ? 'Призы за результат' : 'Rewards for the top referrers'}</p>
               <h2 className="mt-1 text-lg font-black tracking-tight sm:text-xl">{isRussian ? 'Тройка лидеров' : 'Top three winners'}</h2>
             </div>
-            <span className="text-xs font-medium text-white/55">{isRussian ? 'Места распределяются по числу успешных рефералов' : 'Ranked by successful referrals'}</span>
+            <span className="text-xs font-medium text-white/55">{isRussian ? 'Места распределяются по числу активных рефералов' : 'Ranked by successful referrals'}</span>
           </div>
 
           <ol aria-label={isRussian ? 'Три лучших участника' : 'Top three participants'} className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end sm:gap-4">
