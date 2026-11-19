@@ -4,7 +4,7 @@ export type ReferralLeaderboardEntry = {
   rank: number
   displayName: string
   avatarSrc: ProfileAvatarSrc
-  successfulReferrals: number
+  activeReferrals: number
 }
 
 export type ReferralOverview = {

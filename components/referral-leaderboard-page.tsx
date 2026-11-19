@@ -101,7 +101,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
       fallbackData: { leaderboard: initialLeaderboard },
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      refreshInterval: 60 * 60 * 1000,
+      refreshInterval: 60 * 1000,
     },
   )
   const leaderboard = (data?.leaderboard ?? initialLeaderboard).slice(0, 10)
@@ -120,14 +120,14 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
             </div>
             <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-300">
               {isRussian
-                ? 'В рейтинге учитываются только подтверждённые участники с успешным начислением реферальной награды.'
-                : 'Only verified participants with a successful referral reward credit count toward the ranking.'}
+                ? 'Реферал активен, если в текущем месяце UTC он выполнил не менее 15 одобренных PTC-заданий и входил в аккаунт в 3 разные даты.'
+                : 'A referral qualifies when they complete at least 15 approved PTC tasks and log in on 3 different days in the current UTC month.'}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 text-xs font-bold text-emerald-800 dark:text-emerald-100">
               <span aria-hidden="true" className="size-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(52,211,153,0.8)] dark:bg-emerald-300" />
-              {isRussian ? 'Общий рейтинг' : 'All-time ranking'}
+              {isRussian ? 'Текущий месяц · UTC' : 'Current month · UTC'}
             </span>
             <button
               type="button"
@@ -156,7 +156,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
               <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-cyan-100/70">{isRussian ? 'Призы за результат' : 'Rewards for the top referrers'}</p>
               <h2 className="mt-1 text-lg font-black tracking-tight sm:text-xl">{isRussian ? 'Тройка лидеров' : 'Top three winners'}</h2>
             </div>
-            <span className="text-xs font-medium text-white/55">{isRussian ? 'Места распределяются по числу активных рефералов' : 'Ranked by successful referrals'}</span>
+            <span className="text-xs font-medium text-white/55">{isRussian ? 'Места распределяются по числу активных рефералов' : 'Ranked by active referrals this month'}</span>
           </div>
 
           <ol aria-label={isRussian ? 'Три лучших участника' : 'Top three participants'} className="relative z-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end sm:gap-4">
@@ -185,8 +185,8 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
                         </p>
                       </div>
                     </div>
-                    <p className="mt-4 font-mono text-3xl font-black tracking-tight tabular-nums text-white">{player ? player.successfulReferrals.toLocaleString(isRussian ? 'ru-RU' : 'en-US') : '—'}</p>
-                    <p className="mt-0.5 text-xs font-semibold text-white/60">{isRussian ? 'успешных рефералов' : 'successful referrals'}</p>
+                    <p className="mt-4 font-mono text-3xl font-black tracking-tight tabular-nums text-white">{player ? player.activeReferrals.toLocaleString(isRussian ? 'ru-RU' : 'en-US') : '—'}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-white/60">{isRussian ? 'активных рефералов' : 'active referrals'}</p>
                     <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/15 px-4 py-2">
                       <span className="text-xs font-semibold text-white/60">{isRussian ? 'Приз' : 'Prize'}</span>
                       <span className={`font-mono text-lg font-black tabular-nums ${colors.text}`}>${prizeAmounts[rank - 1]}</span>
@@ -203,7 +203,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
             <div>
               <h2 id="referral-ranking-title" className="text-base font-black tracking-tight sm:text-lg">{isRussian ? 'Топ-10 участников' : 'Top 10 referral ranking'}</h2>
               <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                {isRussian ? 'Список обновляется автоматически каждый час.' : 'Standings refresh automatically every hour.'}
+                {isRussian ? 'Список автоматически обновляется раз в минуту.' : 'Standings refresh automatically every minute.'}
               </p>
             </div>
             <span className="rounded-full border border-violet-200/60 bg-violet-50 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/[0.08] dark:text-violet-100">
@@ -218,7 +218,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
                   <tr className="bg-slate-50/80 text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-400 dark:bg-slate-950/25 dark:text-slate-500">
                     <th scope="col" className="px-4 py-3.5 sm:px-6">{isRussian ? 'Место' : 'Rank'}</th>
                     <th scope="col" className="px-3 py-3.5">{isRussian ? 'Участник' : 'Participant'}</th>
-                    <th scope="col" className="px-3 py-3.5 text-right">{isRussian ? 'Рефералы' : 'Successful referrals'}</th>
+                    <th scope="col" className="px-3 py-3.5 text-right">{isRussian ? 'Активные рефералы' : 'Active referrals'}</th>
                     <th scope="col" className="px-4 py-3.5 text-right sm:px-6">{isRussian ? 'Приз' : 'Prize'}</th>
                   </tr>
                 </thead>
@@ -236,7 +236,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
                             <span className="max-w-[240px] truncate text-sm font-bold text-slate-800 dark:text-slate-100">{player.displayName}</span>
                           </div>
                         </td>
-                        <td className="px-3 py-3.5 text-right font-mono text-sm font-black tabular-nums text-slate-800 dark:text-white">{player.successfulReferrals.toLocaleString(isRussian ? 'ru-RU' : 'en-US')}</td>
+                        <td className="px-3 py-3.5 text-right font-mono text-sm font-black tabular-nums text-slate-800 dark:text-white">{player.activeReferrals.toLocaleString(isRussian ? 'ru-RU' : 'en-US')}</td>
                         <td className="px-4 py-3.5 text-right font-mono text-sm font-black tabular-nums text-amber-700 dark:text-amber-200 sm:px-6">${prizeAmounts[player.rank - 1]}</td>
                       </tr>
                     )
@@ -249,7 +249,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
               <span aria-hidden="true" className="mb-3 grid size-12 place-items-center rounded-2xl border border-amber-300/30 bg-amber-300/10 text-amber-500 dark:text-amber-200"><Trophy size={21} /></span>
               <h3 className="text-sm font-black">{isRussian ? 'Рейтинг пока пуст' : 'The leaderboard is ready for its first entry'}</h3>
               <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">
-                {isRussian ? 'Приглашайте друзей. В рейтинг попадут подтверждённые аккаунты после первого успешного начисления.' : 'Invite friends. Verified accounts appear after their first successful referral reward credit.'}
+                {isRussian ? 'Приглашайте друзей. Реферал попадёт в зачёт после 15 одобренных PTC-заданий и входов в аккаунт в 3 разные даты текущего месяца UTC.' : 'Invite friends. A referral qualifies after 15 approved PTC tasks and authenticated logins on 3 different days in the current UTC month.'}
               </p>
               <Link href="/referrals" className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-4 text-xs font-extrabold text-white shadow-lg shadow-indigo-950/15 transition hover:-translate-y-0.5 hover:from-violet-500 hover:to-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 motion-reduce:transition-none motion-reduce:hover:transform-none">
                 {isRussian ? 'Открыть рефералов' : 'Open referrals'}

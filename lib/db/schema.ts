@@ -218,6 +218,12 @@ export const referralCommissions = pgTable('earnpepe_referral_commissions', {
   index('earnpepe_commissions_referrer_idx').on(table.referrerId, table.createdAt),
 ])
 
+export const referralLoginDays = pgTable('earnpepe_referral_login_days', {
+  userId: text('user_id').notNull(),
+  loginDay: date('login_day', { mode: 'string' }).notNull(),
+  recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [primaryKey({ columns: [table.userId, table.loginDay] })])
+
 export type SignupIpClaimStatus = 'pending' | 'claimed'
 
 export const signupIpClaims = pgTable('earnpepe_signup_ip_claims', {
