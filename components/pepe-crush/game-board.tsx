@@ -204,7 +204,7 @@ export function GameBoard({
 
   return (
     <div className="crush-root mx-auto flex w-full max-w-[640px] flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="crush-game-toolbar flex items-center justify-between gap-2">
         <button type="button" onClick={onExit} disabled={busy || submitting} className="crush-btn-ghost">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {ru ? 'Карта' : 'Map'}
@@ -219,7 +219,7 @@ export function GameBoard({
         </button>
       </div>
 
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-white/10 bg-black/30 p-3">
+      <div className="crush-status grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-white/10 bg-black/30 p-3">
         <div className="flex flex-col items-center rounded-xl bg-lime-400/15 px-3 py-1.5">
           <span className="text-[10px] font-bold uppercase text-lime-200/80">{ru ? 'Ходы' : 'Moves'}</span>
           <span className={`text-2xl font-black tabular-nums ${game.movesLeft <= 3 ? 'text-rose-300' : 'text-white'}`}>{game.movesLeft}</span>
@@ -286,7 +286,7 @@ export function GameBoard({
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-2" role="toolbar" aria-label={ru ? 'Бустеры' : 'Boosters'}>
+      <div className="crush-booster-tray grid grid-cols-5 gap-2" role="toolbar" aria-label={ru ? 'Бустеры' : 'Boosters'}>
         {BOOSTER_CODES.map((code) => {
           const Icon = BOOSTER_ICONS[code]
           const count = available(code)
