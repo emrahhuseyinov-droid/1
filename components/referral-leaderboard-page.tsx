@@ -101,7 +101,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
       fallbackData: { leaderboard: initialLeaderboard },
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
-      refreshInterval: 30_000,
+      refreshInterval: 60 * 60 * 1000,
     },
   )
   const leaderboard = (data?.leaderboard ?? initialLeaderboard).slice(0, 10)
@@ -203,7 +203,7 @@ export function ReferralLeaderboardPage({ initialLeaderboard }: ReferralLeaderbo
             <div>
               <h2 id="referral-ranking-title" className="text-base font-black tracking-tight sm:text-lg">{isRussian ? 'Топ-10 участников' : 'Top 10 referral ranking'}</h2>
               <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                {isRussian ? 'Список обновляется автоматически каждые 30 секунд.' : 'Standings refresh automatically every 30 seconds.'}
+                {isRussian ? 'Список обновляется автоматически каждый час.' : 'Standings refresh automatically every hour.'}
               </p>
             </div>
             <span className="rounded-full border border-violet-200/60 bg-violet-50 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-violet-700 dark:border-violet-300/20 dark:bg-violet-300/[0.08] dark:text-violet-100">

@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { and, asc, desc, eq, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from '@/lib/db'
@@ -44,4 +45,14 @@ export async function getReferralLeaderboard(): Promise<ReferralLeaderboardEntry
     avatarSrc: getProfileAvatar(row.avatar),
     successfulReferrals: row.successfulReferrals,
   }))
+}
+
+const getCachedReferralLeaderboard = unstable_cache(
+  getReferralLeaderboard,
+  ['referral-leaderboard-hourly'],
+  { revalidate: 60 * 60, tags: ['referral-leaderboard'] },
+)
+
+export async function getHourlyReferralLeaderboard(): Promise<ReferralLeaderboardEntry[]> {
+  return getCachedReferralLeaderboard()
 }

@@ -12,7 +12,7 @@ import { getProfileAvatar } from '@/lib/profile-avatars'
 import { isPepeReserveAdmin } from '@/lib/pepe-reserve'
 import { getPromoActivityEligibility, getPromoClaims } from '@/lib/promos'
 import { getReferralOverview, guestCookieName } from '@/lib/referrals'
-import { getReferralLeaderboard } from '@/lib/referral-leaderboard'
+import { getHourlyReferralLeaderboard } from '@/lib/referral-leaderboard'
 
 function getSafeErrorDetails(error: unknown) {
   const normalizedError = error instanceof Error ? error : new Error(String(error))
@@ -94,7 +94,7 @@ export async function DashboardRouteContent({
       )
     : { eligible: false, lastActivityAt: null, windowDays: 7 }
   const initialReferralLeaderboard = section === 'Referral Leaderboard'
-    ? await withDashboardStep(section, 'getReferralLeaderboard', () => getReferralLeaderboard())
+    ? await withDashboardStep(section, 'getReferralLeaderboard', () => getHourlyReferralLeaderboard())
     : []
 
   return (
