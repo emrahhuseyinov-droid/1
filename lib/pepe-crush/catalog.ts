@@ -11,14 +11,14 @@ export const BOOSTER_INFO: Record<BoosterCode, { ru: string; en: string; descRu:
 export const STARTER_BOOSTERS: BoosterCounts = { hammer: 3, bomb: 1, rainbow: 1, rowRocket: 2, colRocket: 2 }
 export const BOOSTER_CAP = 99
 
-export const DAILY_REWARDS: { coins: number; boosters?: Partial<BoosterCounts> }[] = [
-  { coins: 20 },
-  { coins: 30 },
-  { coins: 40, boosters: { hammer: 1 } },
-  { coins: 50 },
-  { coins: 60, boosters: { rowRocket: 1, colRocket: 1 } },
-  { coins: 80 },
-  { coins: 120, boosters: { bomb: 1, rainbow: 1 } },
+export const DAILY_REWARDS: { pepe: number; boosters?: Partial<BoosterCounts> }[] = [
+  { pepe: 20 },
+  { pepe: 30 },
+  { pepe: 40, boosters: { hammer: 1 } },
+  { pepe: 50 },
+  { pepe: 60, boosters: { rowRocket: 1, colRocket: 1 } },
+  { pepe: 80 },
+  { pepe: 120, boosters: { bomb: 1, rainbow: 1 } },
 ]
 
 export type MissionMetric = 'levelsWon' | 'score' | 'specials' | 'bestCascade' | 'boostersUsed' | 'stars'
@@ -57,31 +57,31 @@ export type AchievementDefinition = {
   code: string
   metric: AchievementMetric
   target: number
-  coins: number
+  reward: number
   boosters?: Partial<BoosterCounts>
   ru: string
   en: string
 }
 
 export const ACHIEVEMENTS: AchievementDefinition[] = [
-  { code: 'first_win', metric: 'wins', target: 1, coins: 20, ru: 'Первая победа', en: 'First win' },
-  { code: 'level_10', metric: 'levelsCompleted', target: 10, coins: 50, boosters: { hammer: 1 }, ru: '10 уровней пройдено', en: '10 levels completed' },
-  { code: 'level_25', metric: 'levelsCompleted', target: 25, coins: 80, ru: '25 уровней пройдено', en: '25 levels completed' },
-  { code: 'level_50', metric: 'levelsCompleted', target: 50, coins: 120, boosters: { bomb: 1 }, ru: '50 уровней пройдено', en: '50 levels completed' },
-  { code: 'level_100', metric: 'levelsCompleted', target: 100, coins: 200, boosters: { rainbow: 1 }, ru: '100 уровней пройдено', en: '100 levels completed' },
-  { code: 'level_250', metric: 'levelsCompleted', target: 250, coins: 350, ru: '250 уровней пройдено', en: '250 levels completed' },
-  { code: 'level_500', metric: 'levelsCompleted', target: 500, coins: 600, boosters: { rainbow: 2 }, ru: '500 уровней пройдено', en: '500 levels completed' },
-  { code: 'level_1000', metric: 'levelsCompleted', target: 1000, coins: 1200, boosters: { rainbow: 3, bomb: 3 }, ru: '1000 уровней пройдено', en: '1000 levels completed' },
-  { code: 'stars_30', metric: 'totalStars', target: 30, coins: 50, ru: '30 звёзд', en: '30 stars' },
-  { code: 'stars_100', metric: 'totalStars', target: 100, coins: 120, ru: '100 звёзд', en: '100 stars' },
-  { code: 'stars_300', metric: 'totalStars', target: 300, coins: 300, ru: '300 звёзд', en: '300 stars' },
-  { code: 'stars_1000', metric: 'totalStars', target: 1000, coins: 800, ru: '1000 звёзд', en: '1000 stars' },
-  { code: 'three_star_10', metric: 'threeStarLevels', target: 10, coins: 100, ru: '10 уровней на 3 звезды', en: '10 three-star levels' },
-  { code: 'specials_50', metric: 'specialsCreated', target: 50, coins: 60, ru: '50 спецэлементов', en: '50 special pieces' },
-  { code: 'specials_500', metric: 'specialsCreated', target: 500, coins: 250, ru: '500 спецэлементов', en: '500 special pieces' },
-  { code: 'rainbow_maker', metric: 'rainbowsCreated', target: 1, coins: 40, ru: 'Создай радужную конфету', en: 'Create a rainbow candy' },
-  { code: 'cascade_5', metric: 'bestCascade', target: 5, coins: 60, ru: 'Цепочка ×5', en: '×5 chain reaction' },
-  { code: 'streak_7', metric: 'streak', target: 7, coins: 150, boosters: { bomb: 1 }, ru: '7 дней подряд', en: '7-day streak' },
+  { code: 'first_win', metric: 'wins', target: 1, reward: 10, ru: 'Первая победа', en: 'First win' },
+  { code: 'level_10', metric: 'levelsCompleted', target: 10, reward: 25, boosters: { hammer: 1 }, ru: '10 уровней пройдено', en: '10 levels completed' },
+  { code: 'level_25', metric: 'levelsCompleted', target: 25, reward: 40, ru: '25 уровней пройдено', en: '25 levels completed' },
+  { code: 'level_50', metric: 'levelsCompleted', target: 50, reward: 60, boosters: { bomb: 1 }, ru: '50 уровней пройдено', en: '50 levels completed' },
+  { code: 'level_100', metric: 'levelsCompleted', target: 100, reward: 100, boosters: { rainbow: 1 }, ru: '100 уровней пройдено', en: '100 levels completed' },
+  { code: 'level_250', metric: 'levelsCompleted', target: 250, reward: 175, ru: '250 уровней пройдено', en: '250 levels completed' },
+  { code: 'level_500', metric: 'levelsCompleted', target: 500, reward: 300, boosters: { rainbow: 2 }, ru: '500 уровней пройдено', en: '500 levels completed' },
+  { code: 'level_1000', metric: 'levelsCompleted', target: 1000, reward: 600, boosters: { rainbow: 3, bomb: 3 }, ru: '1000 уровней пройдено', en: '1000 levels completed' },
+  { code: 'stars_30', metric: 'totalStars', target: 30, reward: 25, ru: '30 звёзд', en: '30 stars' },
+  { code: 'stars_100', metric: 'totalStars', target: 100, reward: 60, ru: '100 звёзд', en: '100 stars' },
+  { code: 'stars_300', metric: 'totalStars', target: 300, reward: 150, ru: '300 звёзд', en: '300 stars' },
+  { code: 'stars_1000', metric: 'totalStars', target: 1000, reward: 400, ru: '1000 звёзд', en: '1000 stars' },
+  { code: 'three_star_10', metric: 'threeStarLevels', target: 10, reward: 50, ru: '10 уровней на 3 звезды', en: '10 three-star levels' },
+  { code: 'specials_50', metric: 'specialsCreated', target: 50, reward: 30, ru: '50 спецэлементов', en: '50 special pieces' },
+  { code: 'specials_500', metric: 'specialsCreated', target: 500, reward: 125, ru: '500 спецэлементов', en: '500 special pieces' },
+  { code: 'rainbow_maker', metric: 'rainbowsCreated', target: 1, reward: 20, ru: 'Создай радужную конфету', en: 'Create a rainbow candy' },
+  { code: 'cascade_5', metric: 'bestCascade', target: 5, reward: 30, ru: 'Цепочка ×5', en: '×5 chain reaction' },
+  { code: 'streak_7', metric: 'streak', target: 7, reward: 75, boosters: { bomb: 1 }, ru: '7 дней подряд', en: '7-day streak' },
 ]
 
 export function getUtcDayKey(date = new Date()) {

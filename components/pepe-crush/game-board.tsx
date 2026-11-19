@@ -31,10 +31,10 @@ export type CrushFinishResult =
       score: number
       stars: number
       firstCompletion: boolean
-      coinsEarned: number
+      levelReward: number
       boosterRewards: Partial<BoosterCounts> | null
-      achievements: { code: string; ru: string; en: string; coins: number }[]
-      achievementCoins: number
+      achievements: { code: string; ru: string; en: string; reward: number }[]
+      achievementReward: number
       nextLevel: number
     }
 
