@@ -1053,7 +1053,7 @@ dialog.adslab-captcha-dialog[open] {
 .crush-cell:focus-visible { z-index: 25; outline: 2px solid #fff17b; outline-offset: -2px; }
 .crush-jelly-1 { box-shadow: inset 0 0 0 100px rgb(255 131 193 / 0.4); }
 .crush-jelly-2 { box-shadow: inset 0 0 0 100px rgb(255 89 169 / 0.65); }
-.crush-tile { position: absolute; z-index: 5; top: 0; left: 0; width: 12.5%; height: 12.5%; padding: 4%; pointer-events: none; transition: transform 0.2s cubic-bezier(0.3, 1.25, 0.6, 1); animation: crush-drop 0.28s ease-out; will-change: transform; }
+.crush-tile { position: absolute; z-index: 5; top: 0; left: 0; width: 12.5%; height: 12.5%; padding: 1.5%; pointer-events: none; transition: transform 0.2s cubic-bezier(0.3, 1.25, 0.6, 1); animation: crush-drop 0.28s ease-out; will-change: transform; }
 .crush-candy { position: relative; display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgb(255 255 255 / 0.76); border-radius: 32%; box-shadow: inset 0 3px 2px rgb(255 255 255 / 0.46), inset 0 -5px 0 rgb(51 22 82 / 0.24), 0 3px 6px rgb(40 21 68 / 0.35); transition: transform 0.15s ease; }
 .crush-shine { position: absolute; top: 8%; left: 14%; width: 45%; height: 28%; border-radius: 999px; background: rgb(255 255 255 / 0.58); filter: blur(1px); }
 .crush-selected { transform: scale(1.12); box-shadow: 0 0 0 3px #fff17b, 0 0 18px rgb(255 241 123 / 0.9); }
