@@ -1,12 +1,12 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import useSWR from 'swr'
-import { ArrowLeft, Award, CalendarCheck, ChevronLeft, ChevronRight, Coins, Crosshair, Lock, Map as MapIcon, ShoppingBag, Star, Trophy } from 'lucide-react'
+import { ArrowLeft, Award, CalendarCheck, ChevronLeft, ChevronRight, Crosshair, Lock, Map as MapIcon, ShoppingBag, Star, Trophy } from 'lucide-react'
 import { BOOSTER_CODES, emptyBoosterCounts, type BoosterCode, type BoosterCounts } from '@/lib/pepe-crush/engine'
 import { BOOSTER_INFO } from '@/lib/pepe-crush/catalog'
-import { formatTokenAtomic } from '@/lib/pepe-amount'
 import { useSiteLanguage } from '@/components/site-language-provider'
+import { PepeTokenLogo } from '@/components/pepe-token-logo'
 import { GameBoard, type CrushFinishResult, type CrushSession } from './game-board'
 
 type CrushState = {
@@ -45,6 +45,15 @@ type Tab = 'map' | 'daily' | 'shop' | 'leaderboard' | 'achievements'
 
 const PAGE_SIZE = 30
 
+function PepeAmount({ amount, prefix = '', size = 14, className = '' }: { amount: number | string; prefix?: string; size?: number; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 align-middle ${className}`}>
+      <PepeTokenLogo size={size} />
+      <span>{prefix}{amount} PEPE</span>
+    </span>
+  )
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url, { cache: 'no-store' })
   const payload = await response.json().catch(() => null)
@@ -57,10 +66,6 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   const payload = await response.json().catch(() => null)
   if (!response.ok) throw new Error(payload?.error ?? 'Request failed')
   return payload as T
-}
-
-function formatPepeBalance(amountAtomic: string) {
-  return formatTokenAtomic(amountAtomic).replace(/\.?0+$/, '')
 }
 
 function Stars({ count, size = 'h-3.5 w-3.5' }: { count: number; size?: string }) {
@@ -125,14 +130,15 @@ function LevelMap({ current, ru, onPlay }: { current: number; ru: boolean; onPla
 }
 
 function DailyPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; onChange: () => void }) {
-  const [message, setMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState<ReactNode>(null)
   const [pending, setPending] = useState<string | null>(null)
   const claim = async (body: { kind: 'bonus' } | { kind: 'mission'; code: string }, key: string) => {
     setPending(key)
     setMessage(null)
     try {
-      await postJson('/api/pepe-crush/daily', body)
-      setMessage(ru ? 'Награда получена!' : 'Reward claimed!')
+      const result = await postJson<{ reward: number | { pepe: number }; achievementReward?: number }>('/api/pepe-crush/daily', body)
+      const rewardAmount = typeof result.reward === 'number' ? result.reward : result.reward.pepe + (result.achievementReward ?? 0)
+      setMessage(<span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{ru ? 'Награда получена:' : 'Reward claimed:'}<PepeAmount amount={rewardAmount} prefix="+" /></span>)
       onChange()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Error')
@@ -156,7 +162,7 @@ function DailyPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; o
           {state.daily.rewards.map((reward, k) => (
             <li key={k} className={`rounded-lg border p-1.5 text-center text-[10px] font-bold ${k + 1 === state.daily.nextRewardDay && state.daily.canClaimBonus ? 'border-yellow-300 bg-yellow-300/15 text-yellow-100' : 'border-white/10 bg-white/5 text-white/70'}`}>
               <span className="block">{ru ? 'День' : 'Day'} {k + 1}</span>
-              <span className="block text-xs text-white">{reward.pepe} PEPE</span>
+              <PepeAmount amount={reward.pepe} className="mt-1 text-xs text-white" size={12} />
               {reward.boosters ? <span className="block text-lime-300">+{ru ? 'бустер' : 'boost'}</span> : null}
             </li>
           ))}
@@ -173,7 +179,7 @@ function DailyPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; o
                 <div className="mt-1.5 h-1.5 rounded-full bg-white/10">
                   <div className="h-full rounded-full bg-lime-400" style={{ width: `${(mission.progress / mission.target) * 100}%` }} />
                 </div>
-                <p className="mt-1 text-[11px] text-white/50 tabular-nums">{mission.progress.toLocaleString()}/{mission.target.toLocaleString()} · +{mission.reward} PEPE</p>
+                <p className="mt-1 text-[11px] text-white/50 tabular-nums">{mission.progress.toLocaleString()}/{mission.target.toLocaleString()} · <PepeAmount amount={mission.reward} prefix="+" size={12} /></p>
               </div>
               <button type="button" className="crush-btn-primary" disabled={!done || mission.claimed || pending !== null} onClick={() => void claim({ kind: 'mission', code: mission.code }, mission.code)}>
                 {mission.claimed ? (ru ? 'Готово' : 'Done') : (ru ? 'Забрать' : 'Claim')}
@@ -187,16 +193,16 @@ function DailyPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; o
   )
 }
 
-function ShopPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; onChange: () => void }) {
+function ShopPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; onChange: (purchase: { balanceAtomic: string; boosters: BoosterCounts }) => void }) {
   const [message, setMessage] = useState<string | null>(null)
   const [pending, setPending] = useState<string | null>(null)
   const buy = async (code: BoosterCode) => {
     setPending(code)
     setMessage(null)
     try {
-      await postJson('/api/pepe-crush/shop', { code })
+      const purchase = await postJson<{ balanceAtomic: string; boosters: BoosterCounts }>('/api/pepe-crush/shop', { code })
       setMessage(ru ? 'Бустер куплен!' : 'Booster purchased!')
-      onChange()
+      onChange(purchase)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Error')
     } finally {
@@ -205,7 +211,6 @@ function ShopPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; on
   }
   return (
     <div className="space-y-3">
-      <p className="text-sm font-bold text-white/80">{ru ? `Баланс кошелька: ${formatPepeBalance(state.pepeBalanceAtomic)} PEPE` : `Wallet balance: ${formatPepeBalance(state.pepeBalanceAtomic)} PEPE`}</p>
       <div className="grid gap-2 sm:grid-cols-2">
         {state.shop.map(({ code, price, priceAtomic }) => (
           <div key={code} className="crush-panel flex items-center gap-3">
@@ -215,7 +220,7 @@ function ShopPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; on
               <p className="mt-1 text-[11px] text-lime-300">{ru ? 'В наличии' : 'Owned'}: {state.profile.boosters[code] ?? 0}</p>
             </div>
             <button type="button" className="crush-btn-primary" disabled={pending !== null || BigInt(state.pepeBalanceAtomic) < BigInt(priceAtomic)} onClick={() => void buy(code)}>
-              <Coins className="h-4 w-4" aria-hidden="true" />{price} PEPE
+              <PepeAmount amount={price} size={16} />
             </button>
           </div>
         ))}
@@ -278,7 +283,7 @@ function AchievementsPanel({ state, ru }: { state: CrushState; ru: boolean }) {
             <div className="mt-1 h-1.5 rounded-full bg-white/10">
               <div className="h-full rounded-full bg-yellow-300" style={{ width: `${(achievement.progress / achievement.target) * 100}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-white/50 tabular-nums">{achievement.progress}/{achievement.target} · +{achievement.reward} PEPE</p>
+            <p className="mt-1 text-[11px] text-white/50 tabular-nums">{achievement.progress}/{achievement.target} · <PepeAmount amount={achievement.reward} prefix="+" size={12} /></p>
           </div>
         </li>
       ))}
@@ -301,7 +306,7 @@ function ResultModal({ result, ru, onClose, onNext, onRetry }: { result: CrushFi
             <p className="text-xs text-white/50">{ru ? 'очков (проверено сервером)' : 'points (server verified)'}</p>
             {result.levelReward + result.achievementReward > 0 ? (
               <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-yellow-300/15 px-3 py-1 text-sm font-bold text-yellow-200">
-                <Coins className="h-4 w-4" aria-hidden="true" />+{result.levelReward + result.achievementReward} PEPE
+                <PepeAmount amount={result.levelReward + result.achievementReward} prefix="+" size={16} />
               </p>
             ) : null}
             {result.boosterRewards ? (
@@ -333,7 +338,7 @@ function ResultModal({ result, ru, onClose, onNext, onRetry }: { result: CrushFi
   )
 }
 
-export function PepeCrushPage({ onBack }: { onBack: () => void }) {
+export function PepeCrushPage({ onBack, onWalletBalanceChange, onWalletBalanceRefresh }: { onBack: () => void; onWalletBalanceChange: (balanceAtomic: string) => void; onWalletBalanceRefresh: () => void }) {
   const { language } = useSiteLanguage()
   const ru = language === 'ru'
   const { data: state, error, mutate } = useSWR<CrushState>('/api/pepe-crush/state', fetchJson)
@@ -362,7 +367,8 @@ export function PepeCrushPage({ onBack }: { onBack: () => void }) {
   const handleFinished = useCallback((finish: CrushFinishResult) => {
     setResult(finish)
     void mutate()
-  }, [mutate])
+    onWalletBalanceRefresh()
+  }, [mutate, onWalletBalanceRefresh])
 
   const tabs: { id: Tab; label: string; icon: typeof MapIcon }[] = [
     { id: 'map', label: ru ? 'Карта' : 'Map', icon: MapIcon },
@@ -431,8 +437,8 @@ export function PepeCrushPage({ onBack }: { onBack: () => void }) {
 
                 <div role="tabpanel">
                   {tab === 'map' ? <LevelMap current={state.profile.currentLevel} ru={ru} onPlay={(level) => void startLevel(level)} /> : null}
-                  {tab === 'daily' ? <DailyPanel state={state} ru={ru} onChange={() => void mutate()} /> : null}
-                  {tab === 'shop' ? <ShopPanel state={state} ru={ru} onChange={() => void mutate()} /> : null}
+                  {tab === 'daily' ? <DailyPanel state={state} ru={ru} onChange={() => { void mutate(); onWalletBalanceRefresh() }} /> : null}
+                  {tab === 'shop' ? <ShopPanel state={state} ru={ru} onChange={(purchase) => { onWalletBalanceChange(purchase.balanceAtomic); void mutate((current) => current ? { ...current, pepeBalanceAtomic: purchase.balanceAtomic, profile: { ...current.profile, boosters: purchase.boosters } } : current, { revalidate: false }); onWalletBalanceRefresh() }} /> : null}
                   {tab === 'leaderboard' ? <LeaderboardPanel ru={ru} /> : null}
                   {tab === 'achievements' ? <AchievementsPanel state={state} ru={ru} /> : null}
                 </div>
