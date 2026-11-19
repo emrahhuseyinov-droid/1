@@ -24,6 +24,7 @@ import { ShortlinksPage } from '@/components/shortlinks-page'
 import { ArcadePage } from '@/components/arcade-page'
 import { WheelOfFortunePage } from '@/components/wheel-of-fortune-page'
 import { ArcadeWeeklyLeaderboardPage } from '@/components/arcade-weekly-leaderboard-page'
+import { ReferralLeaderboardPage } from '@/components/referral-leaderboard-page'
 import { WithdrawPage } from '@/components/withdraw-page'
 import { ManualFaucetPage } from '@/components/manual-faucet-page'
 import { authClient } from '@/lib/auth-client'
@@ -32,7 +33,7 @@ import type { DashboardOverview } from '@/lib/dashboard-types'
 import { walletAssets, type WalletCoinSymbol } from '@/lib/wallet-assets'
 import type { PromoActivityEligibility, PromoClaim } from '@/lib/promo-types'
 import { DEFAULT_PROFILE_AVATAR, type ProfileAvatarSrc } from '@/lib/profile-avatars'
-import type { ReferralOverview } from '@/lib/referral-types'
+import type { ReferralLeaderboardEntry, ReferralOverview } from '@/lib/referral-types'
 import {
   ArrowDownToLine,
   ArrowLeftRight,
@@ -103,6 +104,7 @@ const publisherNavGroups: NavigationGroup[] = [
       { label: 'Arcade', icon: Gamepad2 },
       { label: 'Wheel of Fortune', icon: Dices },
       { label: 'Weekly Leaderboard', icon: Trophy },
+      { label: 'Referral Leaderboard', icon: Trophy },
       { label: 'PTC Ads', icon: BarChart3, section: 'View Ads' },
       { label: 'Watch and Earn', icon: Play, section: 'Watch and Earn' },
       { label: 'Shortlinks', icon: Link2 },
@@ -147,7 +149,7 @@ const advertiserNavGroups: NavigationGroup[] = [
 const navItemClassName = 'group relative isolate flex w-full items-center overflow-hidden rounded-2xl border border-transparent px-3 py-2.5 text-left text-xs font-bold transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-cyan-200/30 hover:bg-white/[0.07] hover:shadow-lg hover:shadow-indigo-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 motion-reduce:transition-none motion-reduce:hover:transform-none'
 const navEdgeClassName = 'pointer-events-none absolute inset-y-2 w-1 rounded-full bg-gradient-to-b from-cyan-200 to-yellow-200 opacity-0 shadow-[0_0_12px_rgba(99,216,255,0.75)] transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none'
 
-export function ManualClaimPage({ initialSection, email, name, guestId, initialAvatarUrl, isAdmin, referralOverview, promoClaims, promoActivity, dashboardOverview, advertiserView }: { initialSection: DashboardSection; email: string; name: string; guestId: string; initialAvatarUrl: ProfileAvatarSrc; isAdmin: boolean; referralOverview: ReferralOverview; promoClaims: PromoClaim[]; promoActivity: PromoActivityEligibility; dashboardOverview: DashboardOverview; advertiserView?: AdvertiserPageView }) {
+export function ManualClaimPage({ initialSection, email, name, guestId, initialAvatarUrl, isAdmin, referralOverview, promoClaims, promoActivity, dashboardOverview, initialReferralLeaderboard, advertiserView }: { initialSection: DashboardSection; email: string; name: string; guestId: string; initialAvatarUrl: ProfileAvatarSrc; isAdmin: boolean; referralOverview: ReferralOverview; promoClaims: PromoClaim[]; promoActivity: PromoActivityEligibility; dashboardOverview: DashboardOverview; initialReferralLeaderboard: ReferralLeaderboardEntry[]; advertiserView?: AdvertiserPageView }) {
   const router = useRouter()
   const pathname = usePathname()
   const activeSection = getDashboardSectionFromPath(pathname) ?? initialSection
@@ -247,7 +249,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
                   >
                     <span aria-hidden="true" className={`${navEdgeClassName} left-0.5`} />
                     <span aria-hidden="true" className={`${navEdgeClassName} right-0.5`} />
-                    <span className="relative flex items-center gap-3"><Icon size={15} /><span>{label === 'Swap' ? 'TOKEN EXCHANGE' : label === 'Add funds' && isRussian ? 'Пополнить баланс' : label === 'Transfers' && isRussian ? 'Переводы' : label}</span></span>
+                    <span className="relative flex items-center gap-3"><Icon size={15} /><span>{label === 'Referral Leaderboard' && isRussian ? 'Рейтинг рефералов' : label === 'Swap' ? 'TOKEN EXCHANGE' : label === 'Add funds' && isRussian ? 'Пополнить баланс' : label === 'Transfers' && isRussian ? 'Переводы' : label}</span></span>
                     {badge && <span className={`relative rounded-md px-1.5 py-0.5 text-[9px] font-bold transition-colors group-hover:bg-amber-300/15 ${badge === 'return' || badge === '10%' || /^[0-9]+$/.test(badge) ? 'bg-amber-300 text-indigo-950' : 'bg-cyan-300 text-indigo-950'}`}>{badge}</span>}
                   </Link>
                 })}
@@ -311,7 +313,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>
