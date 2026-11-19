@@ -84,7 +84,10 @@ export const auth = betterAuth({
             .limit(1)
 
           if (existingUser) {
-            throw new APIError('BAD_REQUEST', { message: 'That nickname is already in use.' })
+            throw new APIError('BAD_REQUEST', {
+              code: 'NICKNAME_TAKEN',
+              message: 'That nickname is already in use.',
+            })
           }
 
           return { data: { ...createdUser, name: nickname } }

@@ -10,7 +10,9 @@ export const user = pgTable('user', {
   image: text('image'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-})
+}, (table) => [
+  uniqueIndex('user_name_lower_unique').on(sql`lower(${table.name})`),
+])
 
 export const session = pgTable('session', {
   id: text('id').primaryKey(),
