@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { ArrowLeft, Award, CalendarCheck, ChevronLeft, ChevronRight, Coins, Crosshair, Lock, Map as MapIcon, ShoppingBag, Star, Trophy } from 'lucide-react'
 import { BOOSTER_CODES, emptyBoosterCounts, type BoosterCode, type BoosterCounts } from '@/lib/pepe-crush/engine'
 import { BOOSTER_INFO } from '@/lib/pepe-crush/catalog'
+import { formatTokenAtomic } from '@/lib/pepe-amount'
 import { useSiteLanguage } from '@/components/site-language-provider'
 import { GameBoard, type CrushFinishResult, type CrushSession } from './game-board'
 
@@ -18,21 +19,21 @@ type CrushState = {
     wins: number
     losses: number
     threeStarLevels: number
-    coins: number
     boosters: BoosterCounts
     achievements: string[]
     streak: number
   }
+  pepeBalanceAtomic: string
   tier: { name: string; nameRu: string }
   daily: {
     canClaimBonus: boolean
     streak: number
     nextRewardDay: number
-    rewards: { coins: number; boosters?: Partial<BoosterCounts> }[]
+    rewards: { pepe: number; boosters?: Partial<BoosterCounts> }[]
     missions: { code: string; target: number; reward: number; ru: string; en: string; progress: number; claimed: boolean }[]
   }
-  achievements: { code: string; ru: string; en: string; target: number; coins: number; unlocked: boolean; progress: number }[]
-  shop: { code: BoosterCode; price: number }[]
+  achievements: { code: string; ru: string; en: string; target: number; reward: number; unlocked: boolean; progress: number }[]
+  shop: { code: BoosterCode; price: number; priceAtomic: string }[]
 }
 
 type LeaderboardData = {
@@ -56,6 +57,10 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   const payload = await response.json().catch(() => null)
   if (!response.ok) throw new Error(payload?.error ?? 'Request failed')
   return payload as T
+}
+
+function formatPepeBalance(amountAtomic: string) {
+  return formatTokenAtomic(amountAtomic).replace(/\.?0+$/, '')
 }
 
 function Stars({ count, size = 'h-3.5 w-3.5' }: { count: number; size?: string }) {
@@ -151,7 +156,7 @@ function DailyPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; o
           {state.daily.rewards.map((reward, k) => (
             <li key={k} className={`rounded-lg border p-1.5 text-center text-[10px] font-bold ${k + 1 === state.daily.nextRewardDay && state.daily.canClaimBonus ? 'border-yellow-300 bg-yellow-300/15 text-yellow-100' : 'border-white/10 bg-white/5 text-white/70'}`}>
               <span className="block">{ru ? 'День' : 'Day'} {k + 1}</span>
-              <span className="block text-xs text-white">{reward.coins}</span>
+              <span className="block text-xs text-white">{reward.pepe} PEPE</span>
               {reward.boosters ? <span className="block text-lime-300">+{ru ? 'бустер' : 'boost'}</span> : null}
             </li>
           ))}
@@ -168,7 +173,7 @@ function DailyPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; o
                 <div className="mt-1.5 h-1.5 rounded-full bg-white/10">
                   <div className="h-full rounded-full bg-lime-400" style={{ width: `${(mission.progress / mission.target) * 100}%` }} />
                 </div>
-                <p className="mt-1 text-[11px] text-white/50 tabular-nums">{mission.progress.toLocaleString()}/{mission.target.toLocaleString()} · +{mission.reward} PEPE Coins</p>
+                <p className="mt-1 text-[11px] text-white/50 tabular-nums">{mission.progress.toLocaleString()}/{mission.target.toLocaleString()} · +{mission.reward} PEPE</p>
               </div>
               <button type="button" className="crush-btn-primary" disabled={!done || mission.claimed || pending !== null} onClick={() => void claim({ kind: 'mission', code: mission.code }, mission.code)}>
                 {mission.claimed ? (ru ? 'Готово' : 'Done') : (ru ? 'Забрать' : 'Claim')}
@@ -200,17 +205,17 @@ function ShopPanel({ state, ru, onChange }: { state: CrushState; ru: boolean; on
   }
   return (
     <div className="space-y-3">
-      <p className="text-xs text-white/60">{ru ? 'PEPE Coins — внутренняя игровая валюта. Её нельзя вывести, она не влияет на баланс кошелька.' : 'PEPE Coins are an in-game currency. They cannot be withdrawn and do not change your wallet balance.'}</p>
+      <p className="text-sm font-bold text-white/80">{ru ? `Баланс кошелька: ${formatPepeBalance(state.pepeBalanceAtomic)} PEPE` : `Wallet balance: ${formatPepeBalance(state.pepeBalanceAtomic)} PEPE`}</p>
       <div className="grid gap-2 sm:grid-cols-2">
-        {state.shop.map(({ code, price }) => (
+        {state.shop.map(({ code, price, priceAtomic }) => (
           <div key={code} className="crush-panel flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="font-bold text-white">{ru ? BOOSTER_INFO[code].ru : BOOSTER_INFO[code].en}</p>
               <p className="text-xs text-white/60">{ru ? BOOSTER_INFO[code].descRu : BOOSTER_INFO[code].descEn}</p>
               <p className="mt-1 text-[11px] text-lime-300">{ru ? 'В наличии' : 'Owned'}: {state.profile.boosters[code] ?? 0}</p>
             </div>
-            <button type="button" className="crush-btn-primary" disabled={pending !== null || state.profile.coins < price} onClick={() => void buy(code)}>
-              <Coins className="h-4 w-4" aria-hidden="true" />{price}
+            <button type="button" className="crush-btn-primary" disabled={pending !== null || BigInt(state.pepeBalanceAtomic) < BigInt(priceAtomic)} onClick={() => void buy(code)}>
+              <Coins className="h-4 w-4" aria-hidden="true" />{price} PEPE
             </button>
           </div>
         ))}
@@ -273,7 +278,7 @@ function AchievementsPanel({ state, ru }: { state: CrushState; ru: boolean }) {
             <div className="mt-1 h-1.5 rounded-full bg-white/10">
               <div className="h-full rounded-full bg-yellow-300" style={{ width: `${(achievement.progress / achievement.target) * 100}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-white/50 tabular-nums">{achievement.progress}/{achievement.target} · +{achievement.coins} PEPE Coins</p>
+            <p className="mt-1 text-[11px] text-white/50 tabular-nums">{achievement.progress}/{achievement.target} · +{achievement.reward} PEPE</p>
           </div>
         </li>
       ))}
@@ -294,9 +299,9 @@ function ResultModal({ result, ru, onClose, onNext, onRetry }: { result: CrushFi
             {result.won ? <div className="mt-4 flex justify-center"><Stars count={result.stars} size="h-10 w-10" /></div> : null}
             <p className="mt-4 text-2xl font-black tabular-nums text-white">{result.score.toLocaleString()}</p>
             <p className="text-xs text-white/50">{ru ? 'очков (проверено сервером)' : 'points (server verified)'}</p>
-            {result.coinsEarned + result.achievementCoins > 0 ? (
+            {result.levelReward + result.achievementReward > 0 ? (
               <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-yellow-300/15 px-3 py-1 text-sm font-bold text-yellow-200">
-                <Coins className="h-4 w-4" aria-hidden="true" />+{result.coinsEarned + result.achievementCoins} PEPE Coins
+                <Coins className="h-4 w-4" aria-hidden="true" />+{result.levelReward + result.achievementReward} PEPE
               </p>
             ) : null}
             {result.boosterRewards ? (
@@ -402,7 +407,6 @@ export function PepeCrushPage({ onBack }: { onBack: () => void }) {
                   {[
                     { label: ru ? 'Пройдено уровней' : 'Levels cleared', value: state.profile.levelsCompleted },
                     { label: ru ? 'Звёзды' : 'Stars', value: state.profile.totalStars },
-                    { label: 'PEPE Coins', value: state.profile.coins },
                     { label: ru ? 'Рекорд' : 'Best score', value: state.profile.bestScore },
                     { label: ru ? 'Победы' : 'Wins', value: state.profile.wins },
                     { label: ru ? 'Поражения' : 'Losses', value: state.profile.losses },

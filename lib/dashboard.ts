@@ -17,13 +17,16 @@ const wheelRewardActivityTitles: Record<string, string> = {
   'consolation-prize': 'Wheel of Fortune prize: 10 HOMERO',
 }
 
-export async function getDashboardBalancesAtomic(guestId: string): Promise<Record<WalletCoinSymbol, string>> {
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+type BalanceExecutor = typeof db | Transaction
+
+export async function getDashboardBalancesAtomic(guestId: string, executor: BalanceExecutor = db): Promise<Record<WalletCoinSymbol, string>> {
   const [balanceRows, bonusRows] = await Promise.all([
-    db.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
+    executor.select({ tokenSymbol: earningEvents.tokenSymbol, amount: sql<string>`coalesce(sum(${earningEvents.rewardAtomic}), 0)::text` })
       .from(earningEvents)
       .where(and(eq(earningEvents.guestId, guestId), notInArray(earningEvents.source, [...PEPE_RESERVE_EVENT_SOURCES, ...ADVERTISER_WALLET_EVENT_SOURCES, ...HOMERO_TREASURY_EVENT_SOURCES])))
       .groupBy(earningEvents.tokenSymbol),
-    db.select({ tokenSymbol: referralCommissions.tokenSymbol, amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
+    executor.select({ tokenSymbol: referralCommissions.tokenSymbol, amount: sql<string>`coalesce(sum(${referralCommissions.commissionAmountAtomic}), 0)::text` })
       .from(referralCommissions)
       .where(eq(referralCommissions.referrerId, guestId))
       .groupBy(referralCommissions.tokenSymbol),
@@ -130,9 +133,19 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
                             ? 'Rejected PEPE withdrawal refund'
                             : row.source === 'admin_adjustment'
                               ? 'Admin balance credit'
-                              : row.source === PEPE_SWAP_COMMISSION_SOURCE
-                              ? 'Token exchange commission'
-                              : row.source === ADVERTISER_WALLET_TRANSFER_OUT_SOURCE
+                              : row.source === 'pepe_crush_shop_purchase'
+                                ? 'PEPE Crush booster purchase'
+                                : row.source === 'pepe_crush_level_reward'
+                                  ? 'PEPE Crush level reward'
+                                  : row.source === 'pepe_crush_achievement_reward'
+                                    ? 'PEPE Crush achievement reward'
+                                    : row.source === 'pepe_crush_daily_bonus'
+                                      ? 'PEPE Crush daily bonus'
+                                      : row.source === 'pepe_crush_mission_reward'
+                                        ? 'PEPE Crush mission reward'
+                                        : row.source === PEPE_SWAP_COMMISSION_SOURCE
+                                          ? 'Token exchange commission'
+                                          : row.source === ADVERTISER_WALLET_TRANSFER_OUT_SOURCE
                                 ? 'PEPE transfer to advertiser wallet'
                                 : row.source === 'swap'
                                   ? `Token exchange ${row.itemId ?? 'tokens'}`

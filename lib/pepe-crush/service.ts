@@ -1,8 +1,9 @@
 import 'server-only'
-import { randomInt } from 'node:crypto'
+import { randomInt, randomUUID } from 'node:crypto'
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import {
+  earningEvents,
   guestProfiles,
   pepeCrushDaily,
   pepeCrushLevelResults,
@@ -11,8 +12,10 @@ import {
   user,
   type PepeCrushBoosterInventory,
 } from '@/lib/db/schema'
+import { getDashboardBalancesAtomic } from '@/lib/dashboard'
 import { getProfileAvatar } from '@/lib/profile-avatars'
 import { isPepeReserveAdmin } from '@/lib/pepe-reserve'
+import { PEPE_ATOMIC_UNITS } from '@/lib/withdrawal-constants'
 import {
   BOOSTER_CODES,
   ENGINE_VERSION,
@@ -52,7 +55,7 @@ export class PepeCrushError extends Error {
 const SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000
 const MIN_MS_PER_ACTION = 180
 const MAX_ACTIONS = 400
-const REPLAY_COIN_DAILY_LIMIT = 30
+const REPLAY_REWARD_DAILY_LIMIT = 30
 
 function normalizeBoosters(value: unknown): BoosterCounts {
   const result = emptyBoosterCounts()
@@ -120,7 +123,6 @@ function publicProfile(profile: ProfileRow) {
     wins: profile.wins,
     losses: profile.losses,
     threeStarLevels: profile.threeStarLevels,
-    coins: profile.coins,
     boosters: normalizeBoosters(profile.boosters),
     achievements: profile.achievements,
     specialsCreated: profile.specialsCreated,
@@ -134,7 +136,7 @@ export type PepeCrushProfile = ReturnType<typeof publicProfile>
 export async function getPepeCrushState(guestId: string) {
   await ensureProfile(db, guestId)
   const today = getUtcDayKey()
-  const [[profile], daily, recentSessions] = await Promise.all([
+  const [[profile], daily, recentSessions, balances] = await Promise.all([
     db.select().from(pepeCrushProfiles).where(eq(pepeCrushProfiles.guestId, guestId)),
     getDailyRow(db, guestId, today),
     db
@@ -144,13 +146,13 @@ export async function getPepeCrushState(guestId: string) {
         status: pepeCrushSessions.status,
         score: pepeCrushSessions.score,
         stars: pepeCrushSessions.stars,
-        coinsEarned: pepeCrushSessions.coinsEarned,
         finishedAt: pepeCrushSessions.finishedAt,
       })
       .from(pepeCrushSessions)
       .where(and(eq(pepeCrushSessions.guestId, guestId), inArray(pepeCrushSessions.status, ['won', 'lost'])))
       .orderBy(desc(pepeCrushSessions.finishedAt))
       .limit(10),
+    getDashboardBalancesAtomic(guestId),
   ])
 
   const streakAlive = profile.lastDailyClaim === today || profile.lastDailyClaim === previousDayKey(today)
@@ -158,6 +160,7 @@ export async function getPepeCrushState(guestId: string) {
 
   return {
     profile: publicProfile(profile),
+    pepeBalanceAtomic: balances.PEPE,
     tier: getLevelTier(profile.currentLevel),
     daily: {
       day: today,
@@ -176,7 +179,11 @@ export async function getPepeCrushState(guestId: string) {
       unlocked: profile.achievements.includes(achievement.code),
       progress: Math.min(achievementMetricValue(profile, achievement.metric), achievement.target),
     })),
-    shop: BOOSTER_CODES.map((code) => ({ code, price: BOOSTER_INFO[code].price })),
+    shop: BOOSTER_CODES.map((code) => ({
+      code,
+      price: BOOSTER_INFO[code].price,
+      priceAtomic: String(BigInt(BOOSTER_INFO[code].price) * BigInt(PEPE_ATOMIC_UNITS)),
+    })),
     recentSessions: recentSessions.map((session) => ({ ...session, finishedAt: session.finishedAt?.toISOString() ?? null })),
   }
 }
@@ -232,8 +239,22 @@ function parseActions(raw: unknown): GameAction[] {
   })
 }
 
-function firstCompletionCoins(stars: number) {
+function firstCompletionReward(stars: number) {
   return 10 + stars * 5
+}
+
+async function recordPepeReward(transaction: Transaction, guestId: string, source: string, sourceKey: string, itemId: string, amount: number, now = new Date()) {
+  if (!Number.isSafeInteger(amount) || amount <= 0) return
+  await transaction.insert(earningEvents).values({
+    id: randomUUID(),
+    guestId,
+    source,
+    sourceKey,
+    itemId,
+    tokenSymbol: 'PEPE',
+    rewardAtomic: amount * PEPE_ATOMIC_UNITS,
+    createdAt: now,
+  })
 }
 
 function milestoneBooster(level: number): Partial<BoosterCounts> | undefined {
@@ -285,7 +306,7 @@ export async function finishPepeCrushSession(guestId: string, sessionId: string,
     const today = getUtcDayKey(now)
     const daily = await getDailyRow(transaction, guestId, today, true)
 
-    let coinsEarned = 0
+    let levelReward = 0
     let boosterRewards: Partial<BoosterCounts> | undefined
     let firstCompletion = false
     let newStars = 0
@@ -306,12 +327,12 @@ export async function finishPepeCrushSession(guestId: string, sessionId: string,
       newThreeStar = stars === 3 && previousStars < 3
 
       if (firstCompletion) {
-        coinsEarned += firstCompletionCoins(stars)
+        levelReward += firstCompletionReward(stars)
         boosterRewards = milestoneBooster(session.level)
         await transaction.insert(pepeCrushLevelResults).values({ guestId, level: session.level, bestScore: score, stars })
       } else {
-        coinsEarned += newStars * 5
-        if (daily.levelsWon < REPLAY_COIN_DAILY_LIMIT) coinsEarned += 2
+        levelReward += newStars * 5
+        if (daily.levelsWon < REPLAY_REWARD_DAILY_LIMIT) levelReward += 2
         if (newStars > 0 || scoreGain > 0) {
           await transaction
             .update(pepeCrushLevelResults)
@@ -340,10 +361,15 @@ export async function finishPepeCrushSession(guestId: string, sessionId: string,
     const unlocked = ACHIEVEMENTS.filter((achievement) =>
       !profile.achievements.includes(achievement.code) && achievementMetricValue(updatedProfile, achievement.metric) >= achievement.target,
     )
-    let achievementCoins = 0
+    let achievementReward = 0
     for (const achievement of unlocked) {
-      achievementCoins += achievement.coins
+      achievementReward += achievement.reward
       boosters = addBoosters(boosters, achievement.boosters)
+    }
+
+    await recordPepeReward(transaction, guestId, 'pepe_crush_level_reward', session.id, 'level-reward', levelReward, now)
+    for (const achievement of unlocked) {
+      await recordPepeReward(transaction, guestId, 'pepe_crush_achievement_reward', achievement.code, achievement.code, achievement.reward, now)
     }
 
     await transaction
@@ -360,7 +386,6 @@ export async function finishPepeCrushSession(guestId: string, sessionId: string,
         specialsCreated: updatedProfile.specialsCreated,
         rainbowsCreated: updatedProfile.rainbowsCreated,
         bestCascade: updatedProfile.bestCascade,
-        coins: profile.coins + coinsEarned + achievementCoins,
         boosters: boosters as PepeCrushBoosterInventory,
         achievements: [...profile.achievements, ...unlocked.map((achievement) => achievement.code)],
         updatedAt: now,
@@ -387,7 +412,6 @@ export async function finishPepeCrushSession(guestId: string, sessionId: string,
         stars,
         movesUsed: state.movesUsed,
         boostersUsed: state.boostersUsed as PepeCrushBoosterInventory,
-        coinsEarned: coinsEarned + achievementCoins,
         finishedAt: now,
       })
       .where(eq(pepeCrushSessions.id, session.id))
@@ -399,10 +423,10 @@ export async function finishPepeCrushSession(guestId: string, sessionId: string,
       score,
       stars,
       firstCompletion,
-      coinsEarned,
+      levelReward,
       boosterRewards: boosterRewards ?? null,
-      achievements: unlocked.map((achievement) => ({ code: achievement.code, ru: achievement.ru, en: achievement.en, coins: achievement.coins })),
-      achievementCoins,
+      achievements: unlocked.map((achievement) => ({ code: achievement.code, ru: achievement.ru, en: achievement.en, reward: achievement.reward })),
+      achievementReward,
       nextLevel: updatedProfile.currentLevel,
     }
   })
@@ -420,23 +444,27 @@ export async function claimDailyBonus(guestId: string) {
     const unlocked = ACHIEVEMENTS.filter((achievement) =>
       !profile.achievements.includes(achievement.code) && achievementMetricValue(updated, achievement.metric) >= achievement.target,
     )
-    let achievementCoins = 0
+    let achievementReward = 0
     for (const achievement of unlocked) {
-      achievementCoins += achievement.coins
+      achievementReward += achievement.reward
       boosters = addBoosters(boosters, achievement.boosters)
+    }
+    const now = new Date()
+    await recordPepeReward(transaction, guestId, 'pepe_crush_daily_bonus', today, 'daily-bonus', reward.pepe, now)
+    for (const achievement of unlocked) {
+      await recordPepeReward(transaction, guestId, 'pepe_crush_achievement_reward', achievement.code, achievement.code, achievement.reward, now)
     }
     await transaction
       .update(pepeCrushProfiles)
       .set({
         streak,
         lastDailyClaim: today,
-        coins: profile.coins + reward.coins + achievementCoins,
         boosters: boosters as PepeCrushBoosterInventory,
         achievements: [...profile.achievements, ...unlocked.map((achievement) => achievement.code)],
-        updatedAt: new Date(),
+        updatedAt: now,
       })
       .where(eq(pepeCrushProfiles.guestId, guestId))
-    return { streak, reward, achievementCoins }
+    return { streak, reward, achievementReward }
   })
 }
 
@@ -445,7 +473,7 @@ export async function claimDailyMission(guestId: string, code: unknown) {
   const mission = getDailyMissions(today).find((item) => item.code === code)
   if (!mission) throw new PepeCrushError('Unknown mission.', 400)
   return db.transaction(async (transaction) => {
-    const profile = await lockProfile(transaction, guestId)
+    await lockProfile(transaction, guestId)
     const daily = await getDailyRow(transaction, guestId, today, true)
     if (daily.claimedMissions.includes(mission.code)) throw new PepeCrushError('Mission reward already claimed.', 409)
     if (dailyMetricValue(daily, mission.metric) < mission.target) throw new PepeCrushError('Mission is not complete yet.', 409)
@@ -453,10 +481,7 @@ export async function claimDailyMission(guestId: string, code: unknown) {
       .update(pepeCrushDaily)
       .set({ claimedMissions: [...daily.claimedMissions, mission.code] })
       .where(and(eq(pepeCrushDaily.guestId, guestId), eq(pepeCrushDaily.day, today)))
-    await transaction
-      .update(pepeCrushProfiles)
-      .set({ coins: profile.coins + mission.reward, updatedAt: new Date() })
-      .where(eq(pepeCrushProfiles.guestId, guestId))
+    await recordPepeReward(transaction, guestId, 'pepe_crush_mission_reward', `${today}:${mission.code}`, mission.code, mission.reward)
     return { reward: mission.reward }
   })
 }
@@ -464,17 +489,40 @@ export async function claimDailyMission(guestId: string, code: unknown) {
 export async function buyBooster(guestId: string, code: unknown) {
   if (!isBoosterCode(code)) throw new PepeCrushError('Unknown booster.', 400)
   const price = BOOSTER_INFO[code].price
+  const priceAtomic = BigInt(price) * BigInt(PEPE_ATOMIC_UNITS)
   return db.transaction(async (transaction) => {
+    const [account] = await transaction
+      .select({ id: guestProfiles.id })
+      .from(guestProfiles)
+      .where(eq(guestProfiles.id, guestId))
+      .for('update')
+      .limit(1)
+    if (!account) throw new PepeCrushError('Account not found.', 404)
+
     const profile = await lockProfile(transaction, guestId)
     const boosters = normalizeBoosters(profile.boosters)
-    if (profile.coins < price) throw new PepeCrushError('Not enough PEPE Coins.', 409)
+    const balance = await getDashboardBalancesAtomic(guestId, transaction)
+    const availableAtomic = BigInt(balance.PEPE)
+    if (availableAtomic < priceAtomic) throw new PepeCrushError('Not enough PEPE in your account balance.', 409)
     if (boosters[code] >= BOOSTER_CAP) throw new PepeCrushError('Booster limit reached.', 409)
+
+    const now = new Date()
+    await transaction.insert(earningEvents).values({
+      id: randomUUID(),
+      guestId,
+      source: 'pepe_crush_shop_purchase',
+      sourceKey: randomUUID(),
+      itemId: code,
+      tokenSymbol: 'PEPE',
+      rewardAtomic: -Number(priceAtomic),
+      createdAt: now,
+    })
     boosters[code] += 1
     await transaction
       .update(pepeCrushProfiles)
-      .set({ coins: profile.coins - price, boosters: boosters as PepeCrushBoosterInventory, updatedAt: new Date() })
+      .set({ boosters: boosters as PepeCrushBoosterInventory, updatedAt: now })
       .where(eq(pepeCrushProfiles.guestId, guestId))
-    return { coins: profile.coins - price, boosters }
+    return { balanceAtomic: (availableAtomic - priceAtomic).toString(), boosters }
   })
 }
 
