@@ -203,7 +203,7 @@ export function GameBoard({
     .filter((entry): entry is { tile: Tile; index: number } => entry !== null)
 
   return (
-    <div className="crush-root mx-auto flex w-full max-w-[640px] flex-col gap-3">
+    <div className="crush-root mx-auto flex w-full max-w-[760px] flex-col gap-3">
       <div className="crush-game-toolbar flex items-center justify-between gap-2">
         <button type="button" onClick={onExit} disabled={busy || submitting} className="crush-btn-ghost">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
