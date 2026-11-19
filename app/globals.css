@@ -942,3 +942,51 @@ dialog.adslab-captcha-dialog[open] {
     transform: none;
   }
 }
+
+/* PEPE CRUSH */
+.crush-shell { background: radial-gradient(120% 80% at 50% 0%, rgba(132, 204, 22, 0.18), transparent 60%), linear-gradient(180deg, #102a12 0%, #0b1a10 100%); }
+.crush-title { background: linear-gradient(180deg, #fef08a 0%, #a3e635 55%, #16a34a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45)); }
+.crush-panel { border-radius: 1rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.28); padding: 0.75rem 1rem; }
+.crush-btn-primary, .crush-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 0.8rem; padding: 0.5rem 0.9rem; font-size: 0.8rem; font-weight: 800; transition: transform 0.15s ease, background-color 0.15s ease, opacity 0.15s ease; }
+.crush-btn-primary { background: linear-gradient(180deg, #bef264, #65a30d); color: #0b1a10; box-shadow: 0 3px 0 #3f6212; }
+.crush-btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
+.crush-btn-ghost { border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.06); color: #fff; }
+.crush-btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.crush-btn-primary:disabled, .crush-btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+.crush-board-frame { border-radius: 1.4rem; padding: 0.5rem; background: linear-gradient(180deg, rgba(163, 230, 53, 0.35), rgba(22, 101, 52, 0.45)); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); }
+.crush-board { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 1rem; overflow: hidden; background: #0c1f12; touch-action: none; user-select: none; }
+.crush-cell { position: absolute; width: 12.5%; height: 12.5%; border: 0; padding: 0; cursor: pointer; z-index: 1; }
+.crush-cell-a { background: rgba(255, 255, 255, 0.05); }
+.crush-cell-b { background: rgba(255, 255, 255, 0.09); }
+.crush-cell:focus-visible { outline: 2px solid #fde047; outline-offset: -2px; z-index: 25; }
+.crush-jelly-1 { box-shadow: inset 0 0 0 100px rgba(244, 114, 182, 0.28); }
+.crush-jelly-2 { box-shadow: inset 0 0 0 100px rgba(236, 72, 153, 0.5); }
+.crush-tile { position: absolute; left: 0; top: 0; width: 12.5%; height: 12.5%; padding: 5%; pointer-events: none; z-index: 5; transition: transform 0.2s cubic-bezier(0.3, 1.25, 0.6, 1); animation: crush-drop 0.28s ease-out; will-change: transform; }
+.crush-candy { position: relative; display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; overflow: hidden; border-radius: 30%; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25), 0 3px 6px rgba(0, 0, 0, 0.35); transition: transform 0.15s ease; }
+.crush-shine { position: absolute; left: 14%; top: 8%; width: 45%; height: 28%; border-radius: 999px; background: rgba(255, 255, 255, 0.45); filter: blur(1px); }
+.crush-selected { transform: scale(1.12); box-shadow: 0 0 0 3px #fde047, 0 0 18px rgba(253, 224, 71, 0.8); }
+.crush-rainbow { background: conic-gradient(#f43f5e, #f97316, #facc15, #22c55e, #06b6d4, #a855f7, #f43f5e); animation: crush-spin 3s linear infinite; border-radius: 999px; }
+.crush-rainbow-core { width: 42%; height: 42%; border-radius: 999px; background: radial-gradient(circle, #fff, rgba(255, 255, 255, 0.2)); }
+.crush-stripes { position: absolute; inset: 0; opacity: 0.55; pointer-events: none; }
+.crush-stripes-row { background: repeating-linear-gradient(0deg, transparent 0 18%, rgba(255, 255, 255, 0.85) 18% 26%); }
+.crush-stripes-col { background: repeating-linear-gradient(90deg, transparent 0 18%, rgba(255, 255, 255, 0.85) 18% 26%); }
+.crush-bomb-ring { position: absolute; inset: 6%; border-radius: 30%; border: 3px dashed rgba(255, 255, 255, 0.9); animation: crush-pulse 1s ease-in-out infinite; }
+.crush-stone { position: absolute; width: 12.5%; height: 12.5%; padding: 4%; z-index: 6; pointer-events: none; }
+.crush-stone > span { display: block; width: 100%; height: 100%; border-radius: 22%; background: linear-gradient(160deg, #a8a29e, #57534e); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.3); }
+.crush-stone > span.crush-stone-heavy { background: linear-gradient(160deg, #78716c, #292524); }
+.crush-burst { position: absolute; width: 12.5%; height: 12.5%; z-index: 10; pointer-events: none; border-radius: 999px; background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(253, 224, 71, 0.7) 35%, transparent 70%); animation: crush-burst 0.4s ease-out forwards; }
+.crush-combo { position: absolute; left: 50%; top: 42%; z-index: 20; transform: translate(-50%, -50%); pointer-events: none; text-align: center; font-size: clamp(1.4rem, 6vw, 2.6rem); font-weight: 900; color: #fef08a; text-shadow: 0 3px 0 #3f6212, 0 0 18px rgba(163, 230, 53, 0.8); animation: crush-pop 0.9s ease-out forwards; }
+.crush-node { position: relative; display: flex; width: 3rem; height: 3rem; align-items: center; justify-content: center; border-radius: 999px; transition: transform 0.15s ease; }
+.crush-node-open { background: linear-gradient(180deg, #bef264, #4d7c0f); color: #0b1a10; box-shadow: 0 4px 0 #365314; }
+.crush-node-done { background: linear-gradient(180deg, #fde047, #ca8a04); color: #422006; box-shadow: 0 4px 0 #854d0e; }
+.crush-node-locked { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.4); cursor: not-allowed; }
+.crush-node-current { outline: 3px solid #fff; outline-offset: 3px; animation: crush-pulse 1.4s ease-in-out infinite; }
+.crush-node:hover:not(:disabled) { transform: scale(1.08); }
+.crush-result { background: linear-gradient(180deg, #1a3d1d, #0b1a10); border: 1px solid rgba(163, 230, 53, 0.35); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); animation: crush-pop-in 0.3s ease-out; }
+@keyframes crush-drop { from { opacity: 0; margin-top: -12.5%; } to { opacity: 1; margin-top: 0; } }
+@keyframes crush-spin { to { filter: hue-rotate(360deg); } }
+@keyframes crush-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes crush-burst { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes crush-pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1); } }
+@keyframes crush-pop-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .crush-tile, .crush-rainbow, .crush-bomb-ring, .crush-node-current { animation: none; transition: none; } }

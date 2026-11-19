@@ -22,6 +22,7 @@ import { YoutubeAdsPage } from '@/components/youtube-ads-page'
 import { AdvertiserPage, type AdvertiserPageView } from '@/components/advertiser-page'
 import { ShortlinksPage } from '@/components/shortlinks-page'
 import { ArcadePage } from '@/components/arcade-page'
+import dynamic from 'next/dynamic'
 import { WheelOfFortunePage } from '@/components/wheel-of-fortune-page'
 import { ArcadeWeeklyLeaderboardPage } from '@/components/arcade-weekly-leaderboard-page'
 import { ReferralLeaderboardPage } from '@/components/referral-leaderboard-page'
@@ -56,8 +57,14 @@ import {
   Wallet,
   X,
   Zap,
+  Candy,
   type LucideIcon,
 } from 'lucide-react'
+
+const PepeCrushPage = dynamic(() => import('@/components/pepe-crush/pepe-crush-page').then((module) => module.PepeCrushPage), {
+  ssr: false,
+  loading: () => <main className="dashboard-page-shell p-6 text-sm text-white/70">Loading PEPE CRUSH...</main>,
+})
 
 const atomicUnitsPerToken = 100_000_000
 
@@ -102,6 +109,7 @@ const publisherNavGroups: NavigationGroup[] = [
     links: [
       { label: 'Manual Faucet', icon: Gift },
       { label: 'Arcade', icon: Gamepad2 },
+      { label: 'PEPE CRUSH', icon: Candy, section: 'PEPE Crush', badge: 'NEW' },
       { label: 'Wheel of Fortune', icon: Dices },
       { label: 'Weekly Leaderboard', icon: Trophy },
       { label: 'Referral Leaderboard', icon: Trophy },
@@ -313,7 +321,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'PEPE Crush' ? <PepeCrushPage onBack={() => navigateTo('Dashboard')} /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>

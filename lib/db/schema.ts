@@ -527,3 +527,78 @@ export const wheelCaptchaSessions = pgTable('earnpepe_wheel_captcha_sessions', {
   check('earnpepe_wheel_captcha_sessions_expiry_check', sql`${table.expiresAt} > ${table.createdAt}`),
   check('earnpepe_wheel_captcha_sessions_state_check', sql`(${table.status} = 'pending' and ${table.verifiedAt} is null and ${table.consumedAt} is null) or (${table.status} = 'verified' and ${table.verifiedAt} is not null and ${table.consumedAt} is null) or (${table.status} = 'consumed' and ${table.verifiedAt} is not null and ${table.consumedAt} is not null) or (${table.status} in ('failed', 'expired') and ${table.consumedAt} is null)`),
 ])
+
+export type PepeCrushSessionStatus = 'running' | 'won' | 'lost' | 'abandoned' | 'invalid'
+export type PepeCrushBoosterInventory = { hammer: number; bomb: number; rainbow: number; rowRocket: number; colRocket: number }
+
+export const pepeCrushProfiles = pgTable('earnpepe_crush_profiles', {
+  guestId: uuid('guest_id').primaryKey(),
+  currentLevel: integer('current_level').notNull().default(1),
+  levelsCompleted: integer('levels_completed').notNull().default(0),
+  totalStars: integer('total_stars').notNull().default(0),
+  totalScore: bigint('total_score', { mode: 'number' }).notNull().default(0),
+  bestScore: bigint('best_score', { mode: 'number' }).notNull().default(0),
+  wins: integer('wins').notNull().default(0),
+  losses: integer('losses').notNull().default(0),
+  threeStarLevels: integer('three_star_levels').notNull().default(0),
+  coins: integer('coins').notNull().default(0),
+  boosters: jsonb('boosters').$type<PepeCrushBoosterInventory>().notNull(),
+  achievements: text('achievements').array().notNull().default(sql`ARRAY[]::text[]`),
+  specialsCreated: integer('specials_created').notNull().default(0),
+  rainbowsCreated: integer('rainbows_created').notNull().default(0),
+  bestCascade: integer('best_cascade').notNull().default(0),
+  streak: integer('streak').notNull().default(0),
+  lastDailyClaim: date('last_daily_claim', { mode: 'string' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('earnpepe_crush_profiles_levels_idx').on(table.levelsCompleted.desc()),
+  index('earnpepe_crush_profiles_score_idx').on(table.totalScore.desc()),
+  index('earnpepe_crush_profiles_stars_idx').on(table.totalStars.desc()),
+  check('earnpepe_crush_profiles_level_check', sql`${table.currentLevel} >= 1`),
+  check('earnpepe_crush_profiles_coins_check', sql`${table.coins} >= 0`),
+])
+
+export const pepeCrushLevelResults = pgTable('earnpepe_crush_level_results', {
+  guestId: uuid('guest_id').notNull(),
+  level: integer('level').notNull(),
+  bestScore: bigint('best_score', { mode: 'number' }).notNull().default(0),
+  stars: smallint('stars').notNull().default(0),
+  completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.guestId, table.level] }),
+  check('earnpepe_crush_level_results_stars_check', sql`${table.stars} between 0 and 3`),
+])
+
+export const pepeCrushSessions = pgTable('earnpepe_crush_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  guestId: uuid('guest_id').notNull(),
+  level: integer('level').notNull(),
+  seed: bigint('seed', { mode: 'number' }).notNull(),
+  engineVersion: smallint('engine_version').notNull().default(1),
+  status: text('status').$type<PepeCrushSessionStatus>().notNull().default('running'),
+  score: bigint('score', { mode: 'number' }).notNull().default(0),
+  stars: smallint('stars').notNull().default(0),
+  movesUsed: integer('moves_used').notNull().default(0),
+  boostersUsed: jsonb('boosters_used').$type<PepeCrushBoosterInventory>(),
+  coinsEarned: integer('coins_earned').notNull().default(0),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+}, (table) => [
+  index('earnpepe_crush_sessions_guest_started_idx').on(table.guestId, table.startedAt.desc()),
+  index('earnpepe_crush_sessions_weekly_idx').on(table.status, table.finishedAt),
+  check('earnpepe_crush_sessions_status_check', sql`${table.status} in ('running', 'won', 'lost', 'abandoned', 'invalid')`),
+])
+
+export const pepeCrushDaily = pgTable('earnpepe_crush_daily', {
+  guestId: uuid('guest_id').notNull(),
+  day: date('day', { mode: 'string' }).notNull(),
+  levelsWon: integer('levels_won').notNull().default(0),
+  score: bigint('score', { mode: 'number' }).notNull().default(0),
+  specials: integer('specials').notNull().default(0),
+  boostersUsed: integer('boosters_used').notNull().default(0),
+  bestCascade: integer('best_cascade').notNull().default(0),
+  stars: integer('stars').notNull().default(0),
+  claimedMissions: text('claimed_missions').array().notNull().default(sql`ARRAY[]::text[]`),
+}, (table) => [primaryKey({ columns: [table.guestId, table.day] })])
