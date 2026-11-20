@@ -172,6 +172,12 @@ const advertiserNavGroups: NavigationGroup[] = [
       { label: 'Switch to Earner', icon: House, section: 'Dashboard' },
     ],
   },
+  {
+    title: 'Games',
+    links: [
+      { label: 'PEPE VERSE', icon: Sparkles, section: 'PEPE VERSE', badge: 'NEW' },
+    ],
+  },
 ]
 
 const navItemClassName = 'group relative isolate flex w-full items-center overflow-hidden rounded-2xl border border-transparent px-3 py-2.5 text-left text-xs font-bold transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-cyan-200/30 hover:bg-white/[0.07] hover:shadow-lg hover:shadow-indigo-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 motion-reduce:transition-none motion-reduce:hover:transform-none'
