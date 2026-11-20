@@ -52,7 +52,6 @@ import {
   Menu,
   Play,
   ShieldCheck,
-  Sparkles,
   Trophy,
   UsersRound,
   Wallet,
@@ -65,11 +64,6 @@ import {
 const PepeCrushPage = dynamic(() => import('@/components/pepe-crush/pepe-crush-page').then((module) => module.PepeCrushPage), {
   ssr: false,
   loading: () => <main className="dashboard-page-shell p-6 text-sm text-white/70">Loading PEPE CRUSH...</main>,
-})
-
-const PepeVersePage = dynamic(() => import('@/components/pepe-verse/pepe-verse-page').then((module) => module.PepeVersePage), {
-  ssr: false,
-  loading: () => <main className="dashboard-page-shell p-6 text-sm text-white/70">Loading PEPE VERSE...</main>,
 })
 
 const atomicUnitsPerToken = 100_000_000
@@ -133,12 +127,6 @@ const publisherNavGroups: NavigationGroup[] = [
     ],
   },
   {
-    title: 'Games',
-    links: [
-      { label: 'PEPE VERSE', icon: Sparkles, section: 'PEPE VERSE', badge: 'NEW' },
-    ],
-  },
-  {
     title: 'Advertiser',
     links: [
       { label: 'Advertiser workspace', icon: Megaphone, section: 'Advertiser', href: '/advertiser/fund' },
@@ -170,12 +158,6 @@ const advertiserNavGroups: NavigationGroup[] = [
       { label: 'Advertiser tasks', icon: Check, section: 'Advertiser', href: '/advertiser/campaigns' },
       { label: 'Advertiser wallet activity', icon: ArrowDownToLine, section: 'Advertiser', href: '/advertiser/activity' },
       { label: 'Switch to Earner', icon: House, section: 'Dashboard' },
-    ],
-  },
-  {
-    title: 'Games',
-    links: [
-      { label: 'PEPE VERSE', icon: Sparkles, section: 'PEPE VERSE', badge: 'NEW' },
     ],
   },
 ]
@@ -362,7 +344,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'PEPE Crush' ? <PepeCrushPage onBack={() => navigateTo('Dashboard')} onWalletBalanceChange={(balanceAtomic) => { void walletSnapshot.mutate((current) => current ? { ...current, balancesAtomic: { ...current.balancesAtomic, PEPE: balanceAtomic } } : current, { revalidate: false }) }} onWalletBalanceRefresh={() => { void walletSnapshot.mutate() }} /> : activeSection === 'PEPE VERSE' ? <PepeVersePage isAdmin={isAdmin} onWalletBalanceRefresh={() => { void walletSnapshot.mutate() }} /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'PEPE Crush' ? <PepeCrushPage onBack={() => navigateTo('Dashboard')} onWalletBalanceChange={(balanceAtomic) => { void walletSnapshot.mutate((current) => current ? { ...current, balancesAtomic: { ...current.balancesAtomic, PEPE: balanceAtomic } } : current, { revalidate: false }) }} onWalletBalanceRefresh={() => { void walletSnapshot.mutate() }} /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>
