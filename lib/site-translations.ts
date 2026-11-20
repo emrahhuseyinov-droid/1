@@ -265,7 +265,6 @@ const ruPhrases = new Map<string, string>([
   ['Sign in to continue to your account and saved reward ledger.', 'Войдите, чтобы продолжить работу с аккаунтом и сохранёнными начислениями.'],
   ['Your account uses a secure server-managed session. Existing guest balances are preserved when linked.', 'Для защиты аккаунта используется сессия на сервере. Баланс гостевого аккаунта сохранится после привязки.'],
   ['Could not create the account. Check your details and try again.', 'Не удалось создать аккаунт. Проверьте данные и попробуйте ещё раз.'],
-  ['Only one account per network IP is allowed.', 'С одного IP-адреса разрешена регистрация только одного аккаунта.'],
   ['Could not verify your network address. Please try again.', 'Не удалось определить ваш сетевой адрес. Попробуйте ещё раз.'],
   ['Could not verify your registration. Please try again.', 'Не удалось проверить регистрацию. Попробуйте ещё раз.'],
   ['Could not sign in. Check your email and password.', 'Не удалось войти. Проверьте адрес электронной почты и пароль.'],
@@ -781,6 +780,9 @@ const ruPhrases = new Map<string, string>([
   ['Strong', 'Надёжный'],
   ['Show passwords', 'Показать пароли'],
   ['Hide passwords', 'Скрыть пароли'],
+  ['Show password', 'Показать пароль'],
+  ['Hide password', 'Скрыть пароль'],
+
   ['Change password', 'Изменить пароль'],
   ['Managed by Better Auth', 'Управляется Better Auth'],
   ['This changes the password only for the signed-in account:', 'Это изменит пароль только для текущего аккаунта:'],
