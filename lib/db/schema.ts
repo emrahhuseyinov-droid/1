@@ -602,3 +602,51 @@ export const pepeCrushDaily = pgTable('earnpepe_crush_daily', {
   stars: integer('stars').notNull().default(0),
   claimedMissions: text('claimed_missions').array().notNull().default(sql`ARRAY[]::text[]`),
 }, (table) => [primaryKey({ columns: [table.guestId, table.day] })])
+
+export const pepeVerseProfiles = pgTable('earnpepe_verse_profiles', {
+  guestId: uuid('guest_id').primaryKey(),
+  xp: integer('xp').notNull().default(0),
+  level: integer('level').notNull().default(1),
+  coins: integer('coins').notNull().default(100),
+  energy: smallint('energy').notNull().default(40),
+  stamina: smallint('stamina').notNull().default(30),
+  streak: integer('streak').notNull().default(0),
+  lastDailyClaim: date('last_daily_claim', { mode: 'string' }),
+  skins: text('skins').array().notNull().default(sql`ARRAY['neon-runner']::text[]`),
+  equippedSkin: text('equipped_skin').notNull().default('neon-runner'),
+  achievements: text('achievements').array().notNull().default(sql`ARRAY[]::text[]`),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('earnpepe_verse_profiles_xp_idx').on(table.xp.desc()),
+  check('earnpepe_verse_profiles_xp_check', sql`${table.xp} >= 0`),
+  check('earnpepe_verse_profiles_level_check', sql`${table.level} >= 1`),
+  check('earnpepe_verse_profiles_coins_check', sql`${table.coins} >= 0`),
+  check('earnpepe_verse_profiles_energy_check', sql`${table.energy} between 0 and 100`),
+  check('earnpepe_verse_profiles_stamina_check', sql`${table.stamina} between 0 and 100`),
+])
+
+export const pepeVerseSettings = pgTable('earnpepe_verse_settings', {
+  id: smallint('id').primaryKey().default(1),
+  enabled: boolean('enabled').notNull().default(true),
+  dailyRewards: jsonb('daily_rewards').$type<number[]>().notNull().default(sql`'[20,30,20,40,50,25,75]'::jsonb`),
+  taskRewards: jsonb('task_rewards').$type<Record<string, number>>().notNull().default(sql`'{"faucet":10,"ptc":10,"shortlink":10,"watch":10}'::jsonb`),
+  tournamentPrizes: jsonb('tournament_prizes').$type<number[]>().notNull().default(sql`'[100,50,25]'::jsonb`),
+  dailyLimit: integer('daily_limit').notNull().default(5),
+  claimedTournamentPlaces: text('claimed_tournament_places').array().notNull().default(sql`ARRAY[]::text[]`),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  check('earnpepe_verse_settings_singleton_check', sql`${table.id} = 1`),
+  check('earnpepe_verse_settings_daily_limit_check', sql`${table.dailyLimit} between 1 and 20`),
+])
+
+export const pepeVerseWeeklyScores = pgTable('earnpepe_verse_weekly_scores', {
+  guestId: uuid('guest_id').notNull(),
+  weekStart: date('week_start', { mode: 'string' }).notNull(),
+  score: integer('score').notNull().default(0),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.guestId, table.weekStart] }),
+  index('earnpepe_verse_weekly_scores_leaderboard_idx').on(table.weekStart, table.score.desc()),
+  check('earnpepe_verse_weekly_scores_score_check', sql`${table.score} >= 0`),
+])
