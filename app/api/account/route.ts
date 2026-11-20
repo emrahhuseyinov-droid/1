@@ -2,11 +2,19 @@ import { sql } from 'drizzle-orm'
 import { NextResponse, type NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { user } from '@/lib/db/schema'
+import { enforceApiRateLimit } from '@/lib/api-rate-limit'
 
 const nicknamePattern = /^[\p{L}\p{N}_-]{3,24}$/u
 const noStoreHeaders = { 'Cache-Control': 'no-store, max-age=0' }
 
 export async function GET(request: NextRequest) {
+  const rateLimitIp = request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')?.trim()
+  if (rateLimitIp) {
+    const limited = await enforceApiRateLimit('nickname-availability', rateLimitIp, { windowSeconds: 60, max: 60 })
+    if (limited) return limited
+  }
+
   const nickname = request.nextUrl.searchParams.get('nickname')?.trim() ?? ''
 
   if (!nicknamePattern.test(nickname)) {
