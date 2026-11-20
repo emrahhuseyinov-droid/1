@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, CircleAlert, Eye, EyeOff, LoaderCircle, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CircleAlert, LoaderCircle, ShieldCheck } from 'lucide-react'
 import { PepeCasaLogo } from '@/components/pepe-casa-logo'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { LocalizedTree } from '@/components/site-language-provider'
@@ -19,7 +19,6 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
   const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const isSignUp = mode === 'sign-up'
@@ -70,9 +69,11 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
           })
 
       if (result.error) {
-        setErrorMessage(isSignUp
-          ? 'Could not create the account. Check your details and try again.'
-          : 'Could not sign in. Check your email and password.')
+        setErrorMessage(isSignUp && result.error.code === 'SIGNUP_IP_LIMIT'
+          ? 'Only one account per network IP is allowed.'
+          : isSignUp
+            ? 'Could not create the account. Check your details and try again.'
+            : 'Could not sign in. Check your email and password.')
         return
       }
 
@@ -125,10 +126,6 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
                   name="nickname"
                   type="text"
                   autoComplete="nickname"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  aria-describedby="auth-nickname-hint"
                   required
                   minLength={3}
                   maxLength={24}
@@ -137,9 +134,6 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
                   className="cartoon-auth-input w-full rounded-2xl border-2 border-violet-200/15 bg-[#111735] px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
                   placeholder="Choose a unique nickname"
                 />
-                <p id="auth-nickname-hint" className="mt-1.5 text-xs leading-5 text-slate-400">
-                  Use 3–24 letters, numbers, underscores, or hyphens.
-                </p>
               </div>
             )}
             <div>
@@ -149,9 +143,6 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
                 name="email"
                 type="email"
                 autoComplete="email"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
                 required
                 maxLength={254}
                 value={email}
@@ -162,30 +153,19 @@ export function AuthForm({ mode, destination }: AuthFormProps) {
             </div>
             <div>
               <label htmlFor="auth-password" className="mb-1.5 block text-xs font-bold text-slate-300">Password</label>
-              <div className="relative">
-                <input
-                  id="auth-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                  required
-                  minLength={8}
-                  maxLength={128}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="cartoon-auth-input w-full rounded-2xl border-2 border-violet-200/15 bg-[#111735] px-3.5 py-3 pr-12 text-sm outline-none transition placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
-                  placeholder={isSignUp ? 'At least 8 characters' : 'Your password'}
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-xl text-slate-400 transition hover:bg-white/5 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-200"
-                >
-                  {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-                </button>
-              </div>
+              <input
+                id="auth-password"
+                name="password"
+                type="password"
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                required
+                minLength={8}
+                maxLength={128}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="cartoon-auth-input w-full rounded-2xl border-2 border-violet-200/15 bg-[#111735] px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-500 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
+                placeholder={isSignUp ? 'At least 8 characters' : 'Your password'}
+              />
               {!isSignUp && (
                 <Link href={forgotPasswordHref} className="mt-2 inline-flex text-xs font-bold text-blue-300 transition hover:text-blue-200">
                   Forgot password?
