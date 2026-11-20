@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { AlertCircle, Clock3, Crown, Medal, RefreshCw, Search, Trophy } from 'lucide-react'
 import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
+import { Badge } from '@/components/ui/badge'
 import { ARCADE_WEEKLY_PRIZE_BUDGET_HOMERO, ARCADE_WEEKLY_PRIZE_BUDGET_PEPE, ARCADE_WEEKLY_PRIZE_TIERS } from '@/lib/arcade-gameplay'
+import { DEMO_ARCADE_LEADERBOARD } from '@/lib/demo-leaderboards'
 import type { ProfileAvatarSrc } from '@/lib/profile-avatars'
 
 type LeaderboardPlayer = {
@@ -15,6 +17,7 @@ type LeaderboardPlayer = {
   prizeAmount: number
   prizeTokenSymbol: 'HOMERO' | 'PEPE'
   isCurrentUser: boolean
+  isDemo?: boolean
 }
 
 type WeeklyLeaderboardData = {
@@ -24,6 +27,7 @@ type WeeklyLeaderboardData = {
 }
 
 type ArcadeWeeklyLeaderboardProps = {
+  boardMode: 'live' | 'demo'
   data?: WeeklyLeaderboardData
   error?: unknown
   isLoading: boolean
@@ -155,6 +159,7 @@ function PlayerAvatar({ player, compact = false }: { player: LeaderboardPlayer; 
 }
 
 export function ArcadeWeeklyLeaderboard({
+  boardMode,
   data,
   error,
   isLoading,
@@ -162,10 +167,11 @@ export function ArcadeWeeklyLeaderboard({
   onRefresh,
 }: ArcadeWeeklyLeaderboardProps) {
   const { language } = useSiteLanguage()
-  const leaderboard = (data?.leaderboard ?? []).slice(0, 100)
+  const isRussian = language === 'ru'
+  const leaderboard = (boardMode === 'demo' ? DEMO_ARCADE_LEADERBOARD : data?.leaderboard ?? []).slice(0, 100)
   const [searchQuery, setSearchQuery] = useState('')
-  const showError = Boolean(error) && !data
-  const showLoading = isLoading && !data && !showError
+  const showError = boardMode === 'live' && Boolean(error) && !data
+  const showLoading = boardMode === 'live' && isLoading && !data && !showError
 
   const filteredPlayers = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -207,22 +213,30 @@ export function ArcadeWeeklyLeaderboard({
               <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-10 size-32 rounded-full bg-sky-300/10 blur-2xl" />
               <div className="relative z-10 flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <h3 id="weekly-prizes-title" className="text-base font-extrabold text-white">Fixed weekly prizes</h3>
-                  <p className="mt-1 text-sm text-white/75">Reward by final rank</p>
+                  <h3 id="weekly-prizes-title" className="text-base font-extrabold text-white">{boardMode === 'live' ? 'Fixed weekly prizes' : (isRussian ? 'Демо-результаты' : 'Demo standings')}</h3>
+                  <p className="mt-1 text-sm text-white/75">{boardMode === 'live' ? 'Reward by final rank' : (isRussian ? 'Примеры результатов · не влияют на реальные места и награды' : 'Sample results · do not affect real standings or prizes')}</p>
                 </div>
-                <div className="flex flex-wrap gap-2 text-xs text-sky-50">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">PEPE budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_PEPE.toLocaleString()} PEPE</span></span>
-                </div>
+                {boardMode === 'live' ? (
+                  <div className="flex flex-wrap gap-2 text-xs text-sky-50">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-100/20 bg-[#101a2e]/70 px-3 py-1.5"><span className="font-semibold">PEPE budget</span><span className="font-mono font-extrabold tabular-nums">{ARCADE_WEEKLY_PRIZE_BUDGET_PEPE.toLocaleString()} PEPE</span></span>
+                  </div>
+                ) : null}
               </div>
-              <ul aria-label="Weekly prize tiers" className="relative z-10 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
-                {ARCADE_WEEKLY_PRIZE_TIERS.map((tier) => (
-                  <li key={`${tier.startRank}-${tier.endRank}`} className={`flex min-h-10 items-center justify-between gap-1.5 rounded-xl border bg-gradient-to-br px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] transition-colors hover:brightness-110 sm:px-3 ${prizeTierStyle(tier.startRank)}`}>
-                    <span className="text-xs font-bold text-white/90 sm:text-sm">{formatRankRange(tier.startRank, tier.endRank)}</span>
-                    <span className="whitespace-nowrap font-mono text-xs font-extrabold tabular-nums text-white sm:text-sm">{tier.amount.toLocaleString()} {tier.tokenSymbol}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">All weekly prizes, from 1st to 100th place, are paid in PEPE; claims remain pending if reserve funds are temporarily unavailable.</p>
+              {boardMode === 'live' ? (
+                <>
+                  <ul aria-label="Weekly prize tiers" className="relative z-10 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                    {ARCADE_WEEKLY_PRIZE_TIERS.map((tier) => (
+                      <li key={`${tier.startRank}-${tier.endRank}`} className={`flex min-h-10 items-center justify-between gap-1.5 rounded-xl border bg-gradient-to-br px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] transition-colors hover:brightness-110 sm:px-3 ${prizeTierStyle(tier.startRank)}`}>
+                        <span className="text-xs font-bold text-white/90 sm:text-sm">{formatRankRange(tier.startRank, tier.endRank)}</span>
+                        <span className="whitespace-nowrap font-mono text-xs font-extrabold tabular-nums text-white sm:text-sm">{tier.amount.toLocaleString()} {tier.tokenSymbol}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="relative z-10 mt-4 text-sm leading-6 text-white/75">All weekly prizes, from 1st to 100th place, are paid in PEPE; claims remain pending if reserve funds are temporarily unavailable.</p>
+                </>
+              ) : (
+                <p role="note" className="relative z-10 mt-4 text-sm leading-6 text-amber-100/85">{isRussian ? 'Демо-участники и их результаты не связаны с аккаунтами игроков. Награды по этой таблице не начисляются.' : 'Demo participants and results are not linked to player accounts. No prizes are awarded from this board.'}</p>
+              )}
             </section>
           </div>
 
@@ -264,10 +278,10 @@ export function ArcadeWeeklyLeaderboard({
               <section aria-labelledby="weekly-podium-title" className="mt-8">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3 px-1">
                   <div>
-                    <h3 id="weekly-podium-title" className="text-lg font-black tracking-tight text-white sm:text-xl">Weekly podium</h3>
-                    <p className="mt-1 text-sm text-white/65">Top three weekly players</p>
+                    <h3 id="weekly-podium-title" className="text-lg font-black tracking-tight text-white sm:text-xl">{boardMode === 'live' ? 'Weekly podium' : (isRussian ? 'Демо-подиум' : 'Demo podium')}</h3>
+                    <p className="mt-1 text-sm text-white/65">{boardMode === 'live' ? 'Top three weekly players' : (isRussian ? 'Вымышленные примеры участников' : 'Fictional sample participants')}</p>
                   </div>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-bold text-emerald-100"><span aria-hidden="true" className="size-1.5 rounded-full bg-emerald-300" />Live standings</span>
+                  <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold ${boardMode === 'live' ? 'border-emerald-200/20 bg-emerald-300/[0.08] text-emerald-100' : 'border-amber-200/20 bg-amber-300/[0.08] text-amber-100'}`}><span aria-hidden="true" className={`size-1.5 rounded-full ${boardMode === 'live' ? 'bg-emerald-300' : 'bg-amber-200'}`} />{boardMode === 'live' ? 'Live standings' : (isRussian ? 'Демо-данные' : 'Demo data')}</span>
                 </div>
                 <div className="relative isolate overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-[#111e34] via-[#10192d] to-[#19182f] p-3 shadow-[0_20px_55px_rgba(4,9,24,0.35)] sm:p-5">
                   <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-violet-400/[0.08] blur-3xl" />
@@ -290,14 +304,19 @@ export function ArcadeWeeklyLeaderboard({
                               <PlayerAvatar player={player} />
                               <div className="min-w-0 text-left">
                                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">{placeLabel}</p>
-                                <p className="mt-1 max-w-full truncate text-base font-extrabold text-white sm:text-lg">{player.displayName}</p>
+                                <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+                                  <p className="max-w-full truncate text-base font-extrabold text-white sm:text-lg">{player.displayName}</p>
+                                  {player.isDemo ? <Badge variant="outline" className="border-amber-200/30 bg-amber-300/10 text-[10px] text-amber-100">{isRussian ? 'Демо' : 'Demo'}</Badge> : null}
+                                </div>
                               </div>
                             </div>
                             <p className="mt-4 flex items-baseline gap-1 font-mono text-2xl font-black tracking-tight tabular-nums text-white sm:text-3xl">{player.bestDistanceM.toLocaleString()} <span className="text-xs font-bold text-white/60 sm:text-sm">m</span></p>
-                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/15 px-3 py-1.5">
-                              <span className="text-xs font-semibold text-white/60">Prize</span>
-                              <span className="font-mono text-xs font-extrabold tabular-nums text-cyan-100">{player.prizeAmount.toLocaleString()} {player.prizeTokenSymbol}</span>
-                            </div>
+                            {boardMode === 'live' ? (
+                              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/15 px-3 py-1.5">
+                                <span className="text-xs font-semibold text-white/60">Prize</span>
+                                <span className="font-mono text-xs font-extrabold tabular-nums text-cyan-100">{player.prizeAmount.toLocaleString()} {player.prizeTokenSymbol}</span>
+                              </div>
+                            ) : null}
                           </div>
                         </li>
                       )
@@ -309,7 +328,7 @@ export function ArcadeWeeklyLeaderboard({
               <section aria-labelledby="top-100-title" className="mt-7">
                 <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <h3 id="top-100-title" className="text-base font-extrabold text-white">Top 100 weekly players</h3>
+                    <h3 id="top-100-title" className="text-base font-extrabold text-white">{boardMode === 'live' ? 'Top 100 weekly players' : (isRussian ? 'Демо-участники недели' : 'Weekly demo participants')}</h3>
                     <p className="mt-1 text-sm text-white/75">
                       {'Showing'} <span className="font-bold text-white">{filteredPlayers.length}</span> {'of'} <span className="font-bold text-white">{leaderboard.length}</span> {'players'}
                     </p>
@@ -337,7 +356,7 @@ export function ArcadeWeeklyLeaderboard({
                           <th scope="col" className="px-4 py-3">Rank</th>
                           <th scope="col" className="px-4 py-3">Player</th>
                           <th scope="col" className="px-4 py-3 text-right">Best result</th>
-                          <th scope="col" className="px-4 py-3 text-right">Prize</th>
+                          <th scope="col" className="px-4 py-3 text-right">{boardMode === 'live' ? 'Prize' : (isRussian ? 'Награда' : 'Prize')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-sky-100/[0.08]">
@@ -348,11 +367,12 @@ export function ArcadeWeeklyLeaderboard({
                               <div className="flex min-w-0 items-center gap-2.5">
                                 <PlayerAvatar player={player} compact />
                                 <span className="min-w-0 truncate">{player.displayName}</span>
+                                {player.isDemo ? <Badge variant="outline" className="border-amber-200/30 bg-amber-300/10 text-[10px] text-amber-100">{isRussian ? 'Демо' : 'Demo'}</Badge> : null}
                                 {player.isCurrentUser && <span className="rounded-full border border-cyan-100/20 bg-cyan-300/15 px-2 py-0.5 text-[10px] font-extrabold text-cyan-50">You</span>}
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-bold tabular-nums text-white">{player.bestDistanceM.toLocaleString()} m</td>
-                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{player.prizeAmount.toLocaleString()} {player.prizeTokenSymbol}</td>
+                            <td className="whitespace-nowrap px-4 py-2.5 text-right font-mono text-sm font-extrabold tabular-nums text-cyan-100">{boardMode === 'live' ? `${player.prizeAmount.toLocaleString()} ${player.prizeTokenSymbol}` : (isRussian ? 'Нет' : 'None')}</td>
                           </tr>
                         ))}
                       </tbody>

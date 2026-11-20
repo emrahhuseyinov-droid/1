@@ -5,6 +5,7 @@ export type ReferralLeaderboardEntry = {
   displayName: string
   avatarSrc: ProfileAvatarSrc
   successfulReferrals: number
+  isDemo?: boolean
 }
 
 export type ReferralOverview = {
