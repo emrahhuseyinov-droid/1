@@ -170,6 +170,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
   const pathname = usePathname()
   const activeSection = getDashboardSectionFromPath(pathname) ?? initialSection
   const isAdvertiserMode = activeSection === 'Advertiser'
+  const isReferralMode = activeSection === 'Referrals'
   const { language } = useSiteLanguage()
   const isRussian = language === 'ru'
   const advertiserWallet = useSWR<AdvertiserWalletHeaderSnapshot>(
@@ -239,7 +240,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
 
   return (
     <LocalizedTree>
-    <div className="cartoon-dashboard min-h-screen w-full min-w-0 overflow-x-clip bg-background text-foreground transition-colors duration-200">
+    <div className={`cartoon-dashboard min-h-screen w-full min-w-0 overflow-x-clip bg-background text-foreground transition-colors duration-200 ${isReferralMode ? 'referrals-shell' : ''}`}>
       {drawerOpen && (
         <button
           type="button"
@@ -251,7 +252,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
 
       <aside
         aria-label={isAdvertiserMode ? 'Advertiser navigation' : 'Main navigation'}
-        className={`fixed inset-y-0 left-0 z-50 flex w-[286px] flex-col border-r-2 border-violet-200/70 bg-[#fffaf0] shadow-[8px_0_35px_rgba(36,28,94,0.08)] transition-transform duration-300 dark:border-violet-300/20 dark:bg-[#151b3b] dark:shadow-[8px_0_35px_rgba(3,8,30,0.24)] ${drawerOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 z-50 flex ${isReferralMode ? 'w-[238px] flex-col border-r border-white/[0.08] bg-[#151515] shadow-none' : 'w-[286px] flex-col border-r-2 border-violet-200/70 bg-[#fffaf0] shadow-[8px_0_35px_rgba(36,28,94,0.08)] dark:border-violet-300/20 dark:bg-[#151b3b] dark:shadow-[8px_0_35px_rgba(3,8,30,0.24)]'} transition-transform duration-300 ${drawerOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
         <div className="flex items-center justify-between border-b border-violet-200/70 px-5 py-4 dark:border-violet-300/15">
           <a href="#top" className="flex items-center" aria-label="pepe.casa home">
@@ -263,7 +264,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
         <nav className="sidebar-scrollbar-hidden flex flex-1 flex-col gap-6 overflow-y-auto px-3 py-5">
           {navGroups.map((group) => (
             <section key={group.title}>
-              <h2 className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.14em] text-violet-600 dark:text-cyan-300">{group.title}</h2>
+              <h2 className={`mb-2 px-3 text-[10px] font-black uppercase tracking-[0.14em] ${isReferralMode ? 'text-white/40' : 'text-violet-600 dark:text-cyan-300'}`}>{group.title}</h2>
               <div className="space-y-1">
                 {group.links.map((link) => {
                   const { label, icon: Icon } = link
@@ -275,11 +276,11 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
                     href={link.href ?? dashboardSectionPaths[sectionKey as DashboardSection]}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => { setDrawerOpen(false); setCoinMenuOpen(false) }}
-                    className={`${navItemClassName} justify-between ${active ? 'border-cyan-100/40 bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500 font-black text-white shadow-lg shadow-indigo-950/30' : 'text-slate-600 hover:text-violet-700 dark:text-slate-300 dark:hover:text-white'}`}
+                    className={`${navItemClassName} justify-between ${active ? isReferralMode ? 'border-white/[0.08] bg-[#292929] font-black text-white shadow-none' : 'border-cyan-100/40 bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500 font-black text-white shadow-lg shadow-indigo-950/30' : 'text-slate-600 hover:text-violet-700 dark:text-slate-300 dark:hover:text-white'}`}
                   >
                     <span aria-hidden="true" className={`${navEdgeClassName} left-0.5`} />
                     <span aria-hidden="true" className={`${navEdgeClassName} right-0.5`} />
-                    <span className="relative flex items-center gap-3"><Icon size={15} /><span>{label === 'Referral Leaderboard' && isRussian ? 'Рейтинг рефералов' : label === 'Swap' ? 'TOKEN EXCHANGE' : label === 'Add funds' && isRussian ? 'Пополнить баланс' : label === 'Transfers' && isRussian ? 'Переводы' : label}</span></span>
+                    <span className="relative flex items-center gap-3"><Icon size={15} className={isReferralMode && active ? 'text-lime-300' : undefined} /><span>{label === 'Referral Leaderboard' && isRussian ? 'Рейтинг рефералов' : label === 'Swap' ? 'TOKEN EXCHANGE' : label === 'Add funds' && isRussian ? 'Пополнить баланс' : label === 'Transfers' && isRussian ? 'Переводы' : label}</span></span>
                     {badge && <span className={`relative rounded-md px-1.5 py-0.5 text-[9px] font-bold transition-colors group-hover:bg-amber-300/15 ${badge === 'return' || badge === '10%' || /^[0-9]+$/.test(badge) ? 'bg-amber-300 text-indigo-950' : 'bg-cyan-300 text-indigo-950'}`}>{badge}</span>}
                   </Link>
                 })}
@@ -287,7 +288,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
             </section>
           ))}
           {!isAdvertiserMode && <section>
-            <h2 className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.14em] text-violet-600 dark:text-cyan-300">Support</h2>
+            <h2 className={`mb-2 px-3 text-[10px] font-black uppercase tracking-[0.14em] ${isReferralMode ? 'text-white/40' : 'text-violet-600 dark:text-cyan-300'}`}>Support</h2>
             <Link href={dashboardSectionPaths['Contact support']} aria-current={activeSection === 'Contact support' ? 'page' : undefined} onClick={() => setDrawerOpen(false)} className={`${navItemClassName} justify-start gap-3 ${activeSection === 'Contact support' ? 'border-l-[3px] border-blue-500 bg-blue-50 font-bold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400'}`}>
               <span aria-hidden="true" className={`${navEdgeClassName} left-0.5`} />
               <span aria-hidden="true" className={`${navEdgeClassName} right-0.5`} />
@@ -303,8 +304,8 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
         </div>
       </aside>
 
-      <div className="min-w-0 md:ml-[286px]">
-      <header className="sticky top-0 z-30 flex h-[62px] min-w-0 items-center justify-between border-b-2 border-violet-200/70 bg-[#fffaf0]/90 px-4 backdrop-blur-xl dark:border-violet-300/15 dark:bg-[#141b3b]/90 sm:px-6">
+      <div className={`min-w-0 ${isReferralMode ? 'md:ml-[238px]' : 'md:ml-[286px]'}`}>
+      <header className={`sticky top-0 z-30 flex h-[62px] min-w-0 items-center justify-between px-4 backdrop-blur-xl sm:px-6 ${isReferralMode ? 'border-b border-white/[0.08] bg-[#0b0b0b]/95' : 'border-b-2 border-violet-200/70 bg-[#fffaf0]/90 dark:border-violet-300/15 dark:bg-[#141b3b]/90'}`}>
         <div className="flex shrink-0 items-center gap-3">
           <button type="button" aria-label="Open navigation menu" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)} className="rounded-xl p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"><Menu size={19} /></button>
           {isAdvertiserMode && <p className="hidden text-xs font-extrabold text-slate-500 dark:text-slate-300 sm:block">Advertiser wallet</p>}

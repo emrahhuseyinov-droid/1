@@ -486,6 +486,82 @@ dialog.adslab-captcha-dialog[open] {
   border-radius: 1.55rem;
 }
 
+.cartoon-dashboard.referrals-shell {
+  background-color: #0b0b0b;
+  background-image: none;
+}
+
+.cartoon-dashboard.referrals-shell > aside[aria-label] {
+  width: 238px;
+  border-color: rgb(255 255 255 / 0.08);
+  background: #151515;
+  background-image: none;
+  box-shadow: none;
+}
+
+.cartoon-dashboard.referrals-shell > aside[aria-label] > div,
+.cartoon-dashboard.referrals-shell > aside[aria-label] nav h2 {
+  border-color: rgb(255 255 255 / 0.08);
+}
+
+.cartoon-dashboard.referrals-shell > aside[aria-label] nav h2 {
+  color: rgb(255 255 255 / 0.4);
+}
+
+.cartoon-dashboard.referrals-shell > aside[aria-label] nav a[aria-current="page"] {
+  border-color: rgb(255 255 255 / 0.08);
+  background-color: #292929;
+  background-image: none;
+  box-shadow: none;
+}
+
+.cartoon-dashboard.referrals-shell > aside[aria-label] nav a[aria-current="page"] svg {
+  color: #d8ff00;
+}
+
+.cartoon-dashboard.referrals-shell > aside[aria-label] > div:last-child {
+  background: #111111;
+}
+
+.cartoon-dashboard.referrals-shell > div.min-w-0 > header {
+  border-color: rgb(255 255 255 / 0.08);
+  background-color: rgb(11 11 11 / 0.96);
+}
+
+.cartoon-dashboard.referrals-shell > div.min-w-0 > header button {
+  border-color: rgb(255 255 255 / 0.1);
+  background-color: #1b1b1b;
+  color: #eeeeee;
+}
+
+.referrals-page {
+  width: 100%;
+  max-width: none;
+  --dashboard-surface: #191919;
+  --dashboard-surface-raised: #141414;
+  --dashboard-outline: rgb(255 255 255 / 0.08);
+  --dashboard-muted: rgb(255 255 255 / 0.48);
+  --dashboard-accent: #d8ff00;
+}
+
+.cartoon-dashboard.referrals-shell .referrals-page :is(section, article, li)[class*="rounded-"][class*="border"] {
+  border-color: rgb(255 255 255 / 0.07);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.cartoon-dashboard.referrals-shell .referrals-page div[class*="rounded-"][class*="border"][class*="bg-"] {
+  border-color: rgb(255 255 255 / 0.07);
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
+  .cartoon-dashboard.referrals-shell > div.min-w-0 {
+    margin-left: 238px;
+  }
+}
+
 .cartoon-hero {
   background-image:
     radial-gradient(circle at 92% 4%, rgb(255 255 255 / 0.24) 0 2px, transparent 2.5px),
