@@ -143,7 +143,13 @@ export async function getDashboardOverview(guestId: string): Promise<DashboardOv
                                       ? 'PEPE Crush daily bonus'
                                       : row.source === 'pepe_crush_mission_reward'
                                         ? 'PEPE Crush mission reward'
-                                        : row.source === PEPE_SWAP_COMMISSION_SOURCE
+                                        : row.source === 'pepe_verse_daily'
+                                          ? 'PEPE VERSE daily reward'
+                                          : row.source === 'pepe_verse_task'
+                                            ? `PEPE VERSE task: ${row.itemId ?? 'reward'}`
+                                            : row.source === 'pepe_verse_tournament'
+                                              ? 'PEPE VERSE tournament prize'
+                                              : row.source === PEPE_SWAP_COMMISSION_SOURCE
                                           ? 'Token exchange commission'
                                           : row.source === ADVERTISER_WALLET_TRANSFER_OUT_SOURCE
                                 ? 'PEPE transfer to advertiser wallet'
