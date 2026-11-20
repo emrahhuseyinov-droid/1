@@ -69,7 +69,15 @@ const PepeCrushPage = dynamic(() => import('@/components/pepe-crush/pepe-crush-p
 const atomicUnitsPerToken = 100_000_000
 
 type AdvertiserWalletHeaderSnapshot = { advertiserBalanceAtomic: string }
+type WalletBalanceSnapshot = { balancesAtomic: Record<WalletCoinSymbol, string> }
 type NavigationLink = { label: string; icon: LucideIcon; badge?: string; section?: DashboardSection; href?: string }
+
+async function getWalletBalances(url: string): Promise<WalletBalanceSnapshot> {
+  const response = await fetch(url, { cache: 'no-store' })
+  const payload = await response.json().catch(() => null) as (WalletBalanceSnapshot & { error?: string }) | null
+  if (!response.ok || !payload?.balancesAtomic) throw new Error(payload?.error ?? 'Could not load wallet balances.')
+  return payload
+}
 
 async function getAdvertiserWalletHeader(url: string): Promise<AdvertiserWalletHeaderSnapshot> {
   const response = await fetch(url, { cache: 'no-store' })
@@ -169,15 +177,29 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
     getAdvertiserWalletHeader,
     { revalidateOnFocus: true, refreshInterval: 30_000 },
   )
+  const walletSnapshot = useSWR<WalletBalanceSnapshot>(
+    isAdvertiserMode ? null : '/api/account/balances',
+    getWalletBalances,
+    {
+      fallbackData: {
+        balancesAtomic: {
+          HOMERO: String(dashboardOverview.balancesAtomic.HOMERO),
+          PEPE: String(dashboardOverview.balancesAtomic.PEPE),
+        },
+      },
+      revalidateOnFocus: true,
+      refreshInterval: 2_000,
+    },
+  )
   const navGroups = isAdvertiserMode ? advertiserNavGroups : publisherNavGroups
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [coinMenuOpen, setCoinMenuOpen] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || DEFAULT_PROFILE_AVATAR)
   const [activeCoin, setActiveCoin] = useState<WalletCoinSymbol>('PEPE')
-  const balancesAtomic = dashboardOverview.balancesAtomic
+  const liveBalancesAtomic = walletSnapshot.data?.balancesAtomic
   const walletBalances: Record<WalletCoinSymbol, number> = {
-    HOMERO: balancesAtomic.HOMERO / atomicUnitsPerToken,
-    PEPE: balancesAtomic.PEPE / atomicUnitsPerToken,
+    HOMERO: Number(liveBalancesAtomic?.HOMERO ?? dashboardOverview.balancesAtomic.HOMERO) / atomicUnitsPerToken,
+    PEPE: Number(liveBalancesAtomic?.PEPE ?? dashboardOverview.balancesAtomic.PEPE) / atomicUnitsPerToken,
   }
   const balance = walletBalances[activeCoin]
   const exactActiveBalance = balance.toFixed(8)
@@ -321,7 +343,7 @@ export function ManualClaimPage({ initialSection, email, name, guestId, initialA
       </header>
 
       <div className="min-w-0">
-      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'PEPE Crush' ? <PepeCrushPage onBack={() => navigateTo('Dashboard')} /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
+      {activeSection === 'Dashboard' ? <DashboardPage overview={dashboardOverview} balance={balance} coin={activeCoin} onNavigate={navigateTo} /> : activeSection === 'My Wallet' ? <WalletPage balances={walletBalances} activeCoin={activeCoin} onSelectCoin={setActiveCoin} onNavigate={navigateTo} /> : activeSection === 'Swap' ? <SwapPage /> : activeSection === 'Withdraw' ? <WithdrawPage balance={walletBalances.PEPE} /> : activeSection === 'Manual Faucet' ? <ManualFaucetPage guestId={guestId} /> : activeSection === 'Arcade' ? <ArcadePage /> : activeSection === 'PEPE Crush' ? <PepeCrushPage onBack={() => navigateTo('Dashboard')} onWalletBalanceChange={(balanceAtomic) => { void walletSnapshot.mutate((current) => current ? { ...current, balancesAtomic: { ...current.balancesAtomic, PEPE: balanceAtomic } } : current, { revalidate: false }) }} onWalletBalanceRefresh={() => { void walletSnapshot.mutate() }} /> : activeSection === 'Wheel of Fortune' ? <WheelOfFortunePage /> : activeSection === 'Weekly Leaderboard' ? <ArcadeWeeklyLeaderboardPage /> : activeSection === 'Referral Leaderboard' ? <ReferralLeaderboardPage initialLeaderboard={initialReferralLeaderboard} /> : activeSection === 'View Ads' ? <ViewAdsPage /> : activeSection === 'Watch and Earn' ? <YoutubeAdsPage /> : activeSection === 'Advertiser' ? <AdvertiserPage view={advertiserView} /> : activeSection === 'Shortlinks' ? <ShortlinksPage /> : activeSection === 'Referrals' ? <ReferralsPage referralOverview={referralOverview} /> : activeSection === 'Promo Code' ? <PromoCodePage initialClaims={promoClaims} activity={promoActivity} /> : activeSection === 'Security & Wallets' ? <AccountSettingsPage name={name} email={email} avatarSrc={avatarUrl} isAdmin={isAdmin} onAvatarChange={setAvatarUrl} /> : <main id="top" className="dashboard-page-shell space-y-5">
         <header>
           <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-blue-500">Account section</p>
           <h1 className="text-2xl font-black tracking-tight sm:text-[28px]">{activeSection}</h1>
