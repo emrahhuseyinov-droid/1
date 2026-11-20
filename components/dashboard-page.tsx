@@ -9,6 +9,7 @@ import {
   Check,
   Clock3,
   Coins,
+  Gamepad2,
   ShieldCheck,
   Wallet,
 } from 'lucide-react'
@@ -80,6 +81,18 @@ export function DashboardPage({ overview, balance, onNavigate, coin }: Props) {
 
         <DailyRewardCard dailyBonus={overview.dailyBonus} />
       </div>
+
+      <section aria-labelledby="pepe-verse-launch-title" className="flex flex-col gap-4 overflow-hidden rounded-[26px] border border-fuchsia-300/25 bg-[radial-gradient(ellipse_at_85%_0%,rgba(168,85,247,0.2),transparent_42%),linear-gradient(110deg,#111b3d,#15143d_60%,#24113c)] p-5 text-white shadow-lg shadow-indigo-950/15 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex items-center gap-4">
+          <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl border border-fuchsia-300/30 bg-fuchsia-400/10 text-fuchsia-200"><Gamepad2 size={23} /></span>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-fuchsia-200">Games</p>
+            <h2 id="pepe-verse-launch-title" className="mt-1 text-lg font-black tracking-tight">PEPE VERSE</h2>
+            <p className="mt-1 text-xs text-slate-300">Play, complete verified tasks, collect rewards, and level up.</p>
+          </div>
+        </div>
+        <button type="button" onClick={() => onNavigate('PEPE VERSE')} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-fuchsia-300 px-4 py-2 text-xs font-black text-indigo-950 transition hover:bg-fuchsia-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111b3d] sm:shrink-0">Open game <ArrowRight size={14} aria-hidden="true" /></button>
+      </section>
 
       <section aria-label="Account shortcuts" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button type="button" onClick={() => onNavigate('View Ads')} className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-dashboard-outline bg-dashboard-surface p-4 text-left shadow-sm shadow-black/5 transition duration-200 hover:-translate-y-0.5 hover:border-dashboard-accent/35 hover:bg-dashboard-surface-raised hover:shadow-lg hover:shadow-blue-950/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dashboard-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
