@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import type { ReferralOverview } from '@/lib/referral-types'
 import { LocalizedTree } from '@/components/site-language-provider'
 import {
@@ -8,12 +9,15 @@ import {
   Check,
   ChevronDown,
   Copy,
-  Flame,
+  Gift,
   Link2,
+  QrCode,
   Share2,
   ShieldCheck,
+  Sparkles,
   UsersRound,
   Wallet,
+  X,
 } from 'lucide-react'
 
 type Props = { referralOverview: ReferralOverview }
@@ -23,7 +27,7 @@ function formatAtomicAmount(amount: string) {
   const atomic = BigInt(amount)
   const whole = atomic / atomicUnitsPerToken
   const fraction = String(atomic % atomicUnitsPerToken).padStart(8, '0')
-  return `${whole}.${fraction}`
+  return `${whole.toLocaleString()}.${fraction}`
 }
 
 const faqItems = [
@@ -41,10 +45,16 @@ const faqItems = [
   },
 ]
 
+function formatRate(value: number) {
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
+}
+
 export function ReferralsPage({ referralOverview }: Props) {
   const [referralLink, setReferralLink] = useState(`/?ref=${referralOverview.referralCode}`)
   const [copied, setCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
+  const [shareNotice, setShareNotice] = useState('')
 
   useEffect(() => {
     setReferralLink(`${window.location.origin}/?ref=${referralOverview.referralCode}`)
@@ -63,105 +73,218 @@ export function ReferralsPage({ referralOverview }: Props) {
     }
   }
 
+  async function inviteFriends() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join pepe.casa',
+          text: 'Join pepe.casa with my referral link',
+          url: referralLink,
+        })
+        return
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(referralLink)
+      setShareNotice('Referral link copied. Share it with your friends.')
+    } catch {
+      setShareNotice('Copy the referral link below to invite your friends.')
+    }
+    window.setTimeout(() => setShareNotice(''), 3000)
+  }
+
   const shareMessage = encodeURIComponent(`Join pepe.casa with my referral link: ${referralLink}`)
+  const rewardRate = referralOverview.referralCount > 0
+    ? Math.min(100, (referralOverview.activeReferralCount / referralOverview.referralCount) * 100)
+    : 0
+  const earnings = [
+    { token: 'PEPE', amount: referralOverview.bonusAtomicByToken.PEPE, accent: 'bg-cyan-300', text: 'text-cyan-200' },
+    { token: 'HOMERO', amount: referralOverview.bonusAtomicByToken.HOMERO, accent: 'bg-lime-300', text: 'text-lime-200' },
+  ]
+  const stats = [
+    { label: 'Total referrals', value: referralOverview.referralCount.toLocaleString(), icon: Share2, note: 'Attributed to your link' },
+    { label: 'Rewarded referrals', value: referralOverview.activeReferralCount.toLocaleString(), icon: UsersRound, note: 'Generated a bonus' },
+    { label: 'Bonus events', value: referralOverview.bonusCount.toLocaleString(), icon: Sparkles, note: 'Verified earnings events' },
+    { label: 'Referral rate', value: formatRate(rewardRate), icon: ArrowUpRight, note: 'Referrals with rewards' },
+  ]
 
   return (
     <LocalizedTree>
-    <main id="top" className="dashboard-page-shell space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[28px]">
-          <UsersRound className="text-blue-500" size={24} /> Referrals
-        </h1>
-        <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1.5 text-[9px] font-extrabold uppercase tracking-wider text-blue-500">Account referral profile</span>
-      </header>
-
-      <section className="relative overflow-hidden rounded-3xl border border-blue-400/20 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-5 text-white shadow-xl shadow-blue-900/15 sm:p-8">
-        <div className="pointer-events-none absolute -right-14 -top-16 size-56 rounded-full border-[28px] border-white/[0.06]" />
-        <div className="pointer-events-none absolute -bottom-24 right-28 size-44 rounded-full bg-cyan-300/10 blur-2xl" />
-        <div className="relative max-w-xl space-y-4">
-          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-blue-50">Referral attribution</span>
-          <h2 className="text-3xl font-black leading-[1.05] tracking-tight sm:text-4xl">Share your link.<br />Keep records together.</h2>
-          <p className="max-w-lg text-xs font-medium leading-relaxed text-blue-100 sm:text-sm">Eligible referral earnings generate a 10% site-funded bonus in the same token, without reducing the referral&apos;s reward.</p>
-
-          <div className="space-y-3 rounded-2xl border border-white/50 bg-white p-3.5 text-slate-900 shadow-lg sm:p-4">
-            <div className="flex items-center justify-between gap-3">
-              <label htmlFor="referral-link" className="text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Your referral link</label>
-              <span className="rounded-md bg-blue-100 px-2 py-1 text-[8px] font-extrabold uppercase text-blue-700">Signup attribution</span>
+      <main id="top" className="dashboard-page-shell space-y-4 sm:space-y-5">
+        <section className="relative isolate overflow-hidden rounded-[26px] border border-white/[0.08] bg-[#101111] p-5 text-white shadow-[0_24px_70px_rgba(0,0,0,0.28)] sm:p-7 lg:p-8">
+          <div className="pointer-events-none absolute -right-10 -top-16 -z-10 size-64 rounded-full bg-lime-300/[0.06] blur-3xl" />
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div className="max-w-2xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-lime-300/15 bg-lime-300/[0.07] px-3 py-1.5 text-[10px] font-semibold tracking-wide text-lime-100">
+                <Sparkles aria-hidden="true" size={13} /> Referral program
+              </div>
+              <h1 className="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Invite friends.<br className="hidden sm:block" /> Earn together.</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/55">Earn a site-funded 10% bonus on eligible referral earnings, paid in the same token. Your friend keeps their full reward.</p>
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                <button type="button" onClick={inviteFriends} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-lime-300 px-4 text-sm font-bold text-[#14170b] transition hover:bg-lime-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101111]">
+                  <UsersRound aria-hidden="true" size={16} /> Invite friends
+                </button>
+                <button type="button" onClick={copyReferralLink} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.07] px-4 text-sm font-semibold text-white transition hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101111]">
+                  {copied ? <Check aria-hidden="true" size={16} /> : <Copy aria-hidden="true" size={16} />}{copied ? 'Copied' : 'Copy link'}
+                </button>
+              </div>
+              {shareNotice && <p role="status" className="mt-3 text-xs text-lime-100">{shareNotice}</p>}
             </div>
-            <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <Link2 className="ml-1 shrink-0 text-slate-400" size={15} />
-              <input id="referral-link" type="text" readOnly value={referralLink} aria-label="Personal referral link" className="min-w-0 flex-1 bg-transparent text-[10px] font-bold text-slate-700 outline-none sm:text-xs" />
-              <button type="button" onClick={copyReferralLink} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-[10px] font-extrabold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
-                {copied ? <Check size={13} /> : <Copy size={13} />}{copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
-            {copyError && <p role="status" className="text-[10px] font-semibold text-rose-600">Could not copy automatically. Select the link and copy it manually.</p>}
-
-            <div className="border-t border-slate-100 pt-3">
-              <p className="mb-2 text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-500">Share your referral link</p>
-              <div className="grid grid-cols-3 gap-2">
-                <a href={`https://twitter.com/intent/tweet?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" aria-label="Share referral link on X" className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2.5 text-[10px] font-extrabold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"><span className="text-xs font-black">X</span><span className="hidden sm:inline">Share</span><ArrowUpRight size={12} /></a>
-                <a href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join pepe.casa with my referral link')}`} target="_blank" rel="noopener noreferrer" aria-label="Share referral link on Telegram" className="flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-3 py-2.5 text-[10px] font-extrabold text-white transition hover:bg-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"><span className="text-xs font-black">TG</span><span className="hidden sm:inline">Share</span><ArrowUpRight size={12} /></a>
-                <a href={`https://wa.me/?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" aria-label="Share referral link on WhatsApp" className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-[10px] font-extrabold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"><span className="text-xs font-black">WA</span><span className="hidden sm:inline">Share</span><ArrowUpRight size={12} /></a>
+            <div aria-hidden="true" className="hidden size-32 shrink-0 items-center justify-center rounded-[28px] border border-white/[0.08] bg-white/[0.035] text-lime-200/90 sm:flex lg:size-36">
+              <div className="relative flex size-20 items-center justify-center rounded-3xl border border-lime-200/20 bg-lime-200/[0.08]">
+                <UsersRound size={38} strokeWidth={1.35} />
+                <span className="absolute -right-2 -top-2 flex size-8 items-center justify-center rounded-xl border border-[#101111] bg-lime-300 text-[#14170b]"><Gift size={15} /></span>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section aria-label="Referral statistics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-        {[
-          { label: 'Total referrals', icon: UsersRound, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', value: String(referralOverview.referralCount) },
-          { label: 'Rewarded referrals', icon: Flame, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', value: String(referralOverview.activeReferralCount) },
-          { label: 'Bonus events', icon: Wallet, iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-500', value: String(referralOverview.bonusCount) },
-          { label: 'Bonus balance', icon: Wallet, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', value: `${formatAtomicAmount(referralOverview.bonusAtomicByToken.HOMERO)} HOMERO · ${formatAtomicAmount(referralOverview.bonusAtomicByToken.PEPE)} PEPE` },
-        ].map(({ label, icon: Icon, iconBg, iconColor, value }) => (
-          <article key={label} className="flex min-h-[88px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-[#111a2b] sm:p-4">
-            <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg} ${iconColor}`}><Icon size={17} /></span>
-            <div className="min-w-0 flex-1">
-              <p className="whitespace-normal break-words text-[9px] font-extrabold uppercase leading-snug tracking-wide text-slate-400">{label}</p>
-              <p className={`mt-1 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 break-words font-black leading-tight ${label === 'Bonus balance' ? 'text-[10px] sm:text-xs' : 'text-base'}`}>
-                {value}
-              </p>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <aside className="flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5 sm:p-4">
-        <ShieldCheck className="mt-0.5 shrink-0 text-emerald-500" size={17} />
-        <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm"><strong className="font-extrabold">Active referral program.</strong></p>
-      </aside>
-
-      <section className="space-y-3">
-        <div className="text-center"><h2 className="text-base font-black sm:text-lg">Referral status</h2><p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 sm:text-sm">The site funds a 10% bonus in the same token for eligible referral earnings.</p></div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          {[
-            { icon: Share2, iconBg: 'bg-blue-500/10', iconColor: 'text-blue-500', title: '1. Share your link', text: 'A new account can carry your referral code through sign-up.' },
-            { icon: Flame, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', title: '2. Sign-ups are attributed', text: 'Referral attribution is recorded on the persistent account profile.' },
-            { icon: Wallet, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', title: '3. Earn a 10% bonus', text: 'The platform funds the bonus separately; it does not reduce what your referral earns.' },
-          ].map(({ icon: Icon, iconBg, iconColor, title, text }) => (
-            <article key={title} className="rounded-2xl border border-slate-200 bg-white p-5 text-center dark:border-slate-800 dark:bg-[#111a2b] sm:p-6">
-              <span className={`mx-auto flex size-11 items-center justify-center rounded-full ${iconBg} ${iconColor}`}><Icon size={20} /></span>
-              <h3 className="mt-3 text-xs font-extrabold">{title}</h3>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">{text}</p>
+        <section aria-label="Referral statistics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map(({ label, value, icon: Icon, note }) => (
+            <article key={label} className="min-w-0 rounded-2xl border border-white/[0.07] bg-[#151616] p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.045] text-lime-200"><Icon aria-hidden="true" size={17} /></span>
+              </div>
+              <p className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-[28px]">{value}</p>
+              <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                <h2 className="text-xs font-medium text-white/70">{label}</h2>
+                <span className="text-[10px] text-white/50">{note}</span>
+              </div>
             </article>
           ))}
-        </div>
-      </section>
+        </section>
 
-      <section className="space-y-2 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#111a2b] sm:p-6">
-        <h2 className="mb-3 text-sm font-black">Frequently asked questions</h2>
-        {faqItems.map(({ question, answer }) => (
-          <details key={question} className="group rounded-2xl border border-slate-100 p-3.5 transition open:bg-slate-50 dark:border-slate-800 dark:open:bg-slate-900/50 sm:p-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-bold marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-              <span>{question}</span><ChevronDown size={15} className="shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
-            </summary>
-            <p className="mt-3 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 sm:text-xs">{answer}</p>
-          </details>
-        ))}
-      </section>
-    </main>
+        <section aria-labelledby="referral-link-title" className="rounded-2xl border border-white/[0.07] bg-[#151616] p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 id="referral-link-title" className="text-sm font-semibold text-white">Your referral link</h2>
+              <p className="mt-1 text-xs text-white/45">Share this link to connect new accounts to your profile.</p>
+            </div>
+            <span className="rounded-lg border border-lime-200/10 bg-lime-200/[0.06] px-2.5 py-1.5 font-mono text-[10px] font-semibold tracking-wider text-lime-100">{referralOverview.referralCode}</span>
+          </div>
+          <div className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row">
+            <label htmlFor="referral-link" className="sr-only">Personal referral link</label>
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/[0.07] bg-[#1c1d1d] px-3.5">
+              <Link2 aria-hidden="true" className="shrink-0 text-white/50" size={16} />
+              <input id="referral-link" type="text" readOnly value={referralLink} className="min-h-11 min-w-0 flex-1 bg-transparent text-xs text-white/70 outline-none sm:text-sm" />
+            </div>
+            <button type="button" onClick={copyReferralLink} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-lime-300 px-4 text-xs font-bold text-[#14170b] transition hover:bg-lime-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#151616]">
+              {copied ? <Check aria-hidden="true" size={15} /> : <Copy aria-hidden="true" size={15} />}{copied ? 'Copied' : 'Copy link'}
+            </button>
+          </div>
+          {copyError && <p role="status" className="mt-2 text-xs font-medium text-rose-300">Could not copy automatically. Select the link and copy it manually.</p>}
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3.5">
+            <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-white/50">Share via</span>
+            <a href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join pepe.casa with my referral link')}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.045] px-3.5 text-xs font-medium text-white/75 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><Share2 aria-hidden="true" size={14} />Telegram</a>
+            <a href={`https://twitter.com/intent/tweet?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.045] px-3.5 text-xs font-medium text-white/75 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><ArrowUpRight aria-hidden="true" size={14} />X</a>
+            <a href={`https://wa.me/?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.045] px-3.5 text-xs font-medium text-white/75 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><ArrowUpRight aria-hidden="true" size={14} />WhatsApp</a>
+            <button type="button" aria-expanded={qrOpen} aria-controls="referral-qr-panel" onClick={() => setQrOpen((open) => !open)} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/[0.07] bg-white/[0.045] px-3.5 text-xs font-medium text-white/75 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><QrCode aria-hidden="true" size={14} />{qrOpen ? 'Hide QR code' : 'QR code'}</button>
+          </div>
+          {qrOpen && <div id="referral-qr-panel" className="mt-4 flex flex-col items-center gap-4 rounded-xl border border-white/[0.07] bg-[#1c1d1d] p-4 text-center sm:flex-row sm:text-left">
+            <div className="rounded-xl bg-white p-3"><QRCodeSVG value={referralLink} size={144} level="M" includeMargin /></div>
+            <div className="max-w-sm">
+              <h3 className="text-sm font-semibold text-white">Scan to join</h3>
+              <p className="mt-1 text-xs leading-5 text-white/45">This QR code opens your referral link. Friends can scan it with their phone camera.</p>
+              <button type="button" onClick={() => setQrOpen(false)} className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-white/60 transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><X aria-hidden="true" size={14} />Close</button>
+            </div>
+          </div>}
+        </section>
+
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)]">
+          <section aria-labelledby="referral-performance-title" className="rounded-2xl border border-white/[0.07] bg-[#151616] p-4 sm:p-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 id="referral-performance-title" className="text-sm font-semibold text-white">Referral performance</h2>
+                <p className="mt-1 text-xs text-white/55">Your account&apos;s verified referral activity</p>
+              </div>
+              <span className="rounded-full border border-white/[0.07] px-2.5 py-1 text-[10px] font-medium text-white/45">All time</span>
+            </div>
+            <div className="mt-5 grid gap-2.5 sm:grid-cols-3">
+              {[
+                { label: 'Attributed accounts', value: referralOverview.referralCount.toLocaleString(), icon: Link2 },
+                { label: 'Rewarded referrals', value: referralOverview.activeReferralCount.toLocaleString(), icon: UsersRound },
+                { label: 'Bonus events', value: referralOverview.bonusCount.toLocaleString(), icon: Sparkles },
+              ].map(({ label, value, icon: Icon }) => (
+                <div key={label} className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-3.5">
+                  <div className="flex items-center gap-2 text-white/55"><Icon aria-hidden="true" size={14} /><span className="text-[10px] font-medium">{label}</span></div>
+                  <p className="mt-3 text-xl font-semibold tracking-tight text-white">{value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3.5">
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <span className="text-white/65">Attributed → rewarded</span>
+                <span className="font-semibold text-lime-100">{formatRate(rewardRate)}</span>
+              </div>
+              <div role="progressbar" aria-label="Share of referrals with a bonus" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(rewardRate)} className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+                <div className="h-full rounded-full bg-lime-300 transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${rewardRate}%` }} />
+              </div>
+              <p className="mt-2 text-[10px] text-white/50">Based on {referralOverview.referralCount.toLocaleString()} attributed accounts</p>
+            </div>
+            <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-emerald-300/10 bg-emerald-300/[0.04] p-3">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-200" size={15} />
+              <p className="text-[11px] leading-5 text-white/55">Only eligible earnings verified by the server create referral bonuses. Sign-up attribution stays attached to your account.</p>
+            </div>
+          </section>
+
+          <section aria-labelledby="earnings-breakdown-title" className="rounded-2xl border border-white/[0.07] bg-[#151616] p-4 sm:p-5">
+            <div>
+              <h2 id="earnings-breakdown-title" className="text-sm font-semibold text-white">Earnings breakdown</h2>
+              <p className="mt-1 text-xs text-white/55">Bonus balance by token</p>
+            </div>
+            <div className="mt-5 flex flex-col gap-3">
+              {earnings.map(({ token, amount, accent, text }) => (
+                <div key={token} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3.5">
+                  <div className="flex items-center gap-2.5"><span className={`size-2.5 rounded-full ${accent}`} /><span className="text-xs font-medium text-white/65">{token}</span></div>
+                  <span className={`break-all text-right font-mono text-xs font-semibold ${text}`}>{formatAtomicAmount(amount)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl border border-lime-200/10 bg-lime-200/[0.04] p-3.5">
+              <div className="flex items-center gap-2 text-lime-100"><Wallet aria-hidden="true" size={15} /><span className="text-xs font-semibold">10% referral bonus</span></div>
+              <p className="mt-2 text-[11px] leading-5 text-white/45">Bonuses are funded by pepe.casa in the same token as the eligible referral earnings.</p>
+            </div>
+            <p className="mt-3 text-[10px] leading-4 text-white/50">Token balances are shown separately and are not combined into a single value.</p>
+          </section>
+        </div>
+
+        <section aria-labelledby="referral-steps-title" className="rounded-2xl border border-white/[0.07] bg-[#151616] p-4 sm:p-5">
+          <div className="text-center">
+            <h2 id="referral-steps-title" className="text-sm font-semibold text-white">How it works</h2>
+            <p className="mt-1 text-xs text-white/55">Three simple steps to earn together</p>
+          </div>
+          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
+            {[
+              { icon: Share2, title: '1. Share your link', text: 'A new account can carry your referral code through sign-up.' },
+              { icon: UsersRound, title: '2. Invite a friend', text: 'Referral attribution is saved to the account profile.' },
+              { icon: Gift, title: '3. Earn a bonus', text: 'Receive 10% of eligible earnings, funded by the platform.' },
+            ].map(({ icon: Icon, title, text }) => (
+              <article key={title} className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-4">
+                <span className="flex size-9 items-center justify-center rounded-full border border-lime-200/10 bg-lime-200/[0.06] text-lime-200"><Icon aria-hidden="true" size={16} /></span>
+                <h3 className="mt-3 text-xs font-semibold text-white/80">{title}</h3>
+                <p className="mt-1.5 text-[11px] leading-5 text-white/55">{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="referral-faq-title" className="rounded-2xl border border-white/[0.07] bg-[#151616] p-4 sm:p-5">
+          <h2 id="referral-faq-title" className="mb-3 text-sm font-semibold text-white">Frequently asked questions</h2>
+          <div className="flex flex-col gap-2">
+            {faqItems.map(({ question, answer }) => (
+              <details key={question} className="group rounded-xl border border-white/[0.06] p-3.5 transition open:bg-white/[0.025] sm:p-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-medium text-white/75 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200">
+                  <span>{question}</span><ChevronDown aria-hidden="true" size={15} className="shrink-0 text-white/50 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="mt-3 text-[11px] leading-5 text-white/45 sm:text-xs">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </main>
     </LocalizedTree>
   )
 }
