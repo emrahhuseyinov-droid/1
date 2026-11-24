@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import type { ReferralOverview } from '@/lib/referral-types'
-import { LocalizedTree } from '@/components/site-language-provider'
+import { LocalizedTree, useSiteLanguage } from '@/components/site-language-provider'
 import {
+  ArrowDownRight,
   ArrowUpRight,
   Check,
   ChevronDown,
@@ -30,6 +31,19 @@ function formatAtomicAmount(amount: string) {
   return `${whole.toLocaleString()}.${fraction}`
 }
 
+function formatRate(value: number) {
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
+}
+
+function formatRussianFriendCount(value: number) {
+  const lastTwoDigits = value % 100
+  const lastDigit = value % 10
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return 'друзей'
+  if (lastDigit === 1) return 'друг'
+  if (lastDigit >= 2 && lastDigit <= 4) return 'друга'
+  return 'друзей'
+}
+
 const faqItems = [
   {
     question: 'When are referral rewards credited?',
@@ -45,11 +59,29 @@ const faqItems = [
   },
 ]
 
-function formatRate(value: number) {
-  return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`
+function ReferralStat({ label, value, note, icon: Icon, tone }: {
+  label: string
+  value: string
+  note: string
+  icon: typeof UsersRound
+  tone: string
+}) {
+  return (
+    <article className="group flex min-w-0 flex-col justify-between rounded-[22px] border border-[#e9e2d8] bg-[#fffdf8] p-4 shadow-[0_7px_22px_rgba(51,35,47,0.035)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(51,35,47,0.08)] sm:min-h-[148px] sm:p-5 motion-reduce:transform-none motion-reduce:transition-none">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-semibold leading-5 text-[#756d70] sm:text-xs">{label}</p>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${tone}`}><Icon aria-hidden="true" size={16} /></span>
+      </div>
+      <div className="mt-5 min-w-0">
+        <p className="truncate text-[27px] font-semibold leading-none tracking-[-0.055em] text-[#29232c] sm:text-[32px]">{value}</p>
+        <p className="mt-2 text-[10px] leading-4 text-[#948b8c]">{note}</p>
+      </div>
+    </article>
+  )
 }
 
 export function ReferralsPage({ referralOverview }: Props) {
+  const { language } = useSiteLanguage()
   const [referralLink, setReferralLink] = useState(`/?ref=${referralOverview.referralCode}`)
   const [copied, setCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
@@ -73,12 +105,15 @@ export function ReferralsPage({ referralOverview }: Props) {
     }
   }
 
+  const inviteTitle = language === 'ru' ? 'Присоединяйтесь к pepe.casa' : 'Join pepe.casa'
+  const inviteText = language === 'ru' ? 'Присоединяйтесь к pepe.casa по моей реферальной ссылке' : 'Join pepe.casa with my referral link'
+
   async function inviteFriends() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join pepe.casa',
-          text: 'Join pepe.casa with my referral link',
+          title: inviteTitle,
+          text: inviteText,
           url: referralLink,
         })
         return
@@ -96,217 +131,207 @@ export function ReferralsPage({ referralOverview }: Props) {
     window.setTimeout(() => setShareNotice(''), 3000)
   }
 
-  const shareMessage = encodeURIComponent(`Join pepe.casa with my referral link: ${referralLink}`)
+  const shareMessage = encodeURIComponent(`${inviteText}: ${referralLink}`)
   const rewardRate = referralOverview.referralCount > 0
     ? Math.min(100, (referralOverview.activeReferralCount / referralOverview.referralCount) * 100)
     : 0
-  const earnings = [
-    { token: 'PEPE', amount: referralOverview.bonusAtomicByToken.PEPE, accent: 'bg-cyan-300', text: 'text-cyan-200' },
-    { token: 'HOMERO', amount: referralOverview.bonusAtomicByToken.HOMERO, accent: 'bg-lime-300', text: 'text-lime-200' },
-  ]
   const stats = [
-    { label: 'Total referrals', value: referralOverview.referralCount.toLocaleString(), icon: UsersRound, note: 'Joined with your link' },
-    { label: 'Rewarded referrals', value: referralOverview.activeReferralCount.toLocaleString(), icon: Gift, note: 'Earned a bonus' },
-    { label: 'Bonus events', value: referralOverview.bonusCount.toLocaleString(), icon: Sparkles, note: 'Verified activity' },
-    { label: 'PEPE bonus total', value: formatAtomicAmount(referralOverview.bonusAtomicByToken.PEPE), icon: Wallet, note: 'Referral earnings' },
+    { label: 'People you invited', value: referralOverview.referralCount.toLocaleString(), icon: UsersRound, note: 'Joined through your link', tone: 'bg-[#f9e7df] text-[#bd6558]' },
+    { label: 'Friends earning', value: referralOverview.activeReferralCount.toLocaleString(), icon: Gift, note: 'Already earned a bonus', tone: 'bg-[#eee7f5] text-[#755b8d]' },
+    { label: 'Bonus moments', value: referralOverview.bonusCount.toLocaleString(), icon: Sparkles, note: 'Verified reward events', tone: 'bg-[#f8edd0] text-[#a57928]' },
+    { label: 'PEPE earned', value: formatAtomicAmount(referralOverview.bonusAtomicByToken.PEPE), icon: Wallet, note: 'Your referral rewards', tone: 'bg-[#dff1e8] text-[#3b8064]' },
+  ]
+  const earnings = [
+    { token: 'PEPE', amount: referralOverview.bonusAtomicByToken.PEPE, color: 'bg-[#ed8f79]', text: 'text-[#a95143]' },
+    { token: 'HOMERO', amount: referralOverview.bonusAtomicByToken.HOMERO, color: 'bg-[#8c73a8]', text: 'text-[#69517f]' },
   ]
 
   return (
     <LocalizedTree>
-      <main id="top" className="dashboard-page-shell referrals-page max-w-none w-full space-y-4 rounded-[22px] border border-white/[0.08] bg-[#101010] p-3 text-white before:hidden after:hidden sm:space-y-5 sm:p-4 lg:p-5">
-        <section className="referral-hero relative isolate flex min-h-[250px] items-center overflow-hidden rounded-[18px] border border-white/[0.08] bg-[#131513] px-5 py-7 sm:min-h-[280px] sm:px-8 lg:px-10">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_77%_48%,rgba(216,255,0,0.13),transparent_32%),radial-gradient(ellipse_at_15%_0%,rgba(255,255,255,0.035),transparent_46%),linear-gradient(110deg,rgba(255,255,255,0.018),transparent_62%)]" />
-          <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-[26%] hidden w-px bg-gradient-to-b from-transparent via-white/[0.08] to-transparent lg:block" />
-          <div className="relative z-10 max-w-[690px]">
-            <p className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-lime-200 sm:text-[11px]">
-              <span aria-hidden="true" className="size-1.5 rounded-full bg-lime-300 shadow-[0_0_12px_rgba(216,255,0,0.75)]" />
-              Referral program <span className="text-white/25">/</span> grow together
-            </p>
-            <h1 className="max-w-[620px] text-[30px] font-semibold leading-[1.08] tracking-[-0.045em] text-white sm:text-[42px] lg:text-[48px]">Invite friends.<br className="hidden sm:block" /> Earn crypto together.</h1>
-            <p className="mt-3 max-w-[475px] text-[13px] leading-6 text-white/55 sm:text-sm">Earn a site-funded 10% bonus on eligible referral rewards. Your friends keep every bit of their earnings.</p>
-            <div className="mt-6 flex flex-wrap gap-2.5">
-              <button type="button" onClick={inviteFriends} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-lime-300 px-5 text-xs font-bold text-[#17190c] shadow-[0_8px_24px_rgba(216,255,0,0.13)] transition hover:-translate-y-0.5 hover:bg-lime-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131513] motion-reduce:transition-none motion-reduce:hover:transform-none">
-                <UsersRound aria-hidden="true" size={15} /> Invite friends <ArrowUpRight aria-hidden="true" size={14} />
+      <main id="top" className="referrals-page mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-3 pb-8 pt-4 sm:gap-6 sm:px-5 sm:pt-6 lg:px-8">
+        <section aria-labelledby="referrals-title" className="relative isolate grid min-h-[330px] overflow-hidden rounded-[30px] border border-[#eee3d7] bg-[#f4ecdf] shadow-[0_18px_50px_rgba(22,14,25,0.13)] lg:grid-cols-[1.15fr_0.85fr]">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_85%_18%,rgba(236,149,127,0.30),transparent_32%),radial-gradient(ellipse_at_5%_100%,rgba(149,125,174,0.14),transparent_43%)]" />
+          <div className="relative z-10 flex flex-col items-start justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#d8cbbd] bg-white/55 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[#766d70] sm:text-[10px]">
+              <span className="size-1.5 rounded-full bg-[#dd806f]" /> pepe.casa · referral circle
+            </span>
+            <h1 id="referrals-title" className="mt-5 max-w-[620px] text-[38px] font-semibold leading-[0.98] tracking-[-0.065em] text-[#302633] sm:text-[54px] lg:text-[64px]">Invite friends.<br /><span className="font-serif font-medium italic text-[#a45c76]">Earn together.</span></h1>
+            <p className="mt-4 max-w-[430px] text-[13px] leading-6 text-[#70666a] sm:text-sm sm:leading-7">Bring your people to pepe.casa. When they earn, you do too — with a platform-funded 10% bonus.</p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button type="button" onClick={inviteFriends} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#32263a] px-5 text-xs font-semibold text-[#fff9ef] shadow-[0_9px_18px_rgba(50,38,58,0.18)] transition hover:-translate-y-0.5 hover:bg-[#493650] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#755b8d] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4ecdf] motion-reduce:transform-none motion-reduce:transition-none">
+                Invite your circle <ArrowUpRight aria-hidden="true" size={15} />
               </button>
-              <button type="button" onClick={copyReferralLink} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.045] px-4 text-xs font-semibold text-white/85 transition hover:border-white/20 hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131513]">
-                {copied ? <Check aria-hidden="true" size={15} /> : <Copy aria-hidden="true" size={15} />}{copied ? 'Copied' : 'Copy link'}
-              </button>
+              <span className="inline-flex items-center gap-2 text-[11px] font-medium text-[#756a6e]"><Gift aria-hidden="true" size={15} className="text-[#b96868]" /> Your friends keep 100% of their earnings</span>
             </div>
-            {shareNotice && <p role="status" className="mt-2 text-xs text-lime-100">{shareNotice}</p>}
+            {shareNotice && <p role="status" className="mt-3 text-xs font-medium text-[#496f5a]">{shareNotice}</p>}
           </div>
-          <div aria-hidden="true" className="pointer-events-none absolute -right-5 top-1/2 hidden size-[270px] -translate-y-1/2 sm:block lg:right-5 lg:size-[310px]">
-            <div className="absolute inset-8 rounded-full border border-lime-200/[0.13]" />
-            <div className="absolute inset-[52px] rounded-full border border-white/[0.06]" />
-            <img src="/images/referral-hero.png" alt="" className="relative size-full object-contain opacity-90" />
+          <div aria-hidden="true" className="relative min-h-[200px] overflow-hidden lg:min-h-full">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_56%_48%,rgba(255,255,255,0.52),transparent_41%)]" />
+            <div className="absolute left-1/2 top-1/2 size-[250px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#b99bb1]/35 sm:size-[310px]" />
+            <div className="absolute left-1/2 top-1/2 size-[190px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[#bb8d8a]/40 sm:size-[238px]" />
+            <div className="absolute left-1/2 top-1/2 flex size-[112px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-[7px] border-[#f8f1e8] bg-[#32263a] text-center text-[#fff8ed] shadow-[0_15px_36px_rgba(51,35,47,0.2)] sm:size-[132px]">
+              <span className="text-[32px] font-semibold leading-none tracking-[-0.07em] sm:text-[38px]">10%</span>
+              <span className="mt-1 text-[8px] font-bold uppercase tracking-[0.18em] text-[#e7c9d1]">for your circle</span>
+            </div>
+            <span className="absolute left-[15%] top-[28%] flex size-12 items-center justify-center rounded-[17px] bg-[#e7b7a4] text-[#543944] shadow-[0_8px_18px_rgba(88,61,69,0.12)] sm:left-[18%] sm:top-[21%] sm:size-[58px]"><UsersRound size={21} /></span>
+            <span className="absolute right-[15%] top-[23%] flex size-11 items-center justify-center rounded-full bg-[#c9b6d8] text-[#493954] shadow-[0_8px_18px_rgba(88,61,69,0.12)] sm:right-[16%] sm:top-[19%] sm:size-[54px]"><Sparkles size={19} /></span>
+            <span className="absolute bottom-[22%] left-[19%] flex size-10 items-center justify-center rounded-full bg-[#e8d49e] text-[#62513a] shadow-[0_8px_18px_rgba(88,61,69,0.12)] sm:bottom-[19%] sm:left-[21%] sm:size-[50px]"><Gift size={18} /></span>
+            <span className="absolute bottom-[19%] right-[18%] flex size-12 items-center justify-center rounded-[17px] bg-[#a8c8b4] text-[#365747] shadow-[0_8px_18px_rgba(88,61,69,0.12)] sm:bottom-[18%] sm:right-[17%] sm:size-[56px]"><Wallet size={20} /></span>
+            <span className="absolute right-[11%] top-[49%] size-2 rounded-full bg-[#d68472] sm:right-[12%]" />
+            <span className="absolute left-[12%] top-[54%] size-2 rounded-full bg-[#9678a8] sm:left-[13%]" />
+            <span className="absolute bottom-[9%] left-[48%] size-1.5 rounded-full bg-[#b38a4a]" />
+            <span className="absolute bottom-5 right-6 hidden text-[9px] font-semibold uppercase tracking-[0.18em] text-[#8f7f80] sm:block">A little more, together</span>
           </div>
-          <div aria-hidden="true" className="pointer-events-none absolute bottom-5 right-7 hidden font-mono text-[9px] tracking-[0.2em] text-white/25 lg:block">PEPE.CASA · REFERRALS</div>
         </section>
 
-        <section aria-label="Referral statistics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map(({ label, value, icon: Icon, note }, index) => (
-            <article key={label} className="group relative flex min-h-[150px] min-w-0 flex-col justify-between overflow-hidden rounded-[14px] border border-white/[0.08] bg-[#171817] p-4 transition duration-200 hover:border-white/[0.14] hover:bg-[#1a1b19] sm:min-h-[164px] sm:p-5">
-              <span aria-hidden="true" className="pointer-events-none absolute -right-5 -top-7 size-24 rounded-full border border-white/[0.04] transition-transform duration-300 group-hover:scale-110" />
-              <div className="flex items-center justify-between">
-                <span className="flex size-9 items-center justify-center rounded-full border border-white/[0.09] bg-white/[0.045] text-lime-200"><Icon aria-hidden="true" size={16} /></span>
-                <span className="font-mono text-[9px] tracking-[0.16em] text-white/25">0{index + 1}</span>
-              </div>
-              <div className="relative min-w-0">
-                <p className={`truncate font-semibold leading-none tracking-[-0.04em] text-white ${label === 'PEPE bonus total' ? 'text-lg sm:text-xl' : 'text-[28px] sm:text-[32px]'}`}>{value}</p>
-                <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                  <h2 className="text-xs font-semibold text-white/80">{label}</h2>
-                  <span className="text-[10px] text-white/38">{note}</span>
+        <section aria-label="Referral statistics" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          {stats.map((stat) => <ReferralStat key={stat.label} {...stat} />)}
+        </section>
+
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)]">
+          <section aria-labelledby="referral-link-title" className="relative overflow-hidden rounded-[26px] bg-[#302633] p-5 text-[#fff9ef] shadow-[0_16px_38px_rgba(22,14,25,0.17)] sm:p-7">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full border border-white/[0.08]" />
+            <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-12 size-48 rounded-full border border-white/[0.08]" />
+            <div className="relative">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#e6b7ac]">Your invitation</p>
+                  <h2 id="referral-link-title" className="mt-2 text-xl font-semibold tracking-[-0.04em] sm:text-2xl">Your link, your people</h2>
+                  <p className="mt-1.5 max-w-md text-xs leading-5 text-white/60">Pass it along. Every new friend who joins is connected to your circle.</p>
                 </div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-[#f3d8c9]"><Link2 size={13} />{referralOverview.referralCode}</span>
               </div>
-            </article>
-          ))}
-        </section>
-
-        <section aria-labelledby="referral-link-title" className="relative overflow-hidden rounded-[14px] border border-white/[0.08] bg-[#171817] p-4 sm:p-6">
-          <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-[radial-gradient(ellipse_at_100%_0%,rgba(216,255,0,0.055),transparent_62%)]" />
-          <div className="relative flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-lime-200/[0.08] text-lime-200"><Link2 aria-hidden="true" size={15} /></span>
-                <h2 id="referral-link-title" className="text-sm font-semibold tracking-tight text-white sm:text-base">Your referral link</h2>
-              </div>
-              <p className="mt-2 text-xs text-white/45">Share your unique link and start earning together.</p>
-            </div>
-            <span className="rounded-lg border border-lime-200/15 bg-lime-200/[0.06] px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.12em] text-lime-100">CODE&nbsp; {referralOverview.referralCode}</span>
-          </div>
-          <div className="relative mt-4 flex min-w-0 flex-col gap-2 sm:flex-row">
-            <label htmlFor="referral-link" className="sr-only">Personal referral link</label>
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/[0.08] bg-[#101110] px-3.5 sm:px-4">
-              <Link2 aria-hidden="true" className="shrink-0 text-white/40" size={16} />
-              <input id="referral-link" type="text" readOnly value={referralLink} className="min-h-12 min-w-0 flex-1 bg-transparent text-xs text-white/70 outline-none sm:text-sm" />
-            </div>
-            <button type="button" onClick={copyReferralLink} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-lime-300 px-5 text-xs font-bold text-[#14170b] transition hover:bg-lime-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#171817]">
-              {copied ? <Check aria-hidden="true" size={15} /> : <Copy aria-hidden="true" size={15} />}{copied ? 'Copied' : 'Copy link'}
-            </button>
-          </div>
-          {copyError && <p role="status" className="relative mt-2 text-xs font-medium text-rose-300">Could not copy automatically. Select the link and copy it manually.</p>}
-          <div className="relative mt-4 flex flex-wrap items-center gap-2 border-t border-white/[0.07] pt-3.5">
-            <span className="mr-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/38">Share via</span>
-            <a href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join pepe.casa with my referral link')}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-xs font-medium text-white/75 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><Share2 aria-hidden="true" size={14} />Telegram</a>
-            <a href={`https://twitter.com/intent/tweet?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-xs font-medium text-white/75 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><ArrowUpRight aria-hidden="true" size={14} />X</a>
-            <a href={`https://wa.me/?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-xs font-medium text-white/75 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><ArrowUpRight aria-hidden="true" size={14} />WhatsApp</a>
-            <button type="button" aria-expanded={qrOpen} aria-controls="referral-qr-panel" onClick={() => setQrOpen((open) => !open)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.035] px-3 text-xs font-medium text-white/75 transition hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><QrCode aria-hidden="true" size={14} />{qrOpen ? 'Hide QR code' : 'QR code'}</button>
-          </div>
-          {qrOpen && <div id="referral-qr-panel" className="relative mt-4 flex flex-col items-center gap-4 rounded-xl border border-white/[0.08] bg-[#101110] p-4 text-center sm:flex-row sm:text-left">
-            <div className="rounded-lg bg-white p-3"><QRCodeSVG value={referralLink} size={144} level="M" includeMargin /></div>
-            <div className="max-w-sm">
-              <h3 className="text-sm font-semibold text-white">Scan to join</h3>
-              <p className="mt-1 text-xs leading-5 text-white/45">This QR code opens your referral link. Friends can scan it with their phone camera.</p>
-              <button type="button" onClick={() => setQrOpen(false)} className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-white/60 transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200"><X aria-hidden="true" size={14} />Close</button>
-            </div>
-          </div>}
-        </section>
-
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.85fr)]">
-          <section aria-labelledby="referral-performance-title" className="rounded-[14px] border border-white/[0.08] bg-[#171817] p-4 sm:p-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-lime-200/75">Overview</p>
-                <h2 id="referral-performance-title" className="text-base font-semibold tracking-tight text-white">Referral performance</h2>
-                <p className="mt-1 text-xs text-white/45">A snapshot of your verified referral activity</p>
-              </div>
-              <span className="rounded-lg border border-white/[0.08] bg-white/[0.025] px-3 py-1.5 text-[10px] font-medium text-white/45">All time</span>
-            </div>
-            <div className="mt-5 grid gap-2 sm:grid-cols-3">
-              {[
-                { label: 'Attributed accounts', value: referralOverview.referralCount.toLocaleString(), icon: Link2 },
-                { label: 'Rewarded referrals', value: referralOverview.activeReferralCount.toLocaleString(), icon: UsersRound },
-                { label: 'Bonus events', value: referralOverview.bonusCount.toLocaleString(), icon: Sparkles },
-              ].map(({ label, value, icon: Icon }) => (
-                <div key={label} className="rounded-xl border border-white/[0.06] bg-[#111211] p-3.5 sm:p-4">
-                  <div className="flex items-center gap-2 text-white/45"><Icon aria-hidden="true" size={14} /><span className="text-[10px] font-medium">{label}</span></div>
-                  <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-white">{value}</p>
+              <div className="mt-5 flex min-w-0 flex-col gap-2 sm:flex-row">
+                <label htmlFor="referral-link" className="sr-only">Personal referral link</label>
+                <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/15 bg-black/15 px-4">
+                  <Link2 aria-hidden="true" className="shrink-0 text-[#ddb7b5]" size={16} />
+                  <input id="referral-link" type="text" readOnly value={referralLink} className="min-h-12 min-w-0 flex-1 bg-transparent text-xs text-white/80 outline-none sm:text-sm" />
                 </div>
-              ))}
-            </div>
-            <div className="mt-3 rounded-xl border border-white/[0.06] bg-[#111211] p-4">
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="text-white/65">Referral reward rate</span>
-                <span className="font-semibold text-lime-200">{formatRate(rewardRate)}</span>
+                <button type="button" onClick={copyReferralLink} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#eab2a0] px-5 text-xs font-bold text-[#382733] transition hover:bg-[#f3c3b3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c3b3] focus-visible:ring-offset-2 focus-visible:ring-offset-[#302633]">
+                  {copied ? <Check aria-hidden="true" size={15} /> : <Copy aria-hidden="true" size={15} />}{copied ? 'Copied' : 'Copy invite link'}
+                </button>
               </div>
-              <div role="progressbar" aria-label="Share of referrals with a bonus" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(rewardRate)} className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.08]">
-                <div className="h-full rounded-full bg-gradient-to-r from-lime-400 to-lime-200 transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${rewardRate}%` }} />
+              {copyError && <p role="status" className="mt-2 text-xs font-medium text-[#ffc4b8]">Could not copy automatically. Select the link and copy it manually.</p>}
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/10 pt-4">
+                <span className="mr-1 text-[9px] font-semibold uppercase tracking-[0.17em] text-white/45">Share it</span>
+                <a href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(inviteText)}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/15 px-3.5 text-[11px] font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c3b3]"><Share2 aria-hidden="true" size={13} />Telegram</a>
+                <a href={`https://twitter.com/intent/tweet?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/15 px-3.5 text-[11px] font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c3b3]">X <ArrowUpRight aria-hidden="true" size={13} /></a>
+                <a href={`https://wa.me/?text=${shareMessage}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/15 px-3.5 text-[11px] font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c3b3]">WhatsApp <ArrowUpRight aria-hidden="true" size={13} /></a>
+                <button type="button" aria-expanded={qrOpen} aria-controls="referral-qr-panel" onClick={() => setQrOpen((open) => !open)} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/15 px-3.5 text-[11px] font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c3b3]"><QrCode aria-hidden="true" size={13} />{qrOpen ? 'Hide QR' : 'QR code'}</button>
               </div>
-              <p className="mt-2.5 text-[10px] text-white/40">{referralOverview.activeReferralCount.toLocaleString()} of {referralOverview.referralCount.toLocaleString()} referrals have earned a bonus.</p>
-            </div>
-            <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-emerald-300/10 bg-emerald-300/[0.035] p-3.5">
-              <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-200" size={15} />
-              <p className="text-[11px] leading-5 text-white/50">Only eligible earnings verified by the server create referral bonuses. Sign-up attribution stays attached to your account.</p>
+              {qrOpen && <div id="referral-qr-panel" className="mt-4 flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-center sm:flex-row sm:text-left">
+                <div className="rounded-xl bg-white p-2.5"><QRCodeSVG value={referralLink} size={128} level="M" includeMargin /></div>
+                <div className="max-w-sm">
+                  <h3 className="text-sm font-semibold">A scan away</h3>
+                  <p className="mt-1 text-xs leading-5 text-white/60">Friends can scan this code with their phone camera to open your invitation.</p>
+                  <button type="button" onClick={() => setQrOpen(false)} className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold text-white/65 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f3c3b3]"><X aria-hidden="true" size={14} />Close</button>
+                </div>
+              </div>}
             </div>
           </section>
 
-          <section aria-labelledby="earnings-breakdown-title" className="rounded-[14px] border border-white/[0.08] bg-[#171817] p-4 sm:p-6">
+          <section aria-labelledby="earnings-breakdown-title" className="rounded-[26px] border border-[#e9e2d8] bg-[#fffdf8] p-5 shadow-[0_7px_22px_rgba(51,35,47,0.035)] sm:p-7">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-lime-200/75">Your rewards</p>
-                <h2 id="earnings-breakdown-title" className="text-base font-semibold tracking-tight text-white">Earnings breakdown</h2>
-                <p className="mt-1 text-xs text-white/45">Bonuses by token</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#a45c76]">The good part</p>
+                <h2 id="earnings-breakdown-title" className="mt-2 text-lg font-semibold tracking-[-0.04em] text-[#302633]">Bonuses, by token</h2>
+                <p className="mt-1 text-xs text-[#887e7f]">A little extra for helping your circle grow.</p>
               </div>
-              <span className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.035] text-white/45"><Wallet aria-hidden="true" size={16} /></span>
+              <span className="flex size-10 items-center justify-center rounded-2xl bg-[#f1e9f4] text-[#755b8d]"><Wallet aria-hidden="true" size={17} /></span>
             </div>
-            <div className="mt-5 flex items-center gap-4 rounded-xl border border-white/[0.06] bg-[#111211] p-4">
-              <div aria-hidden="true" className="grid size-[82px] shrink-0 place-items-center rounded-full p-[7px]" style={{ background: 'conic-gradient(#d8ff00 0 10%, #303030 10% 100%)' }}>
-                <div className="grid size-full place-items-center rounded-full bg-[#111211] text-center"><span className="text-lg font-semibold leading-none text-white">10%</span><span className="mt-1 text-[8px] uppercase tracking-wide text-white/40">bonus</span></div>
+            <div className="mt-5 flex items-center gap-4 rounded-2xl bg-[#f5efe7] p-4">
+              <div aria-hidden="true" className="grid size-[72px] shrink-0 place-items-center rounded-full p-[5px]" style={{ background: 'conic-gradient(#a45c76 0 10%, #e6dce0 10% 100%)' }}>
+                <div className="grid size-full place-items-center rounded-full bg-[#f5efe7] text-center"><span className="text-lg font-semibold leading-none text-[#392c39]">10%</span><span className="mt-1 text-[7px] font-bold uppercase tracking-[0.15em] text-[#8a777e]">bonus</span></div>
               </div>
               <div>
-                <p className="text-xs font-semibold text-white/80">Platform-funded rewards</p>
-                <p className="mt-1 text-[11px] leading-5 text-white/45">A 10% bonus on eligible referral earnings—without reducing your friends’ rewards.</p>
+                <p className="text-xs font-semibold text-[#413540]">Funded by pepe.casa</p>
+                <p className="mt-1 text-[10px] leading-4 text-[#817579]">Your friends keep every bit of their own rewards.</p>
               </div>
             </div>
             <div className="mt-3 flex flex-col gap-2">
-              {earnings.map(({ token, amount, accent, text }) => (
-                <div key={token} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-[#111211] px-3.5 py-3.5">
-                  <div className="flex items-center gap-2.5"><span aria-hidden="true" className={`size-2 rounded-full ${accent}`} /><span className="text-xs font-medium text-white/65">{token}</span></div>
+              {earnings.map(({ token, amount, color, text }) => (
+                <div key={token} className="flex items-center justify-between gap-3 rounded-2xl border border-[#eee7df] px-4 py-3.5">
+                  <div className="flex items-center gap-2.5"><span aria-hidden="true" className={`size-2.5 rounded-full ${color}`} /><span className="text-xs font-semibold text-[#675e62]">{token}</span></div>
                   <span className={`break-all text-right font-mono text-xs font-semibold ${text}`}>{formatAtomicAmount(amount)}</span>
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[10px] leading-4 text-white/40">Token balances are displayed separately.</p>
+            <p className="mt-3 text-[10px] leading-4 text-[#958a8d]">Token balances are displayed separately.</p>
           </section>
         </div>
 
-        <section aria-labelledby="referral-steps-title" className="rounded-[14px] border border-white/[0.08] bg-[#151615] p-4 sm:p-6">
-          <div className="flex flex-wrap items-end justify-between gap-2">
+        <section aria-labelledby="referral-performance-title" className="rounded-[26px] border border-[#e9e2d8] bg-[#fffdf8] p-5 shadow-[0_7px_22px_rgba(51,35,47,0.035)] sm:p-7">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-lime-200/75">Simple by design</p>
-              <h2 id="referral-steps-title" className="text-base font-semibold tracking-tight text-white">How it works</h2>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#a45c76]">Your momentum</p>
+              <h2 id="referral-performance-title" className="mt-2 text-lg font-semibold tracking-[-0.04em] text-[#302633]">A circle in motion</h2>
+              <p className="mt-1 text-xs text-[#887e7f]">A snapshot of your verified referral activity.</p>
             </div>
-            <p className="text-xs text-white/45">Three steps. Rewards for both of you.</p>
+            <span className="rounded-full bg-[#f2eee9] px-3.5 py-2 text-[10px] font-semibold text-[#786f72]">All time</span>
           </div>
-          <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
-              { icon: Share2, title: '1. Share your link', text: 'A new account can carry your referral code through sign-up.' },
-              { icon: UsersRound, title: '2. Invite a friend', text: 'Referral attribution is saved to the account profile.' },
-              { icon: Gift, title: '3. Earn a bonus', text: 'Receive 10% of eligible earnings, funded by the platform.' },
-            ].map(({ icon: Icon, title, text }) => (
-              <article key={title} className="rounded-xl border border-white/[0.06] bg-[#111211] p-4">
-                <div className="flex items-center justify-between">
-                  <span className="flex size-9 items-center justify-center rounded-lg border border-lime-200/10 bg-lime-200/[0.06] text-lime-200"><Icon aria-hidden="true" size={16} /></span>
-                  <span aria-hidden="true" className="font-mono text-[9px] tracking-[0.14em] text-white/25">STEP 0{title[0]}</span>
-                </div>
-                <h3 className="mt-3 text-xs font-semibold text-white/85">{title.slice(3)}</h3>
-                <p className="mt-1.5 text-[11px] leading-5 text-white/50">{text}</p>
+              { label: 'People reached', value: referralOverview.referralCount.toLocaleString(), icon: Link2 },
+              { label: 'Friends earning', value: referralOverview.activeReferralCount.toLocaleString(), icon: UsersRound },
+              { label: 'Bonuses sent', value: referralOverview.bonusCount.toLocaleString(), icon: Sparkles },
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label} className="flex items-center gap-3 rounded-2xl bg-[#f5efe7] px-4 py-3.5">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#98708c]"><Icon aria-hidden="true" size={15} /></span>
+                <div className="min-w-0"><p className="text-[10px] font-medium text-[#82777b]">{label}</p><p className="mt-1 text-lg font-semibold leading-none tracking-tight text-[#342b35]">{value}</p></div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-[#eee7df] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="font-medium text-[#6f6569]">Friends who have earned a bonus</span>
+              <span className="font-semibold text-[#9b5c76]">{formatRate(rewardRate)}</span>
+            </div>
+            <div role="progressbar" aria-label="Share of referrals with a bonus" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(rewardRate)} className="mt-3 h-2 overflow-hidden rounded-full bg-[#eee8e5]">
+              <div className="h-full rounded-full bg-gradient-to-r from-[#a45c76] to-[#e59b84] transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${rewardRate}%` }} />
+            </div>
+            <div className="mt-2.5 flex items-center justify-between gap-2 text-[10px] text-[#92878b]"><span>{language === 'ru' ? `${referralOverview.activeReferralCount.toLocaleString()} из ${referralOverview.referralCount.toLocaleString()} ${formatRussianFriendCount(referralOverview.referralCount)}` : `${referralOverview.activeReferralCount.toLocaleString()} of ${referralOverview.referralCount.toLocaleString()} friends`}</span><span className="inline-flex items-center gap-1"><ArrowDownRight aria-hidden="true" size={12} />Keep sharing</span></div>
+          </div>
+          <div className="mt-4 flex items-start gap-2.5 rounded-2xl bg-[#edf4ee] p-3.5">
+            <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-[#4d8062]" size={15} />
+            <p className="text-[10px] leading-5 text-[#617269]">Only eligible earnings verified by the server create referral bonuses. Sign-up attribution stays attached to your account.</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="referral-steps-title" className="rounded-[26px] border border-[#e9e2d8] bg-[#eee7f1] p-5 sm:p-7">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8c6684]">Easy as one, two, three</p>
+              <h2 id="referral-steps-title" className="mt-2 text-lg font-semibold tracking-[-0.04em] text-[#302633]">How the circle grows</h2>
+            </div>
+            <p className="text-xs text-[#786f78]">A simple invite. A shared little win.</p>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[
+              { icon: Share2, title: 'Share your link', text: 'A new account can carry your referral code through sign-up.', number: '01', color: 'bg-[#f9e3d9] text-[#af6758]' },
+              { icon: UsersRound, title: 'Your friend joins', text: 'Their referral attribution is saved to their account profile.', number: '02', color: 'bg-[#e4d8ec] text-[#755b8d]' },
+              { icon: Gift, title: 'Both of you benefit', text: 'You receive a platform-funded bonus on eligible earnings.', number: '03', color: 'bg-[#f2e5bc] text-[#97753b]' },
+            ].map(({ icon: Icon, title, text, number, color }) => (
+              <article key={number} className="rounded-[20px] border border-white/70 bg-[#fffdf8]/75 p-4 sm:p-5">
+                <div className="flex items-center justify-between"><span className={`flex size-10 items-center justify-center rounded-[15px] ${color}`}><Icon aria-hidden="true" size={17} /></span><span className="font-mono text-[10px] font-semibold tracking-[0.16em] text-[#a69aa3]">{number}</span></div>
+                <h3 className="mt-4 text-sm font-semibold text-[#392f3a]">{title}</h3>
+                <p className="mt-1.5 text-[11px] leading-5 text-[#81767e]">{text}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section aria-labelledby="referral-faq-title" className="rounded-[14px] border border-white/[0.08] bg-[#151615] p-4 sm:p-6">
-          <div className="mb-3">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-lime-200/75">Need to know</p>
-            <h2 id="referral-faq-title" className="text-base font-semibold tracking-tight text-white">Frequently asked questions</h2>
+        <section aria-labelledby="referral-faq-title" className="rounded-[26px] border border-[#e9e2d8] bg-[#fffdf8] p-5 shadow-[0_7px_22px_rgba(51,35,47,0.035)] sm:p-7">
+          <div className="mb-4">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#a45c76]">A few details</p>
+            <h2 id="referral-faq-title" className="mt-2 text-lg font-semibold tracking-[-0.04em] text-[#302633]">Good to know</h2>
           </div>
           <div className="flex flex-col gap-2">
             {faqItems.map(({ question, answer }) => (
-              <details key={question} className="group rounded-xl border border-white/[0.06] bg-[#111211] p-3.5 transition open:bg-white/[0.025] sm:p-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-medium text-white/75 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-200">
-                  <span>{question}</span><ChevronDown aria-hidden="true" size={15} className="shrink-0 text-white/50 transition-transform group-open:rotate-180" />
+              <details key={question} className="group rounded-2xl border border-[#eee7df] bg-[#fffefa] px-4 py-3.5 transition open:bg-[#faf5ef] sm:px-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-[#51464e] marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a45c76] [&::-webkit-details-marker]:hidden">
+                  <span>{question}</span><ChevronDown aria-hidden="true" size={15} className="shrink-0 text-[#a58794] transition-transform group-open:rotate-180" />
                 </summary>
-                <p className="mt-3 text-[11px] leading-5 text-white/45 sm:text-xs">{answer}</p>
+                <p className="mt-3 max-w-4xl text-[11px] leading-5 text-[#81767e] sm:text-xs">{answer}</p>
               </details>
             ))}
           </div>
