@@ -18,6 +18,7 @@ const translatableAttributes = new Set([
   'errorText',
   'helperText',
   'label',
+  'note',
   'placeholder',
   'title',
 ])
