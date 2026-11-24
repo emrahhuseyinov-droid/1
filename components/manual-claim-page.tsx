@@ -116,7 +116,7 @@ const publisherNavGroups: NavigationGroup[] = [
     title: 'Earning features',
     links: [
       { label: 'Manual Faucet', icon: Gift },
-      { label: 'Arcade', icon: Gamepad2 },
+      { label: 'PEPE RUNNER', icon: Gamepad2 },
       { label: 'PEPE CRUSH', icon: Candy, section: 'PEPE Crush', badge: 'NEW' },
       { label: 'Wheel of Fortune', icon: Dices },
       { label: 'Weekly Leaderboard', icon: Trophy },

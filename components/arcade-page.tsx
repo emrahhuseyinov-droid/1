@@ -287,7 +287,7 @@ export function ArcadePage() {
     <LocalizedTree>
     <main id="top" className="dashboard-page-shell min-w-0 space-y-5 text-white">
       <header className="space-y-3 sm:space-y-4">
-        <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[30px]"><Gamepad2 className="text-amber-300" size={25} /> Arcade</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight sm:text-[30px]"><Gamepad2 className="text-amber-300" size={25} /> PEPE RUNNER</h1>
         <section aria-label="Arcade guide" className="hidden grid-cols-1 gap-3 md:grid md:grid-cols-3">
           {arcadeGuideCards.map(({ title, description, Icon, color }) => (
             <article key={title} className={cn('relative min-h-[136px] overflow-hidden rounded-[22px] border-2 p-3.5 text-[#241600] shadow-[0_5px_0_rgba(0,0,0,0.25),0_14px_28px_rgba(0,0,0,0.18)] transition-transform duration-200 hover:-translate-y-1 sm:p-4', color)}>
