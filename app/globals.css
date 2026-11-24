@@ -536,11 +536,12 @@ dialog.adslab-captcha-dialog[open] {
 
 .referrals-page {
   width: 100%;
-  max-width: none;
-  --dashboard-surface: #191919;
-  --dashboard-surface-raised: #141414;
-  --dashboard-outline: rgb(255 255 255 / 0.08);
-  --dashboard-muted: rgb(255 255 255 / 0.48);
+  max-width: 1600px;
+  margin-inline: auto;
+  --dashboard-surface: #151515;
+  --dashboard-surface-raised: #202020;
+  --dashboard-outline: rgb(255 255 255 / 0.1);
+  --dashboard-muted: rgb(255 255 255 / 0.58);
   --dashboard-accent: #d8ff00;
 }
 
