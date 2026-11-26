@@ -28,8 +28,6 @@ async function fetchAdminJson<T>(url: string): Promise<T> {
 
 const numberFormat = new Intl.NumberFormat('ru-RU')
 const dateTimeFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium', timeStyle: 'short' })
-const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium' })
-
 function formatDate(value: string | null, formatter = dateTimeFormat) {
   if (!value) return 'Нет активности'
   const date = new Date(value)
@@ -202,7 +200,7 @@ export function AdminUsersPage({ adminEmail }: { adminEmail: string }) {
                             <span className="mt-1 block truncate text-[11px] text-slate-500">{user.email}</span>
                           </button>
                         </td>
-                        <td className="px-3 py-3.5 text-slate-400">{formatDate(user.registeredAt, dateFormat)}</td>
+                        <td className="px-3 py-3.5 text-slate-400"><time dateTime={user.registeredAt}>{formatDate(user.registeredAt)}</time></td>
                         <td className="px-3 py-3.5 text-right font-mono text-slate-200">{numberFormat.format(user.tasksCompleted)}</td>
                         <td className="px-3 py-3.5 text-right font-mono text-slate-200">{numberFormat.format(gameCount)}</td>
                         <td className="px-4 py-3.5 text-right text-slate-500 sm:px-5">{formatDate(user.latestActivityAt)}</td>

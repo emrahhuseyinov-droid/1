@@ -75,53 +75,56 @@ export async function getAdminUserSummaries(): Promise<AdminUsersResponse> {
         }).from(youtubeAdViews).where(inArray(youtubeAdViews.guestId, guestIds)).groupBy(youtubeAdViews.guestId)
       : Promise.resolve([]),
     db.execute(sql<{ userId: string; latestAt: Date | null }>`
+      with requested_users as (
+        select unnest(${sql.param(userIds)}::text[]) as user_id
+      )
       select user_id as "userId", max(occurred_at) as "latestAt"
       from (
         select profile.user_id, event.created_at as occurred_at
         from public.earnpepe_earning_events event
         join public.earnpepe_guest_profiles profile on profile.id = event.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select click.user_id, click.updated_at from public.ptc_clicks click
-        where click.user_id = any(${userIds}::text[])
+        where click.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, game.started_at from public.earnpepe_arcade_sessions game
         join public.earnpepe_guest_profiles profile on profile.id = game.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, game.started_at from public.earnpepe_crush_sessions game
         join public.earnpepe_guest_profiles profile on profile.id = game.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, coalesce(ad_view.completed_at, ad_view.started_at) from public.earnpepe_youtube_ad_views ad_view
         join public.earnpepe_guest_profiles profile on profile.id = ad_view.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, spin.created_at from public.earnpepe_wheel_spins spin
         join public.earnpepe_guest_profiles profile on profile.id = spin.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, coalesce(event.dismissed_at, event.clicked_at, event.shown_at, event.scheduled_at)
         from public.earnpepe_banner_promo_events event
         join public.earnpepe_guest_profiles profile on profile.id = event.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, links.started_at from public.earnpepe_shortlink_sessions links
         join public.earnpepe_guest_profiles profile on profile.id = links.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select profile.user_id, coalesce(video.completed_at, video.created_at) from public.earnpepe_video_reward_sessions video
         join public.earnpepe_guest_profiles profile on profile.id = video.guest_id
-        where profile.user_id = any(${userIds}::text[])
+        where profile.user_id in (select user_id from requested_users)
         union all
         select login.user_id, login.recorded_at from public.earnpepe_referral_login_days login
-        where login.user_id = any(${userIds}::text[])
+        where login.user_id in (select user_id from requested_users)
         union all
         select withdrawal.user_id, withdrawal.updated_at from public.earnpepe_withdrawal_requests withdrawal
-        where withdrawal.user_id = any(${userIds}::text[])
+        where withdrawal.user_id in (select user_id from requested_users)
         union all
         select deposit.user_id, deposit.updated_at from public.earnpepe_advertiser_deposits deposit
-        where deposit.user_id = any(${userIds}::text[])
+        where deposit.user_id in (select user_id from requested_users)
       ) user_activity
       where user_id is not null
       group by user_id
