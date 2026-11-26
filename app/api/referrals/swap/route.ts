@@ -25,6 +25,7 @@ import {
   PEPE_SWAP_COMMISSION_SOURCE,
 } from '@/lib/pepe-reserve'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
+import { emailVerificationRequiredResponse } from '@/lib/email-verification-guard'
 
 export const runtime = 'nodejs'
 
@@ -87,6 +88,7 @@ export async function POST(request: NextRequest) {
 
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
+  if (!account.session.user.emailVerified) return emailVerificationRequiredResponse()
   const limited = await enforceApiRateLimit('pepe-swap', account.session.user.id, { windowSeconds: 60, max: 10 })
   if (limited) return limited
 

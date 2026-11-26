@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import {
+  CheckCircle2,
   Eye,
   EyeOff,
   KeyRound,
   LoaderCircle,
+  Send,
   ShieldCheck,
 } from 'lucide-react'
 import {
@@ -22,7 +25,15 @@ import { Button } from '@/components/ui/button'
 import { LocalizedTree } from '@/components/site-language-provider'
 import { authClient } from '@/lib/auth-client'
 
-export function AccountSecurityPanel({ email }: { email: string }) {
+export function AccountSecurityPanel({ email, emailVerified }: { email: string; emailVerified: boolean }) {
+  const router = useRouter()
+  const [verificationEmail, setVerificationEmail] = useState(email)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [codeRequested, setCodeRequested] = useState(false)
+  const [isEmailVerified, setIsEmailVerified] = useState(emailVerified)
+  const [emailAction, setEmailAction] = useState<'send' | 'verify' | null>(null)
+  const [emailError, setEmailError] = useState('')
+  const [emailStatus, setEmailStatus] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -51,6 +62,69 @@ export function AccountSecurityPanel({ email }: { email: string }) {
           : passwordStrength >= 3
             ? 'Fair'
             : 'Weak'
+
+  async function handleSendVerificationCode() {
+    if (emailAction) return
+
+    setEmailError('')
+    setEmailStatus('')
+    setEmailAction('send')
+    try {
+      const response = await fetch('/api/account/email-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send', email: verificationEmail.trim().toLowerCase() }),
+        cache: 'no-store',
+      })
+      const result = await response.json().catch(() => null) as { error?: unknown } | null
+      if (!response.ok) {
+        setEmailError(typeof result?.error === 'string' ? result.error : 'Could not send a verification code. Please try again.')
+        return
+      }
+
+      setCodeRequested(true)
+      setEmailStatus('A six-digit code was sent to your account email. It expires in 10 minutes.')
+    } catch {
+      setEmailError('Could not send a verification code. Please try again.')
+    } finally {
+      setEmailAction(null)
+    }
+  }
+
+  async function handleVerifyEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (emailAction) return
+
+    setEmailError('')
+    setEmailStatus('')
+    setEmailAction('verify')
+    try {
+      const response = await fetch('/api/account/email-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          email: verificationEmail.trim().toLowerCase(),
+          otp: verificationCode,
+        }),
+        cache: 'no-store',
+      })
+      const result = await response.json().catch(() => null) as { error?: unknown; emailVerified?: unknown } | null
+      if (!response.ok || result?.emailVerified !== true) {
+        setEmailError(typeof result?.error === 'string' ? result.error : 'Could not verify your email. Request a new code and try again.')
+        return
+      }
+
+      setIsEmailVerified(true)
+      setVerificationCode('')
+      setEmailStatus('Your email is verified. Financial features are now available.')
+      router.refresh()
+    } catch {
+      setEmailError('Could not verify your email. Please try again.')
+    } finally {
+      setEmailAction(null)
+    }
+  }
 
   async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -115,6 +189,77 @@ export function AccountSecurityPanel({ email }: { email: string }) {
               <span>Password protection</span>
             </div>
           </div>
+        </section>
+
+        <section className="relative isolate overflow-hidden rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#111c2d] via-[#0f1725] to-[#151522] p-4 shadow-[0_24px_65px_rgba(0,0,0,0.3)] sm:p-7" aria-labelledby="email-verification-heading">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 id="email-verification-heading" className="text-sm font-extrabold">Email verification</h3>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/65">Verify your account email before making withdrawals, swaps, deposits, or advertiser wallet transactions.</p>
+            </div>
+            {isEmailVerified && <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-300/[0.08] px-3 py-1.5 text-xs font-bold text-emerald-100"><CheckCircle2 size={14} aria-hidden="true" /> Verified</span>}
+          </div>
+
+          {isEmailVerified ? (
+            <p role="status" className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-3 text-xs leading-relaxed text-emerald-100">
+              <ShieldCheck size={16} aria-hidden="true" />Your account email is verified: <span className="break-all font-semibold">{email}</span>
+            </p>
+          ) : (
+            <form onSubmit={handleVerifyEmail} className="mt-4">
+              <FieldSet>
+                <FieldLegend className="sr-only">Verify your account email</FieldLegend>
+                <FieldGroup className="gap-4">
+                  <Field>
+                    <FieldLabel htmlFor="verification-email">Account email</FieldLabel>
+                    <Input
+                      id="verification-email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      maxLength={254}
+                      value={verificationEmail}
+                      onChange={(event) => setVerificationEmail(event.target.value)}
+                      className="h-11 border-white/10 bg-white/[0.035] text-white focus-visible:border-amber-200/45 focus-visible:ring-amber-200/20"
+                    />
+                    <FieldDescription>This must match the email used to sign in.</FieldDescription>
+                  </Field>
+                  {codeRequested && (
+                    <Field>
+                      <FieldLabel htmlFor="verification-code">Six-digit code</FieldLabel>
+                      <Input
+                        id="verification-code"
+                        name="one-time-code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        pattern="[0-9]{6}"
+                        required
+                        minLength={6}
+                        maxLength={6}
+                        value={verificationCode}
+                        onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className="h-11 border-white/10 bg-white/[0.035] text-center font-mono text-lg font-bold tracking-[0.35em] text-white focus-visible:border-amber-200/45 focus-visible:ring-amber-200/20"
+                        placeholder="000000"
+                      />
+                      <FieldDescription>The code expires in 10 minutes.</FieldDescription>
+                    </Field>
+                  )}
+                </FieldGroup>
+                {emailError && <FieldError>{emailError}</FieldError>}
+                {emailStatus && <p role="status" aria-live="polite" className="rounded-xl border border-emerald-300/20 bg-emerald-300/[0.07] px-3 py-2.5 text-xs leading-relaxed text-emerald-100">{emailStatus}</p>}
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" disabled={emailAction !== null} onClick={() => void handleSendVerificationCode()} className="h-11 border-white/10 bg-white/[0.035] text-white/80 hover:border-amber-200/30 hover:bg-amber-200/[0.06] hover:text-amber-100">
+                    {emailAction === 'send' ? <LoaderCircle className="animate-spin" data-icon="inline-start" /> : <Send data-icon="inline-start" />}
+                    {codeRequested ? 'Send another code' : 'Send verification code'}
+                  </Button>
+                  <Button type="submit" disabled={emailAction !== null || !codeRequested || verificationCode.length !== 6} className="h-11 border-0 bg-gradient-to-r from-amber-300 via-yellow-300 to-orange-300 font-extrabold text-slate-950 disabled:opacity-60">
+                    {emailAction === 'verify' ? <><LoaderCircle className="animate-spin" data-icon="inline-start" />Checking…</> : 'Confirm email'}
+                  </Button>
+                </div>
+              </FieldSet>
+            </form>
+          )}
         </section>
 
         <div className="w-full">

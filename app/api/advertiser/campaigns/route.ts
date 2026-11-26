@@ -9,6 +9,7 @@ import { ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE, ADVERTISER_WALLET_EVENT_SOURC
 import { CAMPAIGN_COMMISSION_ATOMIC, CAMPAIGN_DURATION_SECONDS, CAMPAIGN_PROMOTION_DURATION_HOURS, CAMPAIGN_PROMOTION_FEE_ATOMIC, CAMPAIGN_REWARD_PEPE_ATOMIC, getYouTubeCampaignPricing, YOUTUBE_CAMPAIGN_MAX_TASKS } from '@/lib/pepe-amount'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
 import { getYouTubeVideoId, getYouTubeWatchUrl } from '@/lib/youtube-ads'
+import { emailVerificationRequiredResponse } from '@/lib/email-verification-guard'
 
 export const runtime = 'nodejs'
 
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
 
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
+  if (!account.session.user.emailVerified) return emailVerificationRequiredResponse()
   const limited = await enforceApiRateLimit('advertiser-campaign-create', account.session.user.id, { windowSeconds: 60 * 60, max: 5 })
   if (limited) return limited
 

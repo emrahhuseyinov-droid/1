@@ -10,6 +10,7 @@ import { parsePepeAmountToAtomic } from '@/lib/pepe-amount'
 import { DAILY_WITHDRAWAL_LIMIT_ATOMIC, MIN_WITHDRAWAL_ATOMIC } from '@/lib/withdrawal-constants'
 import { PEPE_RESERVE_EVENT_SOURCES } from '@/lib/pepe-reserve'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
+import { emailVerificationRequiredResponse } from '@/lib/email-verification-guard'
 
 export const runtime = 'nodejs'
 
@@ -216,6 +217,7 @@ export async function POST(request: NextRequest) {
 
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
+  if (!account.session.user.emailVerified) return emailVerificationRequiredResponse()
   const limited = await enforceApiRateLimit('withdrawal-create', account.session.user.id, { windowSeconds: 60 * 60, max: 5 })
   if (limited) return limited
 

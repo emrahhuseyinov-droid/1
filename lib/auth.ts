@@ -25,7 +25,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
-    requireEmailVerification: true,
+    requireEmailVerification: false,
   },
   rateLimit: {
     enabled: true,
@@ -35,6 +35,8 @@ export const auth = betterAuth({
     customRules: {
       '/sign-in/email': { window: 60, max: 5 },
       '/sign-up/email': { window: 60 * 60, max: 5 },
+      '/email-otp/send-verification-otp': { window: 60 * 60, max: 5 },
+      '/email-otp/verify-email': { window: 60, max: 10 },
     },
   },
   plugins: [
