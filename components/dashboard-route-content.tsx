@@ -74,6 +74,7 @@ export async function DashboardRouteContent({
     : requestedPath
   if (!session?.user) redirect(`/sign-in?next=${encodeURIComponent(nextPath)}`)
   const isAdmin = isPepeReserveAdmin(session.user.email, session.user.emailVerified)
+  if (isAdmin) redirect('/admin')
 
   const cookieStore = await withDashboardStep(section, 'request.cookies', () => cookies())
   const guestToken = cookieStore.get(guestCookieName)?.value

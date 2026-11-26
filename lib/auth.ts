@@ -65,7 +65,7 @@ export const auth = betterAuth({
           const [existingUser] = await db
             .select({ id: user.id })
             .from(user)
-            .where(sql`lower(${user.name}) = ${nickname.toLowerCase()}`)
+            .where(sql`lower(btrim(${user.name})) = ${nickname.toLowerCase()}`)
             .limit(1)
 
           if (existingUser) {

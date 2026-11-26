@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { toNextJsHandler } from 'better-auth/next-js'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { signupIpClaims } from '@/lib/db/schema'
+import { signupIpClaims, user } from '@/lib/db/schema'
 
 export const runtime = 'nodejs'
 
@@ -62,6 +62,28 @@ function hashSignupValue(label: 'ip' | 'email', value: string, secret: string) {
   return createHmac('sha256', secret).update(`${label}:${value}`).digest('hex')
 }
 
+async function nicknameIsClaimedByAnotherUser(nickname: string, email: string) {
+  if (!nickname) return false
+
+  const [existingUser] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(
+      sql`lower(btrim(${user.name})) = ${nickname}`,
+      sql`lower(${user.email}) <> ${email}`,
+    ))
+    .limit(1)
+
+  return Boolean(existingUser)
+}
+
+function nicknameConflictResponse() {
+  return NextResponse.json(
+    { code: 'NICKNAME_ALREADY_IN_USE', message: 'That nickname is already in use.' },
+    { status: 400, headers: noStoreHeaders },
+  )
+}
+
 export const GET = authHandlers.GET
 
 export async function POST(request: NextRequest) {
@@ -70,10 +92,14 @@ export async function POST(request: NextRequest) {
   }
 
   const body: unknown = await request.clone().json().catch(() => null)
-  const email = typeof body === 'object' && body !== null && !Array.isArray(body)
-    ? (body as Record<string, unknown>).email
+  const signupBody = typeof body === 'object' && body !== null && !Array.isArray(body)
+    ? body as Record<string, unknown>
     : null
+  const email = signupBody?.email
   const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+  const nickname = typeof signupBody?.name === 'string'
+    ? signupBody.name.trim().toLowerCase()
+    : ''
   const clientIp = getClientIp(request)
   const secret = process.env.BETTER_AUTH_SECRET
 
@@ -112,6 +138,15 @@ export async function POST(request: NextRequest) {
     }
 
     const response = await authHandlers.POST(request)
+    if (!response.ok && response.status >= 500) {
+      try {
+        if (await nicknameIsClaimedByAnotherUser(nickname, normalizedEmail)) {
+          return nicknameConflictResponse()
+        }
+      } catch (error) {
+        console.error('[auth] Could not check nickname after signup failure:', error)
+      }
+    }
     if (response.ok) {
       await db.update(signupIpClaims)
         .set({ status: 'claimed', updatedAt: new Date() })
@@ -119,6 +154,13 @@ export async function POST(request: NextRequest) {
     }
     return response
   } catch (error) {
+    try {
+      if (await nicknameIsClaimedByAnotherUser(nickname, normalizedEmail)) {
+        return nicknameConflictResponse()
+      }
+    } catch {
+      // Preserve the generic signup failure when the collision lookup is unavailable.
+    }
     console.error('[auth] Could not enforce signup IP limit:', error)
     return NextResponse.json({ code: 'SIGNUP_IP_CHECK_FAILED', message: 'Could not verify your registration. Please try again.' }, { status: 503, headers: noStoreHeaders })
   }

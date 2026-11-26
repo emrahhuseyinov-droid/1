@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const [existingUser] = await db
       .select({ id: user.id })
       .from(user)
-      .where(sql`lower(${user.name}) = ${nickname.toLowerCase()}`)
+      .where(sql`lower(btrim(${user.name})) = ${nickname.toLowerCase()}`)
       .limit(1)
 
     return NextResponse.json(
