@@ -137,8 +137,8 @@ export async function getAdminUserSummaries(): Promise<AdminUsersResponse> {
   const arcadeByGuest = new Map(arcadeStats.map((row) => [row.guestId, row]))
   const crushByGuest = new Map(crushStats.map((row) => [row.guestId, row]))
   const youtubeByGuest = new Map(youtubeStats.map((row) => [row.guestId, row]))
-  const latestActivityRows = latestActivityResult.rows as { userId: string; latestAt: Date | null }[]
-  const latestActivityByUser = new Map<string, Date | null>(latestActivityRows.map((row) => [row.userId, row.latestAt]))
+  const latestActivityRows = latestActivityResult.rows as { userId: string; latestAt: Date | string | null }[]
+  const latestActivityByUser = new Map<string, Date | string | null>(latestActivityRows.map((row) => [row.userId, row.latestAt]))
 
   const users = registeredUsers.map((registeredUser) => {
     const profile = profileByUserId.get(registeredUser.id)
@@ -162,7 +162,11 @@ export async function getAdminUserSummaries(): Promise<AdminUsersResponse> {
       crushGames: Number(crush?.games ?? 0),
       ptcCompletions: Number(ptc?.completions ?? 0),
       youtubeCompletions: Number(youtube?.completions ?? 0),
-      latestActivityAt: latestDate?.toISOString() ?? null,
+      latestActivityAt: latestDate == null
+        ? null
+        : latestDate instanceof Date
+          ? latestDate.toISOString()
+          : new Date(latestDate).toISOString(),
     }
   })
 
