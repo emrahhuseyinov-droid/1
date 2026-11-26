@@ -6,6 +6,7 @@ import { ADVERTISER_WALLET_CAMPAIGN_CHARGE_SOURCE, ADVERTISER_WALLET_CAMPAIGN_RE
 import { calculateUnusedPromotionRefundAtomic } from '@/lib/advertiser-promotion'
 import { advertiserCampaigns, earningEvents, guestProfiles } from '@/lib/db/schema'
 import { isTrustedRequestOrigin } from '@/lib/request-origin'
+import { emailVerificationRequiredResponse } from '@/lib/email-verification-guard'
 
 export const runtime = 'nodejs'
 
@@ -17,6 +18,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ c
 
   const account = await getAccountForRequest(request.headers, request.cookies.get(guestCookieName)?.value)
   if (!account) return NextResponse.json({ error: 'Please sign in first.' }, { status: 401, headers: noStoreHeaders })
+  if (!account.session.user.emailVerified) return emailVerificationRequiredResponse()
 
   const { campaignId: rawCampaignId } = await context.params
   if (!uuidPattern.test(rawCampaignId)) return NextResponse.json({ error: 'Invalid campaign ID.' }, { status: 400, headers: noStoreHeaders })

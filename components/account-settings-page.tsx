@@ -14,7 +14,7 @@ const tabs: { id: SettingsTab; label: string; icon: typeof UserRound }[] = [
   { id: 'security', label: 'Security', icon: LockKeyhole },
 ]
 
-export function AccountSettingsPage({ name, email, avatarSrc, isAdmin, onAvatarChange }: { name: string; email: string; avatarSrc: ProfileAvatarSrc; isAdmin: boolean; onAvatarChange: (avatarSrc: ProfileAvatarSrc) => void }) {
+export function AccountSettingsPage({ name, email, emailVerified, avatarSrc, isAdmin, onAvatarChange }: { name: string; email: string; emailVerified: boolean; avatarSrc: ProfileAvatarSrc; isAdmin: boolean; onAvatarChange: (avatarSrc: ProfileAvatarSrc) => void }) {
   const availableAvatars = getAvailableProfileAvatars(isAdmin)
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [copyStatus, setCopyStatus] = useState('')
@@ -175,7 +175,7 @@ export function AccountSettingsPage({ name, email, avatarSrc, isAdmin, onAvatarC
           </div>
         )}
 
-        {activeTab === 'security' && <AccountSecurityPanel email={email} />}
+        {activeTab === 'security' && <AccountSecurityPanel email={email} emailVerified={emailVerified} />}
       </section>
     </main>
     </LocalizedTree>
